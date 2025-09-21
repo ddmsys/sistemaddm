@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "source": "functions"
+  },
+  "hosting": {
+    "public": "public",
+    "rewrites": [
+      {
+        "source": "**",
+        "function": "yourFunctionName" // substitua pelo nome real da sua função se usar hospedagem
+      }
+    ]
+  }
+}

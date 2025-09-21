@@ -1,0 +1,21 @@
+{
+  "name": "functions",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "firebase functions:shell",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.11.1",
+    "firebase-functions": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.4"
+  },
+  "engines": {
+    "node": "18"
+  }
+}
