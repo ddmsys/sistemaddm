@@ -72,4 +72,36 @@ git push origin main
 
 ---
 
+# Script para facilitar comandos Git
+
+### Confirma branch atual
+echo "Branch atual:"
+git branch --show-current
+
+### Passo 1: adicionar mudanças ao stage
+git add .
+
+### Passo 2: commit com mensagem
+read -p "Digite a mensagem do commit: " msg
+git commit -m "$msg"
+
+### Passo 3: enviar para servidor remoto a branch atual
+branch_name=$(git branch --show-current)
+git push origin "$branch_name"
+
+### Passo 4: se quiser, muda para main e atualiza
+read -p "Quer atualizar main? (s/n) " atualizar
+if [ "$atualizar" = "s" ]; then
+  git checkout main
+  git pull origin main
+fi
+
+### Passo 5: quer mesclar a branch na main?
+read -p "Quer fazer merge da branch atual no main? (s/n) " mergear
+if [ "$mergear" = "s" ]; then
+  git merge "$branch_name"
+  git push origin main
+fi
+
+
 
