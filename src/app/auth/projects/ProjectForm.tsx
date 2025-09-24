@@ -11,19 +11,14 @@ import {
   where,
   deleteDoc,
 } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
+import { db } from "@/lib/firebase";
 import TaskList from "@/components/TaskList";
+import { Project, ProjectStatus, Client, Book } from "@/lib/types";
 
 interface Props {
-  project?: any;
+  project?: Project;
   onSave: () => void;
   onCancel: () => void;
-}
-
-interface Client {
-  id: string;
-  name: string;
-  number: number;
 }
 
 async function gerarCodigoProjeto(
@@ -44,30 +39,21 @@ async function gerarCodigoProjeto(
 }
 
 export default function ProjectForm({ project, onSave, onCancel }: Props) {
-  const [name, setName] = useState(project?.name ?? "");
+  const [name, setName] = useState(project?.title ?? "");
   const [clientId, setClientId] = useState(project?.clientId ?? "");
   const [clientNumber, setClientNumber] = useState(project?.clientNumber ?? 0);
-  const [projectType, setProjectType] = useState(project?.projectType ?? "L");
+  const [projectType, setProjectType] = useState(project?.productType ?? "L");
   const [catalogCode, setCatalogCode] = useState(project?.catalogCode ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
-  const [status, setStatus] = useState(project?.status ?? "planejamento");
-  const [book, setBook] = useState(
-    project?.book ?? {
-      title: "",
-      author: "",
-      year: "",
-      ISBN: "",
-    }
+  const [status, setStatus] = useState<ProjectStatus>(
+    project?.status ?? "planejamento"
   );
-  const [tasks, setTasks] = useState<any[]>([]);
-
+  const [book, setBook] = useState<Book>(
+    project?.book ?? { title: "", author: "", year: "", ISBN: "" }
+  );
+  const [tasks, setTasks] = useState<any[]>(project?.tasks ?? []);
   const [clientes, setClientes] = useState<Client[]>([]);
 
-  useEffect(() => {
-    if (project) setTasks(project.tasks ?? []);
-  }, [project]);
-
-  // Busca clientes ao montar o form
   useEffect(() => {
     async function buscarClientes() {
       const snap = await getDocs(collection(db, "clients"));
@@ -84,7 +70,6 @@ export default function ProjectForm({ project, onSave, onCancel }: Props) {
     buscarClientes();
   }, []);
 
-  // Atualiza numeração ao mudar cliente ou tipo
   useEffect(() => {
     async function calcCodigo() {
       if (!clientNumber || !projectType) return;
@@ -94,12 +79,11 @@ export default function ProjectForm({ project, onSave, onCancel }: Props) {
     calcCodigo();
   }, [clientNumber, projectType]);
 
-  // Atualiza clienteSelection e número ao mudar no select
   function handleClientChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const selectedId = e.target.value;
     setClientId(selectedId);
     const cliente = clientes.find((c) => c.id === selectedId);
-    setClientNumber(cliente?.number ?? 0);
+    setClientNumber(cliente?.clientNumber ?? 0);
   }
 
   async function save(e: FormEvent) {
@@ -126,7 +110,6 @@ export default function ProjectForm({ project, onSave, onCancel }: Props) {
 
     await setDoc(projRef, data, { merge: true });
 
-    // Subcoleção tasks (exemplo simples: apagar todas e acrescentar)
     if (id) {
       const tasksCol = collection(db, "projects", id, "tasks");
       const oldTasks = await getDocs(tasksCol);
@@ -165,7 +148,7 @@ export default function ProjectForm({ project, onSave, onCancel }: Props) {
             <option value="">Selecione o cliente</option>
             {clientes.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name} - Nº: {c.number}
+                {c.name} - Nº: {c.clientNumber}
               </option>
             ))}
           </select>
@@ -228,8 +211,7 @@ export default function ProjectForm({ project, onSave, onCancel }: Props) {
         <label>Status</label>
         <select
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="w-full border p-1 rounded"
+          onChange={(e) => setStatus(e.target.value as ProjectStatus)}
         >
           <option value="planejamento">Planejamento</option>
           <option value="em_progresso">Em progresso</option>
@@ -293,7 +275,7 @@ export default function ProjectForm({ project, onSave, onCancel }: Props) {
           className="bg-blue-600 text-white px-4 py-2 rounded"
           type="submit"
         >
-          Salvar
+          Salvar : Adicionar
         </button>
         {project && (
           <button

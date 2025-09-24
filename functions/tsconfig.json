@@ -13,5 +13,5 @@
   },
   "include": [
     "src"
-, "assignClientNumber.js", "index.js"  ]
+, "assignClientNumber.js", "index.js", "lib/index.ts"  ]
 }

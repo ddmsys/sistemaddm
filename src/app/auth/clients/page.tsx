@@ -1,5 +1,6 @@
 "use client";
 
+import LogoutButton from "@/components/LogoutButton";
 import { useEffect, useState } from "react";
 import {
   collection,
@@ -9,7 +10,7 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
+import { db } from "@/lib/firebase";
 import ClientForm from "./ClientForm";
 
 export interface Client {
@@ -78,8 +79,8 @@ export default function ClientsPage() {
   if (loading) return <p>Carregando clientes...</p>;
 
   return (
-    <main className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Clientes</h1>
+    <>
+      <LogoutButton />
 
       <ClientForm
         key={editClient?.id ?? "new"}
@@ -115,6 +116,6 @@ export default function ClientsPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </>
   );
 }

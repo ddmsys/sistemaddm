@@ -1,82 +1,136 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
-import ProjectForm from "./ProjectForm";
+import { useState, useEffect } from "react";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  updateDoc,
+  doc,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Project, ProjectStatus } from "@/lib/types";
+import { ProjectKanban } from "@/components/projects/ProjectKanban";
+import { ProjectCalendar } from "@/components/projects/ProjectCalendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { NewProjectModal } from "@/components/projects/NewProjectModal";
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editProject, setEditProject] = useState<any>(null);
+  const [view, setView] = useState<"kanban" | "calendar">("kanban");
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchProjects();
+    const q = query(collection(db, "projects"), orderBy("updatedAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const projectsData = snapshot.docs.map((doc) => {
+        const data = doc.data();
+
+        return {
+          id: doc.id,
+          clientId: data.clientId ?? "",
+          clientName: data.clientName ?? "",
+          clientNumber: data.clientNumber ?? 0,
+          catalogCode: data.catalogCode ?? "",
+          title: data.title ?? "",
+          productType: data.productType ?? "",
+          description: data.description ?? "",
+          status: data.status ?? "planejamento",
+          dueDate: data.dueDate?.toDate
+            ? data.dueDate.toDate()
+            : new Date(data.dueDate),
+          createdAt: data.createdAt?.toDate
+            ? data.createdAt.toDate()
+            : new Date(data.createdAt),
+          updatedAt: data.updatedAt?.toDate
+            ? data.updatedAt.toDate()
+            : new Date(data.updatedAt),
+          clientApprovalTasks:
+            data.clientApprovalTasks?.map((task: any) => ({
+              ...task,
+              createdAt: task.createdAt?.toDate
+                ? task.createdAt.toDate()
+                : new Date(task.createdAt),
+              decidedAt: task.decidedAt?.toDate
+                ? task.decidedAt.toDate()
+                : task.decidedAt,
+            })) || [],
+          book: data.book ?? null,
+          tasks: data.tasks ?? [],
+        };
+      });
+      setProjects(projectsData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  async function fetchProjects() {
-    setLoading(true);
+  const updateProjectStatus = async (
+    projectId: string,
+    newStatus: ProjectStatus
+  ) => {
     try {
-      const col = collection(db, "projects");
-      const snapshot = await getDocs(col);
-      setProjects(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    } finally {
-      setLoading(false);
+      await updateDoc(doc(db, "projects", projectId), {
+        status: newStatus,
+        updatedAt: Timestamp.now(),
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
     }
-  }
+  };
 
-  async function deleteProject(id: string) {
-    if (!confirm("Excluir projeto?")) return;
-    await deleteDoc(doc(db, "projects", id));
-    fetchProjects();
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        Carregando projetos...
+      </div>
+    );
   }
 
   return (
-    <main className="p-4 max-w-5xl mx-auto">
-      <h1 className="text-xl font-bold mb-4">Projetos</h1>
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Projetos</h1>
+        <Button onClick={() => setModalOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Projeto
+        </Button>
+      </div>
 
-      <ProjectForm
-        key={editProject?.id ?? "new"}
-        project={editProject}
-        onSave={() => {
-          setEditProject(null);
-          fetchProjects();
-        }}
-        onCancel={() => setEditProject(null)}
-      />
-
-      {loading ? (
-        <p>Carregando projetos...</p>
-      ) : (
-        <ul className="space-y-2 mt-6">
-          {projects.map((p) => (
-            <li
-              key={p.id}
-              className="border p-3 rounded flex justify-between items-center"
-            >
-              <div>
-                <strong>{p.catalogCode ?? p.name}</strong> - {p.name}
-                <br />
-                Tipo: {p.projectType} - Status: {p.status}
-              </div>
-              <div className="space-x-2">
-                <button
-                  className="px-3 py-1 bg-yellow-400 rounded"
-                  onClick={() => setEditProject(p)}
-                >
-                  Editar
-                </button>
-                <button
-                  className="px-3 py-1 bg-red-600 text-white rounded"
-                  onClick={() => deleteProject(p.id)}
-                >
-                  Excluir
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+      {modalOpen && (
+        <NewProjectModal
+          onClose={() => setModalOpen(false)}
+          onCreated={() => setModalOpen(false)}
+        />
       )}
-    </main>
+
+      <Tabs
+        value={view}
+        onValueChange={(v) => setView(v as "kanban" | "calendar")}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="kanban">Kanban</TabsTrigger>
+          <TabsTrigger value="calendar">Calendário</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="kanban" className="mt-6">
+          <ProjectKanban
+            projects={projects}
+            onStatusChange={updateProjectStatus}
+          />
+        </TabsContent>
+
+        <TabsContent value="calendar" className="mt-6">
+          <ProjectCalendar projects={projects} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

@@ -4,9 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-import { httpsCallable } from "firebase/functions";
-import { functions } from "@/lib/firebase";
-
 export default function LoginPage() {
   const router = useRouter();
   const { login, user, loading } = useAuth();
@@ -15,29 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  async function callAssignClientNumber() {
-    const assignClientNumber = httpsCallable(functions, "assignClientNumber");
-    try {
-      const result = await assignClientNumber({});
-      console.log(
-        "Função assignClientNumber chamada com sucesso:",
-        result.data
-      );
-    } catch (error) {
-      console.error("Erro ao chamar função assignClientNumber:", error);
-    }
-  }
-
   useEffect(() => {
-    if (!loading && user) {
-      const assignClientNumber = httpsCallable(functions, "assignClientNumber");
-      assignClientNumber({})
-        .then((result) => {
-          console.log("Função chamada:", result.data);
-        })
-        .catch((e) => {
-          console.error("Erro Cloud Function:", e);
-        });
+    if (user && !loading) {
       router.push("/dashboard");
     }
   }, [user, loading, router]);
@@ -47,12 +23,14 @@ export default function LoginPage() {
     setError("");
     try {
       await login(email, password);
-    } catch (err: any) {
-      setError("Erro ao fazer login. Verifique email e senha.");
+    } catch {
+      setError("Erro ao fazer login. Verifique suas credenciais.");
     }
   };
 
-  if (loading) return <p>Carregando...</p>;
+  if (loading) {
+    return <p>Carregando...</p>;
+  }
 
   return (
     <main>

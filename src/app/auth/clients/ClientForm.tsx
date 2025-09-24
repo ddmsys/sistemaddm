@@ -38,8 +38,10 @@ export default function ClientForm({
       return;
     }
     await onSubmit({ id: initialData?.id, name, email });
-    setName("");
-    setEmail("");
+    if (!initialData?.id) {
+      setName("");
+      setEmail("");
+    }
   }
 
   return (
@@ -52,6 +54,7 @@ export default function ClientForm({
         <input
           type="text"
           value={name}
+          autoComplete="name"
           onChange={(e) => setName(e.target.value)}
           className="w-full border rounded px-2 py-1"
           required
@@ -64,6 +67,7 @@ export default function ClientForm({
         <input
           type="email"
           value={email}
+          autoComplete="email"
           onChange={(e) => setEmail(e.target.value)}
           className="w-full border rounded px-2 py-1"
           required

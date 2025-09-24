@@ -1,18 +1,26 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { auth } from "@/lib/firebase";
 
 export default function LogoutButton() {
-  const { logout } = useAuth();
+  const router = useRouter();
 
-  const onLogout = async () => {
-    await logout();
-  };
+  async function handleLogout() {
+    try {
+      await signOut(auth);
+      alert("Logout realizado com sucesso");
+      router.push("/login");
+    } catch (err) {
+      alert("Erro ao fazer logout");
+    }
+  }
 
   return (
     <button
-      onClick={onLogout}
-      className="px-2 py-1 bg-red-600 text-white rounded"
+      onClick={handleLogout}
+      className="px-4 py-2 bg-red-600 text-white rounded"
     >
       Sair
     </button>

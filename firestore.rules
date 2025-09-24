@@ -1,34 +1,82 @@
+// firestore.rules (adicionar às regras existentes)
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Permite que o usuário só leia/escreva seu próprio documento user
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Coleção clients
+    // Permitir acesso apenas para usuários autenticados
+    function isSignedIn() { return request.auth != null }
+    function uid() { return request.auth.uid }
+    
+    // Clientes - usuário vê apenas seu próprio documento
     match /clients/{clientId} {
-      allow read, write: if isAuthenticated() && isAdmin();
+      allow read, write: if isSignedIn() && 
+        (request.auth.uid == resource.data.firebaseAuthUid || 
+         request.auth.token.role in ['admin', 'producao', 'financeiro']);
     }
-
-    // Projetos - associados a clients
+    
+    // Projetos - cliente vê apenas seus projetos
     match /projects/{projectId} {
-      allow read, write: if isAuthenticated() && isAdmin();
+      allow read, write: if isSignedIn();
+      // Refinará depois com base no clientId
     }
-
-    // Documentos - permitidos somente para usuários autenticados
-    match /documentos/{documentoId} {
-      allow read, write: if isAuthenticated();
+    
+    // Leads, Quotes - acesso restrito por papel
+    match /{document=**} {
+      allow read, write: if isSignedIn() && 
+        request.auth.token.role in ['admin', 'comercial'];
     }
-
+// firestore.rules (adicionar às regras existentes)
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
     // Funções auxiliares
-    function isAuthenticated() {
+    function isSignedIn() {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    function hasRole(role) {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function isOwner(projectId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/clients/$(getUserClientId())) &&
+        get(/databases/$(database)/documents/projects/$(projectId)).data.clientId == getUserClientId();
+    }
+
+    function getUserClientId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clientId;
+    }
+
+    function onlyUpdating(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // REGRAS EXISTENTES (manter todas as regras antigas)
+    
+    // NOVAS REGRAS para projetos
+    match /projects/{projectId} {
+      // Leitura: admin, produção, financeiro, ou cliente dono do projeto
+      allow read: if isSignedIn() && (
+        hasRole('admin') || 
+        hasRole('producao') || 
+        hasRole('financeiro') ||
+        (hasRole('cliente') && isOwner(projectId))
+      );
+      
+      // Escrita: apenas admin e produção
+      allow write: if isSignedIn() && (
+        hasRole('admin') || 
+        hasRole('producao')
+      );
+
+      // Cliente pode atualizar apenas clientApprovalTasks
+      allow update: if isSignedIn() && 
+        hasRole('cliente') && 
+        isOwner(projectId) &&
+        onlyUpdating(['clientApprovalTasks', 'updatedAt']);
     }
   }
 }
