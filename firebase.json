@@ -1,14 +1,17 @@
 {
+  "firestore": {
+    "rules": "config/firestore.rules",
+    "indexes": "config/firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "config/storage.rules"
+  },
   "functions": {
-    "source": "functions"
+    "source": "functions",
+    "runtime": "nodejs18"
   },
   "hosting": {
-    "public": "public",
-    "rewrites": [
-      {
-        "source": "**",
-        "function": "yourFunctionName" // substitua pelo nome real da sua função se usar hospedagem
-      }
-    ]
+    "public": "out",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   }
 }

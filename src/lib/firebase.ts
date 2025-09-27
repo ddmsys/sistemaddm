@@ -18,6 +18,7 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const functions = getFunctions(app, "southamerica-east1");
 
+// Configurar emulador para funções se estiver em dev local
 if (process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === "true") {
   connectFunctionsEmulator(functions, "localhost", 5001);
 }
