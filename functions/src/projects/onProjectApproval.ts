@@ -1,3 +1,4 @@
+// functions/src/projects/onProjectApproval.ts (NOVO ARQUIVO)
 import * as functions from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 

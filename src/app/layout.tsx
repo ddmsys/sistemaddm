@@ -2,6 +2,13 @@ import React from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
+export const metadata = {
+  title: "Sistema DDM",
+  description: "Sistema de gerenciamento editorial DDM",
+  charset: "UTF-8",
+  viewport: "width=device-width, initial-scale=1",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -9,12 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <head>
-        <title>Biblioteca DDM</title>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
-      <body>
+      <body className="font-sans">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
