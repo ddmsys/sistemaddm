@@ -1,20 +1,21 @@
+// src/components/dashboard/CommercialDashboard.tsx - VERSÃO OTIMIZADA
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { LeadModal } from "@/components/comercial/modals/LeadModal";
-import { DonutChart } from "@/components/comercial/charts/DonutChart"; // ✅ NOVO IMPORT
-import { RevenueChart } from "@/components/comercial/charts/RevenueChart";
 import { ActivityFeed } from "@/components/comercial/ActivityFeed";
-import { QuickActions } from "@/components/comercial/QuickActions";
+import { DonutChart } from "@/components/comercial/charts/DonutChart";
+import { RevenueChart } from "@/components/comercial/charts/RevenueChart";
 import { DateRangePicker } from "@/components/comercial/filters/DateRangePicker";
-import { useFunnelData } from "@/hooks/comercial/useFunnelData";
+import { LeadModal } from "@/components/comercial/modals/LeadModal";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useCommercialMetrics } from "@/hooks/comercial/useCommercialMetrics";
+import { useFunnelData } from "@/hooks/comercial/useFunnelData";
 import { Lead } from "@/lib/types/comercial";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-// KPI Component inline
+// KPI Component com Design System
 interface KPIData {
   label: string;
   value: string | number;
@@ -23,7 +24,7 @@ interface KPIData {
     type: "increase" | "decrease";
   };
   icon?: React.ReactNode;
-  color?: string;
+  variant?: "primary" | "success" | "purple" | "orange";
 }
 
 function KPICard({ metric }: { metric: KPIData }) {
@@ -36,22 +37,54 @@ function KPICard({ metric }: { metric: KPIData }) {
     return value.toString();
   };
 
+  // ✅ CORES DO DESIGN SYSTEM
+  const getVariantClasses = (variant?: string) => {
+    switch (variant) {
+      case "success":
+        return "bg-success-50 border-success-200";
+      case "purple":
+        return "bg-purple-50 border-purple-200";
+      case "orange":
+        return "bg-orange-50 border-orange-200";
+      default:
+        return "bg-primary-50 border-primary-200";
+    }
+  };
+
+  const getIconColor = (variant?: string) => {
+    switch (variant) {
+      case "success":
+        return "var(--color-success-600)";
+      case "purple":
+        return "var(--color-purple-600)";
+      case "orange":
+        return "var(--color-orange-600)";
+      default:
+        return "var(--color-primary-600)";
+    }
+  };
+
   return (
-    <Card className="p-6 hover:shadow-md transition-shadow duration-200">
+    <Card
+      className={`p-6 hover:shadow-md transition-shadow duration-200 ${getVariantClasses(
+        metric.variant
+      )}`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-slate-600 mb-1">
+          {/* ✅ CORES DO DESIGN SYSTEM */}
+          <p className="text-sm font-medium text-secondary mb-1">
             {metric.label}
           </p>
-          <p className="text-2xl font-bold text-slate-900">
+          <p className="text-2xl font-bold text-primary">
             {formatValue(metric.value)}
           </p>
           {metric.change && (
             <div
               className={`flex items-center mt-2 text-sm ${
                 metric.change.type === "increase"
-                  ? "text-emerald-600"
-                  : "text-red-600"
+                  ? "text-success"
+                  : "text-error"
               }`}
             >
               <span className="mr-1">
@@ -65,7 +98,10 @@ function KPICard({ metric }: { metric: KPIData }) {
           <div className="flex-shrink-0 ml-4">
             <div
               className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: metric.color || "#3b82f6" + "20" }}
+              style={{
+                backgroundColor: getIconColor(metric.variant) + "20",
+                border: `1px solid ${getIconColor(metric.variant)}30`,
+              }}
             >
               {metric.icon}
             </div>
@@ -90,15 +126,15 @@ export function CommercialDashboard() {
   const { funnelData, loading: funnelLoading } = useFunnelData(dateRange);
   const { metrics, loading: metricsLoading } = useCommercialMetrics(dateRange);
 
-  // ✅ CONVERTER DADOS DO FUNIL PARA DONUT
+  // ✅ CORES DO DESIGN SYSTEM PARA DONUT
   const donutData = funnelData.map((item, index) => {
     const colors = [
-      "#64748b", // primeiro-contato - slate
-      "#3b82f6", // qualificado - blue
-      "#8b5cf4", // proposta-enviada - purple
-      "#FFB347", // negociacao - amber
-      "#20B2AA", // fechado-ganho - emerald
-      "#CD5C5C", // fechado-perdido - red
+      "var(--color-gray-500)", // primeiro_contato
+      "var(--color-primary-600)", // qualificado
+      "var(--color-purple-600)", // proposta_enviada
+      "var(--color-warning-600)", // negociacao
+      "var(--color-success-600)", // fechado_ganho
+      "var(--color-error-600)", // fechado_perdido
     ];
 
     return {
@@ -106,11 +142,11 @@ export function CommercialDashboard() {
       label: item.label,
       value: item.count,
       percentage: item.percentage,
-      color: colors[index] || "#6b7280",
+      color: colors[index] || "var(--color-gray-400)",
     };
   });
 
-  // Preparar dados dos KPIs
+  // ✅ KPIs COM VARIANTS DO DESIGN SYSTEM
   const kpiData: KPIData[] = metrics
     ? [
         {
@@ -120,8 +156,8 @@ export function CommercialDashboard() {
             value: metrics.revenueGrowth || 0,
             type: (metrics.revenueGrowth || 0) >= 0 ? "increase" : "decrease",
           },
-          icon: <span className="text-2xl">💰</span>,
-          color: "#20B2AA",
+          icon: <span className="teicon-rotate text-3xl">💰</span>,
+          variant: "success", // ✅ USA VARIANT
         },
         {
           label: "Taxa de Conversão",
@@ -131,8 +167,8 @@ export function CommercialDashboard() {
             type:
               (metrics.conversionGrowth || 0) >= 0 ? "increase" : "decrease",
           },
-          icon: <span className="text-2xl">📈</span>,
-          color: "#3b82f6",
+          icon: <span className="icon-rotate text-3xl">📈</span>,
+          variant: "primary", // ✅ USA VARIANT
         },
         {
           label: "Leads Ativos",
@@ -141,8 +177,8 @@ export function CommercialDashboard() {
             value: metrics.leadsGrowth || 0,
             type: (metrics.leadsGrowth || 0) >= 0 ? "increase" : "decrease",
           },
-          icon: <span className="text-2xl">👥</span>,
-          color: "#8b5cf6",
+          icon: <span className="icon-rotate text-3xl">👥</span>,
+          variant: "purple", // ✅ USA VARIANT
         },
         {
           label: "Ticket Médio",
@@ -151,54 +187,50 @@ export function CommercialDashboard() {
             value: metrics.ticketGrowth || 0,
             type: (metrics.ticketGrowth || 0) >= 0 ? "increase" : "decrease",
           },
-          icon: <span className="text-2xl">🎯</span>,
-          color: "#FFB347",
+          icon: <span className="icon-rotate text-3xl">🎯</span>,
+          variant: "orange", // ✅ USA VARIANT
         },
       ]
     : [];
 
   return (
     <div className="space-y-6">
-      {/* Header com filtros */}
+      {/* ✅ HEADER COM THEME TOGGLE */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-primary">
             Dashboard Comercial
           </h1>
-          <p className="text-slate-600">Visão geral das vendas e pipeline</p>
+          <p className="text-secondary">Visão geral das vendas e pipeline</p>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+          {/* ✅ THEME TOGGLE */}
+          <ThemeToggle />
+
           <DateRangePicker value={dateRange} onChange={setDateRange} />
 
-          {/* ✅ BOTÕES CORRIGIDOS - SÓ NAVEGAR */}
+          {/* ✅ BOTÕES MANTIDOS (já estão corretos) */}
           <Button variant="outline" onClick={() => router.push("/crm/clients")}>
             Clientes
           </Button>
-
           <Button variant="outline" onClick={() => router.push("/crm/quotes")}>
             Orçamentos
           </Button>
-
           <Button
             variant="outline"
             onClick={() => router.push("/crm/projects")}
           >
             Projetos
           </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => router.push("/crm/leads")} // ✅ IR PARA LISTA DE LEADS
-          >
+          <Button variant="outline" onClick={() => router.push("/crm/leads")}>
             Leads
           </Button>
-
           <Button variant="outline">Exportar Relatório</Button>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* ✅ KPI CARDS COM VARIANTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiData.map((metric, index) => (
           <KPICard key={index} metric={metric} />
@@ -210,7 +242,7 @@ export function CommercialDashboard() {
         {/* ✅ FUNIL COM DONUT CHART */}
         <Card className="lg:col-span-2 xl:col-span-2 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-semibold text-primary">
               Funil de Vendas
             </h2>
             <Button variant="ghost" size="sm">
@@ -226,25 +258,24 @@ export function CommercialDashboard() {
           />
         </Card>
 
-        {/* ✅ AÇÕES RÁPIDAS CORRIGIDAS */}
+        {/* ✅ AÇÕES RÁPIDAS (mantidas - já estão perfeitas) */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-6">
+          <h2 className="text-lg font-semibold text-primary mb-6">
             Ações Rápidas
           </h2>
           <div className="space-y-3">
             <Button
-              className="w-full justify-start bg-blue-500 hover:bg-blue-600"
-              onClick={() => {
-                setSelectedLead(null);
-                setModalOpen(true);
-              }}
+              variant="outline" // 🟢 VERDE
+              className="justify-start"
+              onClick={() => setModalOpen(true)}
             >
-              <span className="text-xl mr-3">👤</span>
+              <span className="icon-rotate text-3xl">👤</span>
               Novo Lead
             </Button>
 
             <Button
-              className="w-full justify-start bg-green-500 hover:bg-green-600"
+              variant="default" // 🔵 AZUL (corrigido de "default")
+              className="justify-start"
               onClick={() => router.push("/crm/clients?action=new")}
             >
               <span className="text-xl mr-3">🏢</span>
@@ -252,7 +283,8 @@ export function CommercialDashboard() {
             </Button>
 
             <Button
-              className="w-full justify-start bg-purple-500 hover:bg-purple-600"
+              variant="secondary" // 🟣 ROXO
+              className="justify-start"
               onClick={() => router.push("/crm/quotes?action=new")}
             >
               <span className="text-xl mr-3">📄</span>
@@ -260,7 +292,8 @@ export function CommercialDashboard() {
             </Button>
 
             <Button
-              className="w-full justify-start bg-orange-500 hover:bg-orange-600"
+              variant="outline" // 🟠 LARANJA
+              className="justify-start"
               onClick={() => router.push("/crm/projects?action=new")}
             >
               <span className="text-xl mr-3">🛠️</span>
@@ -268,8 +301,8 @@ export function CommercialDashboard() {
             </Button>
 
             <Button
-              variant="outline"
-              className="w-full justify-start"
+              variant="outline" // ⚪ OUTLINE
+              className="justify-start"
               onClick={() => router.push("/crm/clients")}
             >
               <span className="text-xl mr-3">📋</span>
@@ -281,7 +314,7 @@ export function CommercialDashboard() {
         {/* Receita Mensal */}
         <Card className="lg:col-span-2 xl:col-span-2 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-semibold text-primary">
               Receita vs Meta
             </h2>
             <Button variant="ghost" size="sm">
@@ -293,14 +326,14 @@ export function CommercialDashboard() {
 
         {/* Feed de Atividades */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-6">
+          <h2 className="text-lg font-semibold text-primary mb-6">
             Atividades Recentes
           </h2>
           <ActivityFeed />
         </Card>
       </div>
 
-      {/* ✅ MODAL PARA CRIAR LEAD */}
+      {/* ✅ MODAL MANTIDO */}
       <LeadModal
         isOpen={modalOpen}
         onClose={() => {

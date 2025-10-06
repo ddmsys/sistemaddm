@@ -1,9 +1,104 @@
-// src/lib/types/comercial.ts
 import { Timestamp } from "firebase/firestore";
 
-// ========================================
-// INTERFACES PRINCIPAIS
-// ========================================
+// ================ ENUMS E TYPES BÁSICOS ================
+
+export type ProductType =
+  | "L" // Livro
+  | "E" // E-book
+  | "K" // kindle
+  | "C" // CD
+  | "D" // DVD
+  | "G" // Gráfica
+  | "P" // PlatafDigital
+  | "S" // Single
+  | "X" // LivroTerc
+  | "A"; // Arte
+
+export type LeadSource =
+  | "website"
+  | "socialmedia" // alterado de "social-media" para "socialmedia"
+  | "referral"
+  | "advertising"
+  | "email"
+  | "phone"
+  | "coldcall"
+  | "event"
+  | "other";
+
+export type LeadStatus =
+  | "primeiro_contato"
+  | "qualificado"
+  | "proposta_enviada"
+  | "negociacao"
+  | "fechado_ganho"
+  | "fechado_perdido";
+
+export type QuoteStatus =
+  | "draft"
+  | "sent"
+  | "viewed"
+  | "signed"
+  | "rejected"
+  | "expired";
+
+export type ProjectStatus =
+  | "open"
+  | "design"
+  | "review"
+  | "production"
+  | "shipped"
+  | "done"
+  | "cancelled";
+
+export type Priority = "low" | "medium" | "high" | "urgent";
+
+export type ClientType = "individual" | "company";
+
+// ✅ Corrigido - usar valores em português para compatibilidade
+export type ClientStatus = "ativo" | "inativo" | "bloqueado";
+
+// ================ INTERFACES AUXILIARES ================
+
+export interface Address {
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+
+export interface SocialMedia {
+  instagram?: string;
+  facebook?: string;
+  linkedin?: string;
+  website?: string;
+}
+
+export interface ApprovalTask {
+  id: string;
+  description: string;
+  status: "pending" | "approved" | "rejected";
+  dueDate: Timestamp;
+  assignedTo?: string;
+  completedAt?: Timestamp;
+  notes?: string;
+}
+
+export interface QuoteItem {
+  id?: string; // Opcional para compatibilidade
+  description: string;
+  kind: "etapa" | "impressao";
+  specifications?: string;
+  quantity: number;
+  unitPrice?: number; // Opcional para compatibilidade
+  totalPrice: number;
+  category?: string;
+  notes?: string;
+}
+
+// ================ INTERFACES PRINCIPAIS ================
 
 export interface Lead {
   id?: string;
@@ -11,446 +106,277 @@ export interface Lead {
   email?: string;
   phone?: string;
   company?: string;
-  source:
-    | "website"
-    | "referral"
-    | "social-media" // ✅ CORRIGIDO: hífen em vez de underscore
-    | "cold-call"
-    | "event"
-    | "advertising"
-    | "other";
-  stage:
-    | "primeiro-contato" // ✅ CORRIGIDO: hífen em vez de underscore
-    | "qualificado"
-    | "proposta-enviada"
-    | "negociacao"
-    | "fechado-ganho"
-    | "fechado-perdido";
+  source: LeadSource;
+  status: LeadStatus;
+  indication?: string;
   value?: number;
   probability?: number;
   ownerId: string;
   ownerName: string;
   notes?: string;
   tags?: string[];
+  quoteId?: string;
+  priority?: Priority;
+  expectedValue?: number;
+  expectedCloseDate?: Timestamp;
+  lastContact?: Timestamp;
   lastActivityAt: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
-export interface Quote {
-  id?: string;
-  leadId: string;
-  clientId?: string;
-  number: string; // Auto-gerado pela Cloud Function
-  title: string;
-  description?: string;
-  items: QuoteItem[];
-  subtotal: number;
-  taxes: number;
-  discount: number;
-  grandTotal: number;
-  status: "draft" | "sent" | "signed" | "rejected" | "expired";
-  validUntil: Timestamp;
-  createdBy: string;
-  signedAt?: Timestamp;
-  signedBy?: string;
-  pdfUrl?: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-export interface QuoteItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  category?: string;
-}
-
-export interface Project {
-  id?: string;
-  number: string; // Auto-gerado (PRJ001, PRJ002...)
-  title: string;
-  description?: string;
-  clientId: string;
-  quoteId?: string;
-  category: "book" | "magazine" | "catalog" | "brochure" | "other";
-  status:
-    | "open"
-    | "design"
-    | "review"
-    | "production"
-    | "shipped"
-    | "done"
-    | "cancelled";
-  priority: "low" | "medium" | "high" | "urgent";
-  budget?: number;
-  dueDate?: Timestamp; // ✅ CORRIGIDO: Timestamp direto
-  assignedTo?: string;
-  assignedToName?: string;
-  attachments?: ProjectAttachment[];
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-export interface ProjectAttachment {
-  id: string;
-  name: string;
-  url: string;
-  type: string;
-  size: number;
-  uploadedBy: string;
-  uploadedAt: Timestamp;
-}
-
 export interface Client {
   id?: string;
-  number?: string; // CLT-001, CLT-002...
-  type: "individual" | "company";
+  clientNumber?: number;
+  type: ClientType;
 
-  // ✅ PESSOA FÍSICA
-  name?: string;
+  // ✅ Campos obrigatórios básicos
+  name: string; // Nome sempre obrigatório
+  email: string; // Email sempre obrigatório
+  phone: string; // Telefone sempre obrigatório
+  status: ClientStatus;
+
+  // ✅ Pessoa Física
   cpf?: string;
   rg?: string;
   birthDate?: string;
 
-  // ✅ PESSOA JURÍDICA
-  companyName?: string; // ✅ ESTE É O CORRETO (não company)
+  // ✅ Pessoa Jurídica
+  company?: string; // Razão social
+  companyName?: string; // Alias para compatibilidade
   cnpj?: string;
   stateRegistration?: string;
   contactPerson?: string;
+  businessType?: string;
 
-  // ✅ COMUM
-  email?: string;
-  phone: string; // Obrigatório
+  // ✅ Campos adicionais
+  source?: string;
+  notes?: string;
+  socialMedia?: SocialMedia;
+  address?: Address;
+  firebaseAuthUid?: string;
 
-  // ✅ REDES SOCIAIS
-  socialMedia?: {
-    instagram?: string;
-    facebook?: string;
-    linkedin?: string;
-    website?: string;
+  // ✅ Timestamps obrigatórios
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+export interface Quote {
+  id?: string;
+  number: string;
+  leadId?: string;
+  clientId?: string;
+  clientName: string;
+
+  // ✅ Campos do projeto
+  title?: string; // Para compatibilidade
+  projectTitle: string;
+  quoteType: "producao" | "impressao" | "misto";
+
+  // ✅ Datas e validade
+  issueDate: string; // Alterado para string para compatibilidade
+  validityDays: number;
+  expiryDate?: string | Timestamp; // Alterado para opcional e aceitar string também
+  validUntil?: Timestamp; // Alias para compatibilidade
+
+  // ✅ Status e aprovação
+  status: QuoteStatus;
+  signedAt?: Date | Timestamp; // Compatibilidade para Date e Timestamp
+  signedBy?: string;
+  refusedAt?: Date | Timestamp; // Compatibilidade para Date e Timestamp
+  refusedReason?: string;
+  sentAt?: Date | Timestamp; // Compatibilidade para Date e Timestamp
+  viewedAt?: Date | Timestamp; // Compatibilidade para Date e Timestamp
+
+  // ✅ Itens e totais
+  items: QuoteItem[];
+  totals: {
+    subtotal: number;
+    discount: number;
+    discountType: "percentage" | "fixed";
+    freight: number;
+    taxes: number;
+    total: number;
   };
 
-  // ✅ ENDEREÇO
-  address?: {
-    street?: string;
-    number?: string;
-    complement?: string;
-    neighborhood?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-  };
+  // ✅ Campos de compatibilidade
+  grandTotal?: number; // Alias para totals.total
+  subtotal?: number; // Alias para totals.subtotal
+  taxes?: number; // Alias para totals.taxes
+  discount?: number; // Alias para totals.discount
 
-  status: "active" | "inactive" | "blocked";
-  createdAt?: Date | any;
-  updatedAt?: Date | any;
+  // ✅ Campos adicionais
+  productionTime?: string;
+  terms?: string;
+  notes?: string;
+  pdfUrl?: string;
+
+  // ✅ Metadados
+  ownerId?: string; // Opcional para compatibilidade
+  ownerName?: string; // Opcional para compatibilidade
+  createdBy?: string; // Para compatibilidade
+  createdAt?: Timestamp | Date; // Opcional e aceita Date ou Timestamp
+  updatedAt?: Timestamp | Date; // Opcional e aceita Date ou Timestamp
 }
 
-export interface Contact {
-  id: string;
+export interface Project {
+  id?: string;
+  catalogCode?: string;
+  clientId: string;
+  clientName: string;
+  quoteId?: string;
+  title: string;
+  description?: string;
+  category: ProductType;
+  status: ProjectStatus;
+  priority: Priority;
+  dueDate: Timestamp;
+  budget: number;
+  assignedTo?: string;
+  assignedToName?: string;
+  proofsCount?: number;
+  clientApprovalTasks?: ApprovalTask[];
+  notes?: string;
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ================ FORM DATA INTERFACES ================
+
+export interface LeadFormData {
   name: string;
   email?: string;
   phone?: string;
-  role?: string;
-  isPrimary: boolean;
+  company?: string;
+  source: LeadSource;
+  status: LeadStatus;
+  value?: number;
+  probability?: number;
+  notes?: string;
+  tags?: string[];
 }
 
-// ========================================
-// INTERFACES DE PROPS - MODAIS
-// ========================================
+export interface ClientFormData {
+  type: ClientType;
+  name: string;
+  email: string;
+  phone: string;
+  cpf?: string;
+  cnpj?: string;
+  company?: string;
+  companyName?: string;
+  stateRegistration?: string;
+  contactPerson?: string;
+  businessType?: string;
+  status: ClientStatus;
+  source?: string;
+  notes?: string;
+  socialMedia?: SocialMedia;
+  address?: Address;
+}
+
+export interface QuoteFormData {
+  leadId: string;
+  clientId?: string;
+  projectTitle: string;
+  quoteType: "producao" | "impressao" | "misto";
+  validityDays: number;
+  items: Omit<QuoteItem, "id" | "totalPrice">[];
+  discount: number;
+  discountType: "percentage" | "fixed";
+  productionTime?: string;
+  notes?: string;
+}
+
+export interface ProjectFormData {
+  clientId: string;
+  clientName?: string;
+  quoteId?: string;
+  title: string;
+  description?: string;
+  category: ProductType;
+  priority: Priority;
+  dueDate: string;
+  budget: number;
+  assignedTo?: string;
+  notes?: string;
+}
+
+// ================ PROPS INTERFACES ================
 
 export interface LeadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  lead?: Lead | null; // ✅ ADICIONADO: permite null
-  onSave: (lead: Omit<Lead, "id" | "createdAt" | "updatedAt">) => Promise<void>;
-  loading?: boolean;
-}
-
-export interface QuoteModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  quote?: Quote | null; // ✅ ADICIONADO: permite null
-  leadId?: string;
-  onSave: (
-    quote: Omit<Quote, "id" | "createdAt" | "updatedAt">
-  ) => Promise<void>;
-  loading?: boolean;
-}
-
-export interface ProjectModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  project?: Project | null; // ✅ ADICIONADO: permite null
-  clientId?: string;
-  quoteId?: string;
-  onSave: (
-    project: Omit<Project, "id" | "createdAt" | "updatedAt">
-  ) => Promise<void>;
+  lead?: Lead | null;
+  onSave: (data: LeadFormData) => Promise<void>;
   loading?: boolean;
 }
 
 export interface ClientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  client?: Client | null; // ✅ ADICIONADO: permite null
-  onSave: (
-    client: Omit<Client, "id" | "createdAt" | "updatedAt">
-  ) => Promise<void>;
+  client?: Client | null;
+  onSave: (data: Client) => Promise<void>;
   loading?: boolean;
 }
 
-// ========================================
-// INTERFACES DE PROPS - CHARTS
-// ========================================
-
-export interface FunnelChartProps {
-  data?: FunnelStage[]; // ✅ OPCIONAL e tipado
-  height?: number;
-  showValues?: boolean;
-  showPercentages?: boolean;
-  loading?: boolean; // ✅ ADICIONADO
-  className?: string;
-  onStageClick?: (stage: string) => void;
+export interface QuoteModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  quote?: Quote | null;
+  leadId?: string;
 }
 
-export interface FunnelStage {
-  stage: string;
-  label: string;
-  count: number;
-  value: number;
-  color: string;
-  conversionRate?: number; // ✅ ADICIONADO
+export interface ProjectModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  project?: Project | null;
+  quoteId?: string;
 }
 
-export interface RevenueChartProps {
-  data?: RevenueDataPoint[]; // ✅ OPCIONAL e tipado
-  height?: number;
-  showGrid?: boolean;
-  showGoals?: boolean; // ✅ ADICIONADO
-  className?: string;
-}
+// ================ CARD PROPS ================
 
-export interface RevenueDataPoint {
-  date: string; // ✅ CORRIGIDO: mais simples
-  value: number;
-  goal?: number; // ✅ ADICIONADO
-}
-
-// ========================================
-// INTERFACES DE PROPS - CARDS
-// ========================================
-
-export interface LeadCardProps {
-  lead: Lead;
-  onEdit?: (lead: Lead) => void;
-  onDelete?: (leadId: string) => void;
-  onConvert?: (lead: Lead) => void;
-  className?: string;
+export interface ProjectCardProps {
+  project: Project;
+  onEdit?: (project: Project) => void;
+  onView?: (project: Project) => void;
+  onDelete?: (id: string) => void;
 }
 
 export interface QuoteCardProps {
   quote: Quote;
   onEdit?: (quote: Quote) => void;
-  onDelete?: (quoteId: string) => void;
-  onSend?: (quote: Quote) => void;
-  onDuplicate?: (quote: Quote) => void;
-  className?: string;
+  onView?: (quote: Quote) => void;
+  onDelete?: (id: string) => void;
+  onSign?: (id: string) => void;
 }
 
-export interface ProjectCardProps {
-  project: Project;
-  onEdit?: (project: Project) => void;
-  onDelete?: (projectId: string) => void;
-  onView?: (project: Project) => void;
-  onStatusChange?: (projectId: string, status: Project["status"]) => void;
-  className?: string;
-}
+// ================ FILTERS & STATS ================
 
-export interface ClientCardProps {
-  client: Client;
-  onEdit?: (client: Client) => void;
-  onDelete?: (clientId: string) => void;
-  onView?: (client: Client) => void;
-  className?: string;
-}
-
-// ========================================
-// INTERFACES DE PROPS - TABELAS
-// ========================================
-
-export interface LeadsTableProps {
-  leads: Lead[];
-  loading?: boolean;
-  onEdit?: (lead: Lead) => void;
-  onDelete?: (leadId: string) => void;
-  onStageChange?: (leadId: string, stage: Lead["stage"]) => void;
-  pagination?: PaginationProps;
-  filters?: LeadFilters;
-  onFiltersChange?: (filters: LeadFilters) => void;
-}
-
-export interface QuotesTableProps {
-  quotes: Quote[];
-  loading?: boolean;
-  onEdit?: (quote: Quote) => void;
-  onDelete?: (quoteId: string) => void;
-  onSend?: (quote: Quote) => void;
-  onDuplicate?: (quote: Quote) => void;
-  onStatusChange?: (quoteId: string, status: Quote["status"]) => void; // ✅ ADICIONADO
-  pagination?: PaginationProps;
-  filters?: QuoteFilters;
-  onFiltersChange?: (filters: QuoteFilters) => void;
-}
-
-export interface ProjectsTableProps {
-  projects: Project[];
-  loading?: boolean;
-  onEdit?: (project: Project) => void;
-  onDelete?: (projectId: string) => void;
-  onView?: (project: Project) => void;
-  onStatusChange?: (projectId: string, status: Project["status"]) => void;
-  pagination?: PaginationProps;
-  filters?: ProjectFilters;
-  onFiltersChange?: (filters: ProjectFilters) => void;
-}
-
-// ========================================
-// INTERFACES DE FILTROS
-// ========================================
-
-export interface LeadFilters {
-  stage?: Lead["stage"][];
-  source?: Lead["source"][];
-  ownerId?: string[];
+export interface ComercialFilters {
+  status?: string[];
+  priority?: Priority[];
   dateRange?: {
-    start: Date;
-    end: Date;
+    start?: string;
+    end?: string;
   };
-  valueRange?: {
-    // ✅ ADICIONADO
-    min: number;
-    max: number;
-  };
-  search?: string;
-}
-
-export interface QuoteFilters {
-  status?: Quote["status"][];
-  clientId?: string[];
-  createdBy?: string[];
-  dateRange?: {
-    start: Date;
-    end: Date;
-  };
-  valueRange?: {
-    min: number;
-    max: number;
-  };
-  search?: string;
-}
-
-export interface ProjectFilters {
-  status?: Project["status"][];
-  category?: Project["category"][];
-  priority?: Project["priority"][];
   assignedTo?: string[];
-  clientId?: string[];
-  dateRange?: {
-    start: Date;
-    end: Date;
-  };
   search?: string;
 }
 
-export interface ClientFilters {
-  status?: Client["status"][];
-  dateRange?: {
-    start: Date;
-    end: Date;
+export interface LeadFilters extends ComercialFilters {
+  source?: LeadSource[];
+  probability?: {
+    min?: number;
+    max?: number;
   };
-  search?: string;
 }
-
-// ========================================
-// INTERFACE DE PAGINAÇÃO
-// ========================================
-
-export interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  pageSize: number;
-  totalItems: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-}
-
-// ========================================
-// INTERFACES DE ESTATÍSTICAS
-// ========================================
 
 export interface LeadStats {
   total: number;
-  byStage: Record<Lead["stage"], number>;
-  bySource: Record<Lead["source"], number>;
-  totalValue: number;
-  averageValue: number;
-  conversionRate: number;
-  averageDaysToClose: number;
-}
-
-export interface QuoteStats {
-  total: number;
-  byStatus: Record<Quote["status"], number>;
-  totalValue: number;
-  signedValue: number;
+  byStatus: Record<LeadStatus, number>;
+  bySource: Record<LeadSource, number>;
   conversionRate: number;
   averageValue: number;
-  averageDaysToSign: number;
-}
-
-export interface ProjectStats {
-  total: number;
-  byStatus: Record<Project["status"], number>;
-  byCategory: Record<Project["category"], number>;
-  byPriority: Record<Project["priority"], number>;
-  onTime: number;
-  delayed: number;
-  averageDaysToComplete: number;
-}
-
-// ========================================
-// INTERFACES DE DASHBOARD
-// ========================================
-
-export interface CommercialMetrics {
-  leads: LeadStats;
-  quotes: QuoteStats;
-  projects: ProjectStats;
-  monthlyRevenue: number;
-  revenueGrowth: number;
-  activeDeals: number;
-  criticalProjects: Project[];
-  recentActivities: Activity[];
-}
-
-export interface Activity {
-  id: string;
-  type:
-    | "lead_created"
-    | "quote_sent"
-    | "project_approved"
-    | "payment_received"
-    | "meeting_scheduled";
-  title: string;
-  description: string;
-  entityId: string;
-  entityType: "lead" | "quote" | "project" | "client";
-  userId: string;
-  userName: string;
-  timestamp: Timestamp;
-  metadata?: Record<string, any>;
+  totalValue: number;
 }

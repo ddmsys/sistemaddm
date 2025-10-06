@@ -26,15 +26,21 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.LEADS_EDIT,
     Permission.QUOTES_VIEW,
     Permission.QUOTES_CREATE,
-    // …demais
   ],
   [UserRole.COMMERCIAL]: [
     Permission.LEADS_VIEW,
     Permission.LEADS_CREATE,
-    Permission.LEADS_EDIT,
     Permission.QUOTES_VIEW,
   ],
-  // …demais roles
+  [UserRole.PRODUCTION]: [
+    Permission.LEADS_VIEW,
+  ],
+  [UserRole.FINANCE]: [
+    Permission.QUOTES_VIEW,
+  ],
+  [UserRole.CLIENT]: [
+    Permission.QUOTES_VIEW,
+  ],
 };
 
 export const hasPermission = (role: UserRole, permission: Permission) =>

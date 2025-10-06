@@ -1,14 +1,5 @@
-import { useState, useEffect } from "react";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  getDocs,
-  Timestamp,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Lead, Quote } from "@/lib/types/comercial";
+import { Lead } from "@/lib/types/comercial";
+import { useEffect, useState } from "react";
 
 interface ConversionData {
   period: string;
@@ -322,7 +313,7 @@ export function useConversionRate(filters?: ConversionRateFilters) {
       }
     };
 
-    fetchConversionData();
+    void fetchConversionData();
   }, [filters]);
 
   // Função para calcular conversão por período customizado

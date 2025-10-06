@@ -1,124 +1,389 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import {
-  collection,
-  doc,
-  getDocs,
   addDoc,
-  updateDoc,
+  collection,
   deleteDoc,
-  query,
+  doc,
+  getDoc,
+  getDocs,
   orderBy,
-  onSnapshot,
-  serverTimestamp,
+  query,
+  Timestamp,
+  updateDoc,
+  where,
 } from "firebase/firestore";
+
 import { db } from "@/lib/firebase";
-import { Project } from "@/lib/types/comercial";
+
+import {
+  ComercialFilters,
+  Project,
+  ProjectFormData,
+} from "@/lib/types/comercial";
+
+import { AsyncState } from "@/lib/types/shared";
+
+import { useAuth } from "@/context/AuthContext";
+
+import { toast } from "react-hot-toast";
+
+function isError(error: unknown): error is { message: string } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  );
+}
 
 export function useProjects() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  // ✅ BUSCAR PROJETOS EM TEMPO REAL
-  useEffect(() => {
-    const projectsRef = collection(db, "projects");
-    const q = query(projectsRef, orderBy("createdAt", "desc"));
+  const [projects, setProjects] = useState<AsyncState<Project[]>>({
+    data: null,
+    loading: false,
+    error: null,
+  });
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const projectsData: Project[] = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          projectsData.push({
-            id: doc.id,
-            ...data,
-            createdAt: data.createdAt?.toDate(),
-            updatedAt: data.updatedAt?.toDate(),
-          } as Project);
+  const fetchProjects = useCallback(
+    async (filters?: ComercialFilters) => {
+      if (!user) return;
+
+      setProjects((prev) => ({ ...prev, loading: true, error: null }));
+
+      try {
+        let projectsQuery = query(
+          collection(db, "projects"),
+          orderBy("createdAt", "desc")
+        );
+
+        if (filters?.status?.length) {
+          projectsQuery = query(
+            projectsQuery,
+            where("status", "in", filters.status)
+          );
+        }
+
+        if (filters?.priority?.length) {
+          projectsQuery = query(
+            projectsQuery,
+            where("priority", "in", filters.priority)
+          );
+        }
+
+        if (filters?.assignedTo?.length) {
+          projectsQuery = query(
+            projectsQuery,
+            where("assignedTo", "in", filters.assignedTo)
+          );
+        }
+
+        const snapshot = await getDocs(projectsQuery);
+
+        let projectsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Project[];
+
+        if (filters?.dateRange?.start || filters?.dateRange?.end) {
+          projectsData = projectsData.filter((project) => {
+            const createdAt = project.createdAt.toDate();
+            const start = filters.dateRange?.start
+              ? new Date(filters.dateRange.start)
+              : null;
+            const end = filters.dateRange?.end
+              ? new Date(filters.dateRange.end)
+              : null;
+
+            if (start && createdAt < start) return false;
+            if (end && createdAt > end) return false;
+            return true;
+          });
+        }
+
+        if (filters?.search) {
+          const searchLower = filters.search.toLowerCase();
+          projectsData = projectsData.filter(
+            (project) =>
+              project.title?.toLowerCase().includes(searchLower) ||
+              project.catalogCode?.toLowerCase().includes(searchLower) ||
+              project.clientName?.toLowerCase().includes(searchLower)
+          );
+        }
+
+        setProjects({
+          data: projectsData,
+          loading: false,
+          error: null,
         });
-        setProjects(projectsData);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Erro ao buscar projetos:", error);
-        setLoading(false);
+      } catch (error: unknown) {
+        const errorMessage = isError(error)
+          ? error.message
+          : "Erro ao carregar projetos";
+
+        console.error("Erro ao buscar projetos:", errorMessage);
+
+        setProjects({
+          data: null,
+          loading: false,
+          error: errorMessage,
+        });
+
+        toast.error(errorMessage);
       }
-    );
+    },
+    [user]
+  );
+  const createProject = useCallback(
+    async (data: ProjectFormData): Promise<string | null> => {
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return null;
+      }
 
-    return () => unsubscribe();
-  }, []);
+      // Validação crítica
+      if (!data.category) {
+        toast.error("Tipo do produto é obrigatório");
+        return null;
+      }
 
-  // ✅ CRIAR PROJETO
-  const createProject = async (
-    projectData: Partial<Project>
-  ): Promise<string> => {
-    try {
-      const dataToSave = {
-        ...projectData,
-        number: await generateProjectNumber(),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
+      try {
+        const projectData: Omit<Project, "id" | "catalogCode" | "clientName"> =
+          {
+            clientId: data.clientId,
+            quoteId: data.quoteId || undefined,
+            title: data.title,
+            description: data.description || "",
+            category: data.category,
+            status: "open",
+            priority: data.priority,
+            dueDate: Timestamp.fromDate(new Date(data.dueDate)),
+            budget: data.budget,
+            assignedTo: data.assignedTo || "",
+            proofsCount: 0,
+            clientApprovalTasks: [],
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+            createdBy: user.uid,
+            notes: data.notes || "",
+          };
 
-      const docRef = await addDoc(collection(db, "projects"), dataToSave);
-      console.log("Projeto criado com ID:", docRef.id);
-      return docRef.id;
-    } catch (error) {
-      console.error("Erro ao criar projeto:", error);
-      throw error;
+        console.log("💾 Salvando projeto:", projectData);
+
+        const docRef = await addDoc(collection(db, "projects"), projectData);
+
+        toast.success("Projeto criado com sucesso!");
+        await fetchProjects();
+
+        return docRef.id;
+      } catch (error: unknown) {
+        console.error("❌ ERRO AO CRIAR PROJETO:", error);
+        const errorMessage = isError(error)
+          ? error.message
+          : "Erro ao criar projeto";
+        toast.error(errorMessage);
+        return null;
+      }
+    },
+    [user, fetchProjects]
+  );
+
+  const updateProject = useCallback(
+    async (id: string, data: Partial<Project>): Promise<boolean> => {
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return false;
+      }
+
+      try {
+        const docRef = doc(db, "projects", id);
+
+        const updateData: Partial<Project> & { updatedAt: Timestamp } = {
+          ...data,
+          updatedAt: Timestamp.now(),
+        };
+
+        await updateDoc(docRef, updateData);
+
+        toast.success("Projeto atualizado com sucesso!");
+
+        await fetchProjects();
+
+        return true;
+      } catch (error: unknown) {
+        const errorMessage = isError(error)
+          ? error.message
+          : "Erro ao atualizar projeto";
+        console.error(errorMessage);
+
+        toast.error(errorMessage);
+
+        return false;
+      }
+    },
+    [user, fetchProjects]
+  );
+
+  const updateProjectStatus = useCallback(
+    async (id: string, status: Project["status"]): Promise<boolean> => {
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return false;
+      }
+
+      try {
+        const docRef = doc(db, "projects", id);
+
+        await updateDoc(docRef, {
+          status,
+          updatedAt: Timestamp.now(),
+        });
+
+        toast.success("Status do projeto atualizado!");
+
+        await fetchProjects();
+
+        return true;
+      } catch (error: unknown) {
+        const errorMessage = isError(error)
+          ? error.message
+          : "Erro ao atualizar status";
+        console.error(errorMessage);
+
+        toast.error(errorMessage);
+
+        return false;
+      }
+    },
+    [user, fetchProjects]
+  );
+
+  const deleteProject = useCallback(
+    async (id: string): Promise<boolean> => {
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return false;
+      }
+
+      try {
+        await deleteDoc(doc(db, "projects", id));
+
+        toast.success("Projeto excluído com sucesso!");
+
+        await fetchProjects();
+
+        return true;
+      } catch (error: unknown) {
+        const errorMessage = isError(error)
+          ? error.message
+          : "Erro ao excluir projeto";
+        console.error(errorMessage);
+
+        toast.error(errorMessage);
+
+        return false;
+      }
+    },
+    [user, fetchProjects]
+  );
+
+  // ================ GET SINGLE PROJECT ================
+  const getProject = useCallback(
+    async (projectId: string): Promise<Project | null> => {
+      if (!user || !projectId) return null;
+
+      try {
+        const projectDoc = await getDoc(doc(db, "projects", projectId));
+        if (projectDoc.exists()) {
+          return {
+            id: projectDoc.id,
+            ...projectDoc.data(),
+          } as Project;
+        }
+        return null;
+      } catch (error) {
+        console.error("Erro ao buscar projeto:", error);
+        return null;
+      }
+    },
+    [user]
+  );
+
+  const getProjectsByQuote = useCallback(
+    async (quoteId: string): Promise<Project[]> => {
+      try {
+        const projectsQuery = query(
+          collection(db, "projects"),
+          where("quoteId", "==", quoteId),
+          orderBy("createdAt", "desc")
+        );
+
+        const snapshot = await getDocs(projectsQuery);
+
+        return snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Project[];
+      } catch (error: unknown) {
+        const errorMessage = isError(error)
+          ? error.message
+          : "Erro ao buscar projetos do orçamento";
+        console.error(errorMessage);
+
+        return [];
+      }
+    },
+    []
+  );
+
+  const getProjectsByClient = useCallback(
+    async (clientId: string): Promise<Project[]> => {
+      try {
+        const projectsQuery = query(
+          collection(db, "projects"),
+          where("clientId", "==", clientId),
+          orderBy("createdAt", "desc")
+        );
+
+        const snapshot = await getDocs(projectsQuery);
+
+        return snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Project[];
+      } catch (error: unknown) {
+        const errorMessage = isError(error)
+          ? error.message
+          : "Erro ao buscar projetos do cliente";
+        console.error(errorMessage);
+
+        return [];
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (user) {
+      void fetchProjects();
     }
-  };
-
-  // ✅ ATUALIZAR PROJETO
-  const updateProject = async (
-    id: string,
-    projectData: Partial<Project>
-  ): Promise<void> => {
-    try {
-      const projectRef = doc(db, "projects", id);
-      await updateDoc(projectRef, {
-        ...projectData,
-        updatedAt: serverTimestamp(),
-      });
-      console.log("Projeto atualizado:", id);
-    } catch (error) {
-      console.error("Erro ao atualizar projeto:", error);
-      throw error;
-    }
-  };
-
-  // ✅ DELETAR PROJETO
-  const deleteProject = async (id: string): Promise<void> => {
-    try {
-      await deleteDoc(doc(db, "projects", id));
-      console.log("Projeto deletado:", id);
-    } catch (error) {
-      console.error("Erro ao deletar projeto:", error);
-      throw error;
-    }
-  };
-
-  // ✅ GERAR NÚMERO SEQUENCIAL DO PROJETO
-  const generateProjectNumber = async (): Promise<string> => {
-    try {
-      const projectsRef = collection(db, "projects");
-      const snapshot = await getDocs(projectsRef);
-      const nextNumber = snapshot.size + 1;
-      return `PRJ-${nextNumber.toString().padStart(3, "0")}`; // PRJ-001, PRJ-002...
-    } catch (error) {
-      console.error("Erro ao gerar número do projeto:", error);
-      return `PRJ-${Date.now()}`; // Fallback
-    }
-  };
+  }, [user, fetchProjects]);
 
   return {
-    projects,
-    loading,
+    projects: projects.data || [],
+    loading: projects.loading,
+    error: projects.error,
+    fetchProjects,
+    getProject,
     createProject,
     updateProject,
+    updateProjectStatus,
     deleteProject,
-    generateProjectNumber,
+    getProjectsByQuote,
+    getProjectsByClient,
+    refetch: fetchProjects,
   };
 }

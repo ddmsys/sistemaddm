@@ -1,26 +1,27 @@
 // src/context/AuthContext.tsx
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
+import { AuthUser } from "@/lib/types";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextType {
-  user: any;
+  user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  role?: string; // adiciona essa linha
+  role?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<string | undefined>(undefined); // COLOQUE AQUI
 
@@ -28,10 +29,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
 
-      // Aqui você pode definir o role lendo de algum lugar conforme seu app
-      // Exemplo fictício:
-      // if (user?.email === "admin@exemplo.com") setRole("admin");
-      // else setRole("user");
+      // ✅ USUÁRIO TEMPORÁRIO PARA DESENVOLVIMENTO
+      if (!user) {
+        // Simular usuário logado para desenvolvimento
+        const mockUser: AuthUser = {
+          uid: "dev-user-123",
+          email: "dev@sistemaddm.com",
+          displayName: "Usuário Dev",
+          photoURL: null,
+          role: "admin",
+        };
+        setUser(mockUser);
+        setRole("admin");
+      } else {
+        const authUser: AuthUser = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          role: "admin", // TODO: Buscar role real do Firestore
+        };
+        setUser(authUser);
+        setRole("admin");
+      }
 
       setLoading(false);
     });

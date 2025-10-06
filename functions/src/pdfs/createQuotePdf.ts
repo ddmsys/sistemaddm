@@ -1,100 +1,100 @@
-import * as functions from "firebase-functions/v2";
 import * as admin from "firebase-admin";
-import PDFDocument from "pdfkit";
 import { getStorage } from "firebase-admin/storage";
+import * as functions from "firebase-functions/v2";
+import PDFDocument from "pdfkit";
 
-export const createQuotePdf = functions.https.onCall(async (request) => {
-  const { quoteId } = request.data;
+if (!admin.apps.length) admin.initializeApp();
 
-  if (!request.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "Usuário não autenticado"
-    );
-  }
-
-  try {
-    const db = admin.firestore();
-    const storage = getStorage();
-
-    const quoteDoc = await db.collection("quotes").doc(quoteId).get();
-    if (!quoteDoc.exists) {
+export const createQuotePdf = functions.https.onCall(
+  { region: "southamerica-east1" },
+  async (request) => {
+    const quoteId = request.data;
+    if (!request.auth)
       throw new functions.https.HttpsError(
-        "not-found",
-        "Orçamento não encontrado"
+        "unauthenticated",
+        "Usuário não autenticado"
       );
+
+    try {
+      const db = admin.firestore();
+      const storage = getStorage();
+      const quoteDoc = await db.collection("quotes").doc(quoteId).get();
+      if (!quoteDoc.exists)
+        throw new functions.https.HttpsError(
+          "not-found",
+          "Orçamento não encontrado"
+        );
+      const quote = quoteDoc.data()!;
+
+      // Criar PDF com template profissional
+      const doc = new PDFDocument({
+        margin: 50,
+        size: "A4",
+        info: {
+          Title: `Orçamento ${quote.number}`,
+          Author: "DDM Editora",
+          Subject: "Orçamento de Serviços Editoriais",
+        },
+      });
+
+      const chunks: Buffer[] = [];
+      doc.on("data", (chunk) => chunks.push(chunk));
+
+      // Header da empresa
+      drawHeader(doc, quote);
+
+      // Dados do cliente
+      drawClientInfo(doc, quote, 140);
+
+      // Detalhes do projeto
+      drawProjectDetails(doc, quote, 220);
+
+      // Tabela de itens
+      drawItemsTable(doc, quote, 300);
+
+      // Totais
+      drawTotals(doc, quote, 500);
+
+      // Condições de pagamento
+      drawPaymentTerms(doc, quote, 580);
+
+      // Footer
+      drawFooter(doc, 700);
+
+      doc.end();
+
+      // Converter para Buffer
+      const pdfBuffer = await new Promise<Buffer>((resolve) => {
+        doc.on("end", () => resolve(Buffer.concat(chunks)));
+      });
+
+      // Upload para Storage
+      const fileName = `quotes/${quoteId}/quote-${quote.number}.pdf`;
+      const file = storage.bucket().file(fileName);
+
+      await file.save(pdfBuffer, {
+        metadata: { contentType: "application/pdf" },
+      });
+
+      // URL assinada (7 dias)
+      const [url] = await file.getSignedUrl({
+        action: "read",
+        expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      });
+
+      // Atualizar orçamento
+      await quoteDoc.ref.update({
+        pdfUrl: url,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return { success: true, pdfUrl: url };
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      throw new functions.https.HttpsError("internal", "Erro interno");
     }
-
-    const quote = quoteDoc.data()!;
-
-    // Criar PDF com template profissional
-    const doc = new PDFDocument({
-      margin: 50,
-      size: "A4",
-      info: {
-        Title: `Orçamento ${quote.number}`,
-        Author: "DDM Editora",
-        Subject: "Orçamento de Serviços Editoriais",
-      },
-    });
-
-    const chunks: Buffer[] = [];
-    doc.on("data", (chunk) => chunks.push(chunk));
-
-    // Header da empresa
-    drawHeader(doc, quote);
-
-    // Dados do cliente
-    drawClientInfo(doc, quote, 140);
-
-    // Detalhes do projeto
-    drawProjectDetails(doc, quote, 220);
-
-    // Tabela de itens
-    drawItemsTable(doc, quote, 300);
-
-    // Totais
-    drawTotals(doc, quote, 500);
-
-    // Condições de pagamento
-    drawPaymentTerms(doc, quote, 580);
-
-    // Footer
-    drawFooter(doc, 700);
-
-    doc.end();
-
-    // Converter para Buffer
-    const pdfBuffer = await new Promise<Buffer>((resolve) => {
-      doc.on("end", () => resolve(Buffer.concat(chunks)));
-    });
-
-    // Upload para Storage
-    const fileName = `quotes/${quoteId}/quote-${quote.number}.pdf`;
-    const file = storage.bucket().file(fileName);
-
-    await file.save(pdfBuffer, {
-      metadata: { contentType: "application/pdf" },
-    });
-
-    // URL assinada (7 dias)
-    const [url] = await file.getSignedUrl({
-      action: "read",
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
-    });
-
-    // Atualizar orçamento
-    await quoteDoc.ref.update({
-      pdfUrl: url,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    return { success: true, pdfUrl: url };
-  } catch (error) {
-    console.error("Erro ao gerar PDF:", error);
-    throw new functions.https.HttpsError("internal", "Erro interno");
   }
-});
+);
 
 // Funções auxiliares para desenhar o PDF
 function drawHeader(doc: PDFKit.PDFDocument, quote: any) {

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import { useState } from "react";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -39,7 +39,7 @@ export default function RegisterPage() {
   return (
     <main>
       <h1>Cadastro</h1>
-      <form onSubmit={handleRegister}>
+      <form onSubmit={(e) => void handleRegister(e)}>
         <input
           type="email"
           placeholder="Email"

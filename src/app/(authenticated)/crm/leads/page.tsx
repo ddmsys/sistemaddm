@@ -1,248 +1,400 @@
-// src/app/(authenticated)/crm/leads/page.tsx
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { LeadModal } from "@/components/comercial/modals/LeadModal";
-import { useLeads } from "@/hooks/comercial/useLeads";
-import { Lead } from "@/lib/types/comercial";
-import { Plus, Search, Filter, MoreHorizontal } from "lucide-react";
+import { useFirestore } from "@/hooks/useFirestore";
+import { Lead, LeadFormData, LeadSource, LeadStatus } from "@/lib/types";
+import {
+  Building2,
+  Filter,
+  Mail,
+  MoreHorizontal,
+  Phone,
+  Plus,
+  Search,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
+
+interface FilterState {
+  status: LeadStatus | "";
+  source: LeadSource | "";
+  search: string;
+}
 
 export default function LeadsPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<Lead | undefined>();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const {
-    leads,
-    loading: leadsLoading,
-    createLead,
-    updateLead,
-    deleteLead,
-    changeLeadStage,
-  } = useLeads();
+    data: leads,
+    loading,
+    create,
+    update,
+    remove,
+  } = useFirestore<Lead>("leads");
+  const [showModal, setShowModal] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [filters, setFilters] = useState<FilterState>({
+    status: "",
+    source: "",
+    search: "",
+  });
 
-  const filteredLeads = leads.filter(
-    (lead) =>
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.company?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // ...existing code...
-
-  const handleSave = async (
-    leadData: Omit<Lead, "id" | "createdAt" | "updatedAt" | "lastActivityAt">
-  ): Promise<void> => {
-    setLoading(true);
+  const handleCreateLead = async (data: LeadFormData) => {
     try {
-      if (selectedLead?.id) {
-        // Para atualização, combine os dados existentes com os novos
-        await updateLead(selectedLead.id, {
-          ...selectedLead,
-          ...leadData,
-        });
+      if (selectedLead) {
+        await update(selectedLead.id, data);
       } else {
-        // Para criação, use os dados do formulário
-        await createLead(leadData as Lead);
+        await create({
+          ...data,
+          lead_number: `LED-${new Date().getFullYear()}-${String(
+            Date.now()
+          ).slice(-6)}`,
+          status: "new" as LeadStatus,
+          score: 0,
+          tags: [],
+          activities: [],
+        });
       }
-      setIsModalOpen(false);
-      setSelectedLead(undefined);
+      setShowModal(false);
+      setSelectedLead(null);
     } catch (error) {
       console.error("Erro ao salvar lead:", error);
-      alert("Erro ao salvar lead");
-    } finally {
-      setLoading(false);
+      throw error;
     }
   };
 
-  // ...existing code...
-
-  const handleEdit = (lead: Lead) => {
+  const handleEditLead = (lead: Lead) => {
     setSelectedLead(lead);
-    setIsModalOpen(true);
+    setShowModal(true);
   };
 
-  const handleDelete = async (leadId: string) => {
-    if (!confirm("Tem certeza que deseja deletar este lead?")) return;
-
-    try {
-      await deleteLead(leadId);
-    } catch (error) {
-      console.error("Erro ao deletar lead:", error);
-      alert("Erro ao deletar lead");
+  const handleDeleteLead = async (leadId: string) => {
+    if (window.confirm("Tem certeza que deseja excluir este lead?")) {
+      try {
+        await remove(leadId);
+      } catch (error) {
+        console.error("Erro ao excluir lead:", error);
+      }
     }
   };
 
-  const getStageColor = (stage: Lead["stage"]) => {
+  const statusOptions = [
+    { value: "", label: "Todos os status" },
+    { value: "new", label: "Novo" },
+    { value: "contacted", label: "Contatado" },
+    { value: "qualified", label: "Qualificado" },
+    { value: "proposal", label: "Proposta" },
+    { value: "negotiation", label: "Negociação" },
+    { value: "closed_won", label: "Ganho" },
+    { value: "closed_lost", label: "Perdido" },
+  ];
+
+  const sourceOptions = [
+    { value: "", label: "Todas as fontes" },
+    { value: "website", label: "Website" },
+    { value: "social_media", label: "Redes Sociais" },
+    { value: "referral", label: "Indicação" },
+    { value: "advertising", label: "Publicidade" },
+    { value: "email_marketing", label: "Email Marketing" },
+    { value: "event", label: "Evento" },
+    { value: "cold_call", label: "Cold Call" },
+    { value: "other", label: "Outro" },
+  ];
+
+  const getStatusColor = (status: LeadStatus) => {
     const colors = {
-      "primeiro-contato": "bg-gray-100 text-gray-800",
-      qualificado: "bg-blue-100 text-blue-800",
-      "proposta-enviada": "bg-purple-100 text-purple-800",
-      negociacao: "bg-yellow-100 text-yellow-800",
-      "fechado-ganho": "bg-green-100 text-green-800",
-      "fechado-perdido": "bg-red-100 text-red-800",
+      new: "bg-blue-50 text-blue-700 border-blue-200",
+      contacted: "bg-amber-50 text-amber-700 border-amber-200",
+      qualified: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      proposal: "bg-purple-50 text-purple-700 border-purple-200",
+      negotiation: "bg-orange-50 text-orange-700 border-orange-200",
+      closed_won: "bg-green-50 text-green-700 border-green-200",
+      closed_lost: "bg-red-50 text-red-700 border-red-200",
     };
-    return colors[stage] || "bg-gray-100 text-gray-800";
+    return colors[status];
   };
 
-  const getStageLabel = (stage: Lead["stage"]) => {
+  const getStatusLabel = (status: LeadStatus) => {
     const labels = {
-      "primeiro-contato": "Primeiro Contato",
-      qualificado: "Qualificado",
-      "proposta-enviada": "Proposta Enviada",
-      negociacao: "Negociação",
-      "fechado-ganho": "Fechado Ganho",
-      "fechado-perdido": "Fechado Perdido",
+      new: "Novo",
+      contacted: "Contatado",
+      qualified: "Qualificado",
+      proposal: "Proposta",
+      negotiation: "Negociação",
+      closed_won: "Ganho",
+      closed_lost: "Perdido",
     };
-    return labels[stage] || stage;
+    return labels[status];
   };
+
+  const displayLeads = leads.filter((lead) => {
+    if (filters.status && lead.status !== filters.status) return false;
+    if (filters.source && lead.source !== filters.source) return false;
+    if (
+      filters.search &&
+      !lead.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+      !lead.email.toLowerCase().includes(filters.search.toLowerCase())
+    )
+      return false;
+    return true;
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Leads</h1>
-          <p className="text-slate-600">
-            Gerencie seus leads e oportunidades de vendas
-          </p>
-        </div>
-        <Button
-          onClick={() => {
-            setSelectedLead(undefined);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2"
-        >
-          <Plus size={16} />
-          Novo Lead
-        </Button>
-      </div>
-
-      {/* Filtros */}
-      <Card className="p-4">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
-              size={16}
-            />
-            <Input
-              placeholder="Buscar leads..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+    <div className="min-h-screen bg-primary-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-primary-900">Leads</h1>
+            <p className="text-primary-600 mt-2">
+              Gerencie seus leads e oportunidades
+            </p>
           </div>
-          <Button variant="outline" className="flex items-center gap-2">
-            <Filter size={16} />
-            Filtros
-          </Button>
-        </div>
-      </Card>
 
-      {/* Lista de Leads */}
-      <Card>
-        <div className="p-6">
-          <div className="space-y-4">
-            {leadsLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-slate-600 mt-2">Carregando leads...</p>
+          <button
+            onClick={() => {
+              setSelectedLead(null);
+              setShowModal(true);
+            }}
+            className="mt-4 sm:mt-0 flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Novo Lead
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex flex-col lg:flex-row lg:items-end gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
+                Buscar leads
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-400 w-5 h-5" />
+                <input
+                  type="text"
+                  className="w-full h-12 pl-10 pr-4 border border-primary-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  placeholder="Nome, email ou empresa..."
+                  value={filters.search}
+                  onChange={(e) =>
+                    setFilters({ ...filters, search: e.target.value })
+                  }
+                />
               </div>
-            ) : filteredLeads.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-slate-600">Nenhum lead encontrado</p>
+            </div>
+
+            <div className="w-full lg:w-48">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
+                Status
+              </label>
+              <select
+                className="w-full h-12 px-4 border border-primary-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    status: e.target.value as LeadStatus | "",
+                  })
+                }
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="w-full lg:w-48">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
+                Fonte
+              </label>
+              <select
+                className="w-full h-12 px-4 border border-primary-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                value={filters.source}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    source: e.target.value as LeadSource | "",
+                  })
+                }
+              >
+                {sourceOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button className="flex items-center px-4 py-3 text-primary-700 border border-primary-300 rounded-lg hover:bg-primary-50 transition-colors">
+              <Filter className="w-5 h-5 mr-2" />
+              Filtros
+            </button>
+          </div>
+        </div>
+
+        {/* Results */}
+        <div className="bg-white rounded-lg shadow-sm border">
+          <div className="p-6 border-b">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-primary-900">
+                {loading
+                  ? "Carregando..."
+                  : `${displayLeads.length} leads encontrados`}
+              </h2>
+              <div className="flex items-center space-x-2 text-sm text-primary-600">
+                <Users className="w-4 h-4" />
+                <span>Total: {leads.length}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <span className="ml-2 text-primary-600">
+                  Carregando leads...
+                </span>
+              </div>
+            ) : displayLeads.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 text-primary-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-primary-900 mb-2">
+                  Nenhum lead encontrado
+                </h3>
+                <p className="text-primary-600 mb-6">
+                  Comece criando seu primeiro lead ou ajuste os filtros.
+                </p>
+                <button
+                  onClick={() => {
+                    setSelectedLead(null);
+                    setShowModal(true);
+                  }}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Criar Primeiro Lead
+                </button>
               </div>
             ) : (
-              filteredLeads.map((lead) => (
-                <div
-                  key={lead.id}
-                  className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-slate-900">
-                          {lead.name}
-                        </h3>
-                        <Badge className={getStageColor(lead.stage)}>
-                          {getStageLabel(lead.stage)}
-                        </Badge>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-slate-600">
-                        <div>
-                          <span className="font-medium">Email:</span>
-                          <p>{lead.email || "Não informado"}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayLeads.map((lead) => (
+                  <div
+                    key={lead.id}
+                    className={`rounded-lg border p-6 hover:shadow-md transition-all ${getStatusColor(
+                      lead.status
+                    )}`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                          <Users className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
-                          <span className="font-medium">Telefone:</span>
-                          <p>{lead.phone || "Não informado"}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium">Empresa:</span>
-                          <p>{lead.company || "Não informado"}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium">Valor Potencial:</span>
-                          <p>
-                            {lead.value
-                              ? `R$ ${lead.value.toLocaleString("pt-BR")}`
-                              : "Não informado"}
+                          <h3 className="font-semibold text-primary-900">
+                            {lead.name}
+                          </h3>
+                          <p className="text-xs text-primary-500">
+                            {lead.lead_number}
                           </p>
                         </div>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="px-2 py-1 text-xs font-medium rounded-full border">
+                          {getStatusLabel(lead.status)}
+                        </span>
+                        <div className="relative">
+                          <button className="text-primary-400 hover:text-primary-600 p-1">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
 
-                      {lead.notes && (
-                        <div className="mt-3 text-sm text-slate-600">
-                          <span className="font-medium">Observações:</span>
-                          <p className="mt-1">{lead.notes}</p>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-sm text-primary-600">
+                        <Mail className="w-4 h-4 mr-2" />
+                        <span className="truncate">{lead.email}</span>
+                      </div>
+                      {lead.phone && (
+                        <div className="flex items-center text-sm text-primary-600">
+                          <Phone className="w-4 h-4 mr-2" />
+                          <span>{lead.phone}</span>
+                        </div>
+                      )}
+                      {lead.company && (
+                        <div className="flex items-center text-sm text-primary-600">
+                          <Building2 className="w-4 h-4 mr-2" />
+                          <span className="truncate">{lead.company}</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(lead)}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(lead.id!)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        Excluir
-                      </Button>
+                    {lead.interest_area && (
+                      <div className="mb-4">
+                        <p className="text-sm text-primary-700">
+                          <span className="font-medium">Interesse:</span>{" "}
+                          {lead.interest_area}
+                        </p>
+                      </div>
+                    )}
+
+                    {lead.tags && lead.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {lead.tags.slice(0, 2).map((tag, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 text-xs bg-white bg-opacity-50 rounded"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {lead.tags.length > 2 && (
+                          <span className="px-2 py-1 text-xs bg-white bg-opacity-50 rounded">
+                            +{lead.tags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white border-opacity-20">
+                      <div className="text-sm text-primary-600">
+                        Score:{" "}
+                        <span className="font-medium">{lead.score || 0}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditLead(lead)}
+                          className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLead(lead.id)}
+                          className="px-3 py-1 text-sm text-red-600 hover:text-red-700 font-medium"
+                        >
+                          Excluir
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>
-      </Card>
 
-      {/* Modal */}
-      <LeadModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedLead(undefined);
-        }}
-        lead={selectedLead}
-        onSave={handleSave}
-        loading={loading}
-      />
+        {/* Modal */}
+        <LeadModal
+          isOpen={showModal}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedLead(null);
+          }}
+          onSubmit={handleCreateLead}
+          lead={selectedLead}
+        />
+      </div>
     </div>
   );
 }

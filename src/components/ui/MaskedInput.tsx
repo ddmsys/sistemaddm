@@ -1,11 +1,13 @@
 "use client";
 
-import { forwardRef, useState, useEffect } from "react";
-import { Input } from "./input";
 import { masks } from "@/lib/utils/masks";
-import { InputProps } from "./input"; // ✅ IMPORTAR TIPO
+import type React from "react";
+import { forwardRef, InputHTMLAttributes, useEffect, useState } from "react";
+import { Input } from "./input";
 
-interface MaskedInputProps extends Omit<InputProps, "onChange"> {
+// Props públicas: expomos onChange(string) para facilitar quem usa o componente
+interface MaskedInputProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
   mask: "phone" | "cpf" | "cnpj" | "cep" | "document";
   value?: string;
   onChange?: (value: string) => void;
@@ -16,16 +18,16 @@ export const MaskedInput = forwardRef<HTMLInputElement, MaskedInputProps>(
   ({ mask, value = "", onChange, error, ...props }, ref) => {
     const [displayValue, setDisplayValue] = useState(value);
 
-    // ✅ SINCRONIZAR COM PROP VALUE
+    // ✅ sincroniza quando o value externo muda
     useEffect(() => {
       setDisplayValue(value);
     }, [value]);
 
+    // Internamente lidamos com o evento nativo, aplicamos a máscara
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const rawValue = e.target.value;
+      const rawValue = e.target.value ?? "";
       let maskedValue = rawValue;
 
-      // ✅ APLICAR MÁSCARA
       switch (mask) {
         case "phone":
           maskedValue = masks.phone(rawValue);
@@ -39,22 +41,20 @@ export const MaskedInput = forwardRef<HTMLInputElement, MaskedInputProps>(
         case "cep":
           maskedValue = masks.cep(rawValue);
           break;
-        case "document":
-          // ✅ AUTO-DETECTAR CPF OU CNPJ
+        case "document": {
           const numbers = masks.onlyNumbers(rawValue);
           maskedValue =
             numbers.length <= 11 ? masks.cpf(rawValue) : masks.cnpj(rawValue);
           break;
+        }
       }
 
       setDisplayValue(maskedValue);
-      onChange?.(maskedValue);
+      onChange?.(maskedValue); // ✅ propaga string (sem any)
     };
 
-    // ✅ PLACEHOLDERS INTELIGENTES
     const getPlaceholder = (): string => {
       if (props.placeholder) return props.placeholder;
-
       switch (mask) {
         case "phone":
           return "(11) 99999-9999";
@@ -71,16 +71,16 @@ export const MaskedInput = forwardRef<HTMLInputElement, MaskedInputProps>(
       }
     };
 
-    // ✅ CRIAR PROPS CORRETAS PARA INPUT
-    const inputProps = {
-      ...props,
-      value: displayValue,
-      onChange: handleChange,
-      placeholder: getPlaceholder(),
-      error: error,
-    };
-
-    return <Input {...inputProps} ref={ref} />;
+    return (
+      <Input
+        ref={ref}
+        value={displayValue}
+        onChange={handleChange}
+        placeholder={getPlaceholder()}
+        aria-invalid={!!error || undefined}
+        {...props}
+      />
+    );
   }
 );
 

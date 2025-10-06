@@ -1,41 +1,109 @@
 "use client";
-import { useEffect, useState } from "react";
-import { User, onAuthStateChanged } from "firebase/auth";
+
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+} from "react";
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  User as FirebaseUser,
+} from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { User, UserRole } from "@/lib/types";
 
-interface UserProfile {
-  uid: string;
-  email: string;
-  role: "admin" | "comercial" | "producao" | "financeiro" | "cliente";
-  name: string;
-  clientId?: string; // Para clientes
+interface AuthContextType {
+  user: User | null;
+  firebaseUser: FirebaseUser | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
-export function useAuth() {
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-
-        // Buscar perfil do usuário
-        const userDoc = await getDoc(doc(db, "users", user.uid));
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Get user profile from Firestore
+        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
         if (userDoc.exists()) {
-          setProfile(userDoc.data() as UserProfile);
+          const userData = userDoc.data() as User;
+          setUser(userData);
+        } else {
+          // Create default user profile
+          const defaultUser: User = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email!,
+            name: firebaseUser.displayName || "Usuário",
+            role: "comercial" as UserRole,
+            is_active: true,
+            permissions: [],
+            created_at: new Date() as any,
+            updated_at: new Date() as any,
+          };
+          setUser(defaultUser);
         }
+        setFirebaseUser(firebaseUser);
       } else {
         setUser(null);
-        setProfile(null);
+        setFirebaseUser(null);
       }
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
-  return { user, profile, loading };
+  const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error("Error signing in:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setLoading(true);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const value = {
+    user,
+    firebaseUser,
+    loading,
+    signIn,
+    signOut: handleSignOut,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }

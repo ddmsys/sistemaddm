@@ -1,141 +1,300 @@
-// src/hooks/comercial/useLeads.ts
+"use client";
 
-import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { db } from "@/lib/firebase";
+import { Lead, LeadFilters, LeadStage } from "@/lib/types/leads";
+import { AsyncState, SelectOption } from "@/lib/types/shared";
+import { getErrorMessage } from "@/lib/utils/errors";
 import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
   addDoc,
-  updateDoc,
+  collection,
   deleteDoc,
   doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
   Timestamp,
+  updateDoc,
+  where,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Lead, LeadFilters } from "@/lib/types/comercial";
+import { useCallback, useState } from "react";
+import { toast } from "react-hot-toast";
 
-export function useLeads(filters?: LeadFilters) {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export interface LeadFormData {
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  source: Lead["source"];
+  value?: number;
+  probability?: number;
+  notes?: string;
+  tags?: string[];
+}
 
-  // Buscar leads com filtros
-  useEffect(() => {
-    let q = query(collection(db, "leads"), orderBy("lastActivityAt", "desc"));
+export function useLeads() {
+  const { user } = useAuth();
+  const [leads, setLeads] = useState<AsyncState<Lead[]>>({
+    data: null,
+    loading: false,
+    error: null,
+  });
 
-    // Aplicar filtros
-    if (filters?.stage?.length) {
-      q = query(q, where("stage", "in", filters.stage));
-    }
-    if (filters?.source?.length) {
-      q = query(q, where("source", "in", filters.source));
-    }
-    if (filters?.ownerId?.length) {
-      q = query(q, where("ownerId", "in", filters.ownerId));
-    }
-    if (filters?.dateRange) {
-      q = query(
-        q,
-        where("createdAt", ">=", Timestamp.fromDate(filters.dateRange.start)),
-        where("createdAt", "<=", Timestamp.fromDate(filters.dateRange.end))
-      );
-    }
+  // ================ FETCH LEADS ================
+  const fetchLeads = useCallback(
+    async (filters?: LeadFilters) => {
+      if (!user) return;
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
+      setLeads((prev) => ({ ...prev, loading: true, error: null }));
+
+      try {
+        let leadsQuery = query(
+          collection(db, "leads"),
+          orderBy("createdAt", "desc")
+        );
+
+        // Aplicar filtros se fornecidos
+        if (filters?.stage && filters.stage.length > 0) {
+          leadsQuery = query(leadsQuery, where("stage", "in", filters.stage));
+        }
+
+        if (filters?.source && filters.source.length > 0) {
+          leadsQuery = query(leadsQuery, where("source", "in", filters.source));
+        }
+
+        if (filters?.ownerId && filters.ownerId.length > 0) {
+          leadsQuery = query(
+            leadsQuery,
+            where("ownerId", "in", filters.ownerId)
+          );
+        }
+
+        const snapshot = await getDocs(leadsQuery);
         const leadsData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Lead[];
 
-        // Filtro de busca por texto (client-side)
+        // Aplicar filtros de data e busca no frontend
         let filteredLeads = leadsData;
+
+        if (filters?.dateRange?.start || filters?.dateRange?.end) {
+          filteredLeads = filteredLeads.filter((lead) => {
+            const createdAt =
+              lead.createdAt instanceof Date
+                ? lead.createdAt
+                : lead.createdAt.toDate();
+            const start = filters.dateRange?.start
+              ? new Date(filters.dateRange.start)
+              : null;
+            const end = filters.dateRange?.end
+              ? new Date(filters.dateRange.end)
+              : null;
+
+            if (start && createdAt < start) return false;
+            if (end && createdAt > end) return false;
+            return true;
+          });
+        }
+
         if (filters?.search) {
-          const searchTerm = filters.search.toLowerCase();
-          filteredLeads = leadsData.filter(
+          const searchLower = filters.search.toLowerCase();
+          filteredLeads = filteredLeads.filter(
             (lead) =>
-              lead.name.toLowerCase().includes(searchTerm) ||
-              lead.email?.toLowerCase().includes(searchTerm) ||
-              lead.company?.toLowerCase().includes(searchTerm)
+              lead.name.toLowerCase().includes(searchLower) ||
+              lead.email?.toLowerCase().includes(searchLower) ||
+              lead.company?.toLowerCase().includes(searchLower)
           );
         }
 
-        setLeads(filteredLeads);
-        setLoading(false);
-        setError(null);
-      },
-      (err) => {
-        setError(err.message);
-        setLoading(false);
+        setLeads({
+          data: filteredLeads,
+          loading: false,
+          error: null,
+        });
+      } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao buscar leads:", error);
+        setLeads({
+          data: null,
+          loading: false,
+          error: errorMessage,
+        });
+        toast.error("Erro ao carregar leads");
       }
-    );
+    },
+    [user]
+  );
 
-    return unsubscribe;
-  }, [filters]);
-
-  // Criar lead
-  const createLead = async (
-    leadData: Omit<Lead, "id" | "createdAt" | "updatedAt" | "lastActivityAt">
-  ) => {
+  // ================ GET SINGLE LEAD ================
+  const getLead = useCallback(async (id: string): Promise<Lead | null> => {
     try {
-      const now = Timestamp.now();
-      const newLead = {
-        ...leadData,
-        createdAt: now,
-        updatedAt: now,
-        lastActivityAt: now,
-      };
+      const docRef = doc(db, "leads", id);
+      const docSnap = await getDoc(docRef);
 
-      const docRef = await addDoc(collection(db, "leads"), newLead);
-      return docRef.id;
-    } catch (err) {
-      throw new Error(`Erro ao criar lead: ${err.message}`);
-    }
-  };
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as Lead;
+      }
 
-  // Atualizar lead
-  const updateLead = async (leadId: string, updates: Partial<Lead>) => {
-    try {
-      const leadRef = doc(db, "leads", leadId);
-      await updateDoc(leadRef, {
-        ...updates,
-        updatedAt: Timestamp.now(),
-        lastActivityAt: Timestamp.now(),
-      });
-    } catch (err) {
-      throw new Error(`Erro ao atualizar lead: ${err.message}`);
+      return null;
+    } catch (error) {
+      console.error("Erro ao buscar lead:", error);
+      toast.error("Erro ao carregar lead");
+      return null;
     }
-  };
+  }, []);
 
-  // Deletar lead
-  const deleteLead = async (leadId: string) => {
-    try {
-      const leadRef = doc(db, "leads", leadId);
-      await deleteDoc(leadRef);
-    } catch (err) {
-      throw new Error(`Erro ao deletar lead: ${err.message}`);
-    }
-  };
+  // ================ CREATE LEAD ================
+  const createLead = useCallback(
+    async (data: LeadFormData): Promise<string | null> => {
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return null;
+      }
 
-  // Mudar estágio do lead
-  const changeLeadStage = async (leadId: string, stage: Lead["stage"]) => {
-    try {
-      await updateLead(leadId, { stage });
-    } catch (err) {
-      throw new Error(`Erro ao mudar estágio: ${err.message}`);
-    }
-  };
+      try {
+        const leadData: Omit<Lead, "id"> = {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          company: data.company,
+          source: data.source,
+          stage: "primeiro_contato",
+          status: "primeiro_contato", // Adicionando status obrigatório
+          value: data.value || 0,
+          probability: data.probability || 0,
+          ownerId: user.uid,
+          ownerName: user.displayName || "Usuário",
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+          lastActivityAt: Timestamp.now(),
+          notes: data.notes,
+          tags: data.tags || [],
+        };
+
+        const docRef = await addDoc(collection(db, "leads"), leadData);
+        toast.success("Lead criado com sucesso!");
+        await fetchLeads();
+        return docRef.id;
+      } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao criar lead:", error);
+        toast.error(`Erro ao criar lead: ${errorMessage}`);
+        return null;
+      }
+    },
+    [user, fetchLeads]
+  );
+
+  // ================ UPDATE LEAD ================
+  const updateLead = useCallback(
+    async (id: string, data: Partial<LeadFormData>): Promise<boolean> => {
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return false;
+      }
+
+      try {
+        const docRef = doc(db, "leads", id);
+        const updateData: Partial<Lead> = {
+          ...data,
+          updatedAt: Timestamp.now(),
+          lastActivityAt: Timestamp.now(),
+        };
+
+        await updateDoc(docRef, updateData);
+        toast.success("Lead atualizado com sucesso!");
+        await fetchLeads();
+        return true;
+      } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao atualizar lead:", error);
+        toast.error(`Erro ao atualizar lead: ${errorMessage}`);
+        return false;
+      }
+    },
+    [user, fetchLeads]
+  );
+
+  // ================ UPDATE LEAD STAGE ================
+  const updateLeadStage = useCallback(
+    async (id: string, stage: LeadStage): Promise<boolean> => {
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return false;
+      }
+
+      try {
+        const docRef = doc(db, "leads", id);
+        await updateDoc(docRef, {
+          stage,
+          updatedAt: Timestamp.now(),
+          lastActivityAt: Timestamp.now(),
+        });
+
+        toast.success("Stage do lead atualizado!");
+        await fetchLeads();
+        return true;
+      } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao atualizar stage:", error);
+        toast.error("Erro ao atualizar stage do lead");
+        return false;
+      }
+    },
+    [user, fetchLeads]
+  );
+
+  // ================ DELETE LEAD ================
+  const deleteLead = useCallback(
+    async (id: string): Promise<boolean> => {
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return false;
+      }
+
+      try {
+        await deleteDoc(doc(db, "leads", id));
+        toast.success("Lead excluído com sucesso!");
+        await fetchLeads();
+        return true;
+      } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        console.error("Erro ao excluir lead:", error);
+        toast.error("Erro ao excluir lead");
+        return false;
+      }
+    },
+    [user, fetchLeads]
+  );
+
+  // ================ GET LEADS OPTIONS FOR SELECT ================
+  const getLeadsOptions = useCallback((): SelectOption[] => {
+    if (!leads.data) return [];
+    return leads.data
+      .filter(
+        (lead) =>
+          ["primeiro_contato", "qualificado"].includes(lead.stage) && lead.id
+      )
+      .map((lead) => ({
+        value: lead.id!,
+        label: `${lead.name}${lead.email ? ` (${lead.email})` : ""}`,
+      }));
+  }, [leads.data]);
+
+  // AQUI, SEM NENHUM OUTRO BLOCO DEPOIS
 
   return {
-    leads,
-    loading,
-    error,
+    leads: leads.data ?? [],
+    loading: leads.loading,
+    error: leads.error,
     createLead,
     updateLead,
+    updateLeadStage,
     deleteLead,
-    changeLeadStage,
+    fetchLeads,
+    getLead,
+    getLeadsOptions,
   };
 }

@@ -1,48 +1,63 @@
-import * as functions from "firebase-functions/v2";
 import * as admin from "firebase-admin";
+import * as functions from "firebase-functions/v2";
 
+// Inicializa o Admin SDK
 if (!admin.apps.length) {
   admin.initializeApp();
 }
+
 export const assignClientNumber = functions.firestore.onDocumentCreated(
   {
+    region: "southamerica-east1",
     document: "clients/{clientId}",
-    region: "southamerica-east1", // Região correta para São Paulo!
-    // Se quiser node 20: nodeVersion: "20"
   },
   async (event) => {
     const clientDoc = event.data;
     if (!clientDoc) return;
 
-    const db = admin.firestore();
-
-    const data = clientDoc.data();
-    if (data.clientNumber) return;
+    const data = clientDoc.data() as { clientNumber?: string };
+    if (
+      !data ||
+      (typeof data.clientNumber === "string" && data.clientNumber.length > 0)
+    )
+      return;
 
     try {
-      await db.runTransaction(async (transaction) => {
-        const counterRef = db.collection("counters").doc("clients");
+      await admin.firestore().runTransaction(async (transaction) => {
+        const counterRef = admin
+          .firestore()
+          .collection("_counters")
+          .doc("clients");
         const counterDoc = await transaction.get(counterRef);
 
         let nextNumber = 1;
         if (counterDoc.exists) {
-          nextNumber = (counterDoc.data()?.lastNumber ?? 0) + 1;
+          const counterData = counterDoc.data() as { value?: number };
+          nextNumber = (counterData?.value ?? 0) + 1;
         }
+
+        const formattedNumber = nextNumber.toString().padStart(4, "0");
 
         transaction.set(
           counterRef,
-          { lastNumber: nextNumber },
+          {
+            value: nextNumber,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          },
           { merge: true }
         );
+
         transaction.update(clientDoc.ref, {
-          clientNumber: nextNumber,
+          clientNumber: formattedNumber,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-
-        console.log(`Cliente ${clientDoc.id} recebeu número ${nextNumber}`);
       });
     } catch (error) {
-      console.error("Erro ao atribuir número do cliente:", error);
+      console.error("Erro ao atribuir número sequencial:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Erro processando numeração do cliente"
+      );
     }
   }
 );

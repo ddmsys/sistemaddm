@@ -3,42 +3,53 @@ import { Timestamp } from "firebase/firestore";
 
 export interface Project {
   id?: string;
-  catalogCode: string; // Auto-gerado (DDM2024001, DDM2024002...)
+  catalogCode?: string; // Ex: gerado pela Cloud Function
   clientId: string;
-  clientName: string;
+  clientName?: string;
   quoteId?: string;
   title: string;
   description?: string;
-  category: "book" | "magazine" | "catalog" | "brochure" | "other";
-  status:
-    | "open"
-    | "design"
-    | "review"
-    | "production"
-    | "shipped"
-    | "done"
-    | "cancelled";
-  priority: "low" | "medium" | "high" | "urgent";
-  dueDate: Timestamp;
-  budget: number;
-  assignedTo?: string[];
+  category: ProjectCategory;
+  status: ProjectStatus;
+  priority: ProjectPriority;
+  dueDate?: Timestamp | Date;
+  budget?: number;
+  assignedTo?: string;
   proofsCount: number;
-  clientApprovalTasks: ApprovalTask[];
+  clientApprovalTasks?: ApprovalTask[];
   tags?: string[];
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  notes?: string;
+  createdBy?: string;
+  createdAt?: Timestamp | Date;
+  updatedAt?: Timestamp | Date;
 }
+
+export type ProjectStatus =
+  | "open"
+  | "design"
+  | "review"
+  | "production"
+  | "shipped"
+  | "done"
+  | "cancelled";
+
+export type ProjectPriority = "low" | "medium" | "high" | "urgent";
+export type ProjectCategory =
+  | "book"
+  | "magazine"
+  | "catalog"
+  | "brochure"
+  | "other";
 
 export interface ApprovalTask {
   id: string;
   description: string;
   status: "pending" | "approved" | "rejected";
-  dueDate: Timestamp;
+  dueDate?: Timestamp;
   createdAt: Timestamp;
   resolvedAt?: Timestamp;
   comments?: string;
 }
-
 export interface ProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -57,14 +68,43 @@ export interface ProjectCardProps {
   className?: string;
 }
 
+export interface ProjectFormData {
+  clientId: string;
+  clientName?: string;
+  quoteId?: string;
+  title: string;
+  description?: string;
+  category: ProjectCategory;
+  status?: ProjectStatus;
+  priority: ProjectPriority;
+  dueDate?: string | Date;
+  budget?: number;
+  assignedTo?: string;
+  notes?: string;
+}
 export interface ProjectFilters {
-  status?: Project["status"][];
-  priority?: Project["priority"][];
-  category?: Project["category"][];
+  status?: ProjectStatus[];
+  priority?: ProjectPriority[];
+  category?: ProjectCategory[];
   assignedTo?: string[];
   dateRange?: {
-    start: Date;
-    end: Date;
+    start?: Date;
+    end?: Date;
   };
   search?: string;
 }
+export interface DateRange {
+  start?: Date;
+  end?: Date;
+}
+export type ProductType =
+  | "L" // Livro
+  | "E" // E-book
+  | "K" // kindle
+  | "C" // CD
+  | "D" // DVD
+  | "G" // Gráfica
+  | "P" // PlatafDigital
+  | "S" // Single
+  | "X" // LivroTerc
+  | "A"; // Arte

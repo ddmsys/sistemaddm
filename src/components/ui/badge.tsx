@@ -1,41 +1,44 @@
-"use client";
-
-import React from "react";
 import { cn } from "@/lib/utils";
+import { cva, type VariantProps } from "class-variance-authority";
+import { HTMLAttributes } from "react";
 
-interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "success" | "warning" | "error" | "info";
-  size?: "sm" | "md" | "lg";
-}
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-primary-900 text-primary-50",
+        secondary: "border-transparent bg-primary-100 text-primary-900",
+        success: "border-transparent bg-emerald-100 text-emerald-800",
+        warning: "border-transparent bg-amber-100 text-amber-800",
+        destructive: "border-transparent bg-red-100 text-red-800",
+        info: "border-transparent bg-blue-100 text-blue-800",
+        outline: "text-foreground border-primary-200",
+      },
+      size: {
+        sm: "px-2 py-0.5 text-xs",
+        default: "px-2.5 py-0.5 text-xs",
+        lg: "px-3 py-1 text-sm",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
 
-export function Badge({
-  className,
-  variant = "default",
-  size = "sm",
-  children,
-  ...props
-}: BadgeProps) {
+export interface BadgeProps
+  extends HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, size, ...props }: BadgeProps) {
   return (
     <div
-      className={cn(
-        "inline-flex items-center rounded-full font-medium",
-        {
-          "bg-slate-100 text-slate-800": variant === "default",
-          "bg-emerald-100 text-emerald-800": variant === "success",
-          "bg-amber-100 text-amber-800": variant === "warning",
-          "bg-red-100 text-red-800": variant === "error",
-          "bg-blue-100 text-blue-800": variant === "info",
-        },
-        {
-          "px-2 py-1 text-xs": size === "sm",
-          "px-3 py-1 text-sm": size === "md",
-          "px-4 py-2 text-base": size === "lg",
-        },
-        className
-      )}
+      className={cn(badgeVariants({ variant, size }), className)}
       {...props}
-    >
-      {children}
-    </div>
+    />
   );
 }
+
+export { Badge, badgeVariants };

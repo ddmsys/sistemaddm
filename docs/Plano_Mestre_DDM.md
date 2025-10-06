@@ -1,5 +1,435 @@
 # 📘 Plano Mestre — DDM Sistema (Versão Completa)
 
+## 🏗️ Estrutura Final Definitiva
+
+```
+sistemaddm/
+├── 📁 docs/                          # ✅ Documentação completa
+│   ├── MVP-1.md
+│   ├── MVPs_Detalhado.md
+│   ├── Plano_Mestre_DDM.md
+│   └── Documentacao_Completa.md      # 🆕 Este documento
+├── 📁 functions/                     # ⚡ Cloud Functions organizadas
+│   ├── src/
+│   │   ├── clients/                  # Functions de clientes
+│   │   │   ├── assignClientNumber.ts
+│   │   │   └── createClient.ts
+│   │   ├── quotes/                   # Functions de orçamentos
+│   │   │   ├── createQuotePdf.ts
+│   │   │   └── onQuoteSigned.ts
+│   │   ├── projects/                 # Functions de projetos
+│   │   │   ├── assignProjectCatalogCode.ts
+│   │   │   └── updateProjectStatus.ts
+│   │   ├── pdfs/                     # Geração de PDFs
+│   │   │   ├── generateQuote.ts
+│   │   │   └── generateInvoice.ts
+│   │   ├── notifications/            # Sistema de notificações
+│   │   │   ├── emailNotification.ts
+│   │   │   └── webhookNotification.ts
+│   │   └── index.ts                  # Exports centralizados
+├── 📁 config/                        # 🔧 Configurações centralizadas
+│   ├── firestore.rules              # Regras de segurança
+│   ├── storage.rules                # Regras de storage
+│   └── firestore.indexes.json       # Índices compostos
+├── 📁 src/                           # 🏗️ Código fonte frontend
+│   ├── 📁 app/                       # App Router Next.js 14
+│   │   ├── 📁 (authenticated)/       # 🛡️ Route Group protegido
+│   │   │   ├── crm/                  # 📈 COMERCIAL COMPLETO
+│   │   │   │   ├── dashboard/        # Dashboard comercial integrado
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── leads/            # Prospecção e qualificação
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── [id]/page.tsx
+│   │   │   │   ├── quotes/           # Orçamentos e propostas
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── [id]/page.tsx
+│   │   │   │   ├── projects/         # 🎯 PROJETOS (pós-venda)
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── [id]/page.tsx
+│   │   │   │   └── clients/          # Base de clientes
+│   │   │   │       ├── page.tsx
+│   │   │   │       └── [id]/page.tsx
+│   │   │   ├── production/           # 🎨 PRODUÇÃO/ARTE
+│   │   │   │   ├── dashboard/        # Dashboard produção
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── queue/            # Fila de produção
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── proofs/           # Provas/Revisões
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── [id]/page.tsx
+│   │   │   │   └── quality/          # Controle de qualidade
+│   │   │   │       └── page.tsx
+│   │   │   ├── finance/              # 💰 FINANCEIRO
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── invoices/
+│   │   │   │       └── page.tsx
+│   │   │   ├── purchases/            # 🛒 COMPRAS
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── suppliers/
+│   │   │   │       └── page.tsx
+│   │   │   ├── logistics/            # 🚚 LOGÍSTICA
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── shipments/
+│   │   │   │       └── page.tsx
+│   │   │   └── marketing/            # 📣 MARKETING
+│   │   │       ├── dashboard/
+│   │   │       │   └── page.tsx
+│   │   │       ├── campaigns/
+│   │   │       │   └── page.tsx
+│   │   │       └── creatives/
+│   │   │           └── page.tsx
+│   │   ├── 📁 dashboard/             # 📊 Dashboard Executivo Principal
+│   │   │   └── page.tsx
+│   │   ├── 📁 portal/                # 🌐 Portal do Cliente
+│   │   │   ├── page.tsx
+│   │   │   └── projects/[id]/page.tsx
+│   │   ├── 📁 admin/                 # 🔐 Administração
+│   │   │   └── users/page.tsx
+│   │   ├── 📁 login/
+│   │   │   └── page.tsx
+│   │   ├── 📁 register/
+│   │   │   └── page.tsx
+│   │   ├── globals.css               # Estilos Tailwind
+│   │   ├── layout.tsx                # Layout principal
+│   │   └── page.tsx                  # Home page
+│   ├── 📁 components/                # 🧩 Componentes organizados
+│   │   ├── ui/                       # 🎨 Componentes base
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── modal.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── select.tsx
+│   │   │   └── table.tsx
+│   │   ├── comercial/                # 📈 MÓDULO COMERCIAL COMPLETO
+│   │   │   ├── modals/               # 🔧 Modais de edição
+│   │   │   │   ├── LeadModal.tsx
+│   │   │   │   ├── QuoteModal.tsx
+│   │   │   │   ├── ProjectModal.tsx
+│   │   │   │   └── ClientModal.tsx
+│   │   │   ├── cards/                # 📋 Cards para listagens
+│   │   │   │   ├── LeadCard.tsx
+│   │   │   │   ├── QuoteCard.tsx
+│   │   │   │   ├── ProjectCard.tsx
+│   │   │   │   └── ClientCard.tsx
+│   │   │   ├── charts/               # 📊 Gráficos específicos
+│   │   │   │   ├── FunnelChart.tsx
+│   │   │   │   ├── RevenueChart.tsx
+│   │   │   │   ├── PerformanceChart.tsx
+│   │   │   │   └── ConversionChart.tsx
+│   │   │   ├── tables/               # 📋 Tabelas e listas
+│   │   │   │   ├── LeadsTable.tsx
+│   │   │   │   ├── QuotesTable.tsx
+│   │   │   │   ├── ProjectsTable.tsx
+│   │   │   │   └── ClientsTable.tsx
+│   │   │   ├── forms/                # 📝 Formulários específicos
+│   │   │   │   ├── LeadForm.tsx
+│   │   │   │   ├── QuoteForm.tsx
+│   │   │   │   ├── ProjectForm.tsx
+│   │   │   │   └── ClientForm.tsx
+│   │   │   ├── dashboards/           # 📊 Dashboards
+│   │   │   │   ├── CommercialDashboard.tsx
+│   │   │   │   ├── KPICards.tsx
+│   │   │   │   ├── ActivityFeed.tsx
+│   │   │   │   └── QuickActions.tsx
+│   │   │   └── filters/              # 🔍 Filtros e buscas
+│   │   │       ├── LeadFilters.tsx
+│   │   │       ├── QuoteFilters.tsx
+│   │   │       ├── ProjectFilters.tsx
+│   │   │       └── DateRangePicker.tsx
+│   │   ├── production/               # 🎨 Componentes produção
+│   │   │   ├── ProductionDashboard.tsx
+│   │   │   ├── QueueManagement.tsx
+│   │   │   ├── ProofReview.tsx
+│   │   │   └── QualityControl.tsx
+│   │   ├── dashboards/               # 📊 Dashboards gerais
+│   │   │   ├── ExecutiveDashboard.tsx
+│   │   │   ├── FinanceDashboard.tsx
+│   │   │   ├── PurchasesDashboard.tsx
+│   │   │   ├── LogisticsDashboard.tsx
+│   │   │   └── MarketingDashboard.tsx
+│   │   ├── layout/                   # 🏗️ Layout components
+│   │   │   ├── Header.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── Navigation.tsx
+│   │   │   └── ProtectedRoute.tsx
+│   │   ├── charts/                   # 📈 Gráficos reutilizáveis
+│   │   │   ├── PieChart.tsx
+│   │   │   ├── LineChart.tsx
+│   │   │   ├── BarChart.tsx
+│   │   │   ├── KanbanBoard.tsx
+│   │   │   └── MetricsCard.tsx
+│   │   └── shared/                   # 🔄 Componentes compartilhados
+│   │       ├── LoadingSpinner.tsx
+│   │       ├── EmptyState.tsx
+│   │       ├── ErrorBoundary.tsx
+│   │       └── ConfirmDialog.tsx
+│   ├── 📁 hooks/                     # 🎣 Custom hooks organizados
+│   │   ├── comercial/                # 🎣 Hooks do comercial
+│   │   │   ├── useLeads.ts           # CRUD e queries leads
+│   │   │   ├── useQuotes.ts          # CRUD e queries orçamentos
+│   │   │   ├── useProjects.ts        # CRUD e queries projetos
+│   │   │   ├── useClients.ts         # CRUD e queries clientes
+│   │   │   ├── useFunnelData.ts      # Dados para funil
+│   │   │   ├── useCommercialMetrics.ts # Métricas comerciais
+│   │   │   └── useConversionRate.ts  # Taxa de conversão
+│   │   ├── production/               # 🎣 Hooks de produção
+│   │   │   ├── useProductionQueue.ts # Fila de produção
+│   │   │   ├── useProofs.ts          # Provas e revisões
+│   │   │   └── useQuality.ts         # Controle qualidade
+│   │   ├── finance/                  # 🎣 Hooks financeiro
+│   │   │   ├── useInvoices.ts        # Faturas
+│   │   │   └── useFinancialMetrics.ts # Métricas financeiras
+│   │   └── shared/                   # 🎣 Hooks compartilhados
+│   │       ├── useAuth.ts            # Autenticação
+│   │       ├── usePermissions.ts     # Verificação permissões
+│   │       ├── useFilters.ts         # Filtros genéricos
+│   │       ├── usePagination.ts      # Paginação
+│   │       └── useLocalStorage.ts    # Storage local
+│   ├── 📁 context/                   # 🔄 Context providers
+│   │   ├── AuthContext.tsx           # Context de autenticação
+│   │   ├── ThemeContext.tsx          # Context de tema
+│   │   └── NotificationContext.tsx   # Context de notificações
+│   ├── 📁 lib/                       # 🛠️ Utilitários e configurações
+│   │   ├── firebase.ts               # Config Firebase
+│   │   ├── types/                    # 📝 TypeScript types organizados
+│   │   │   ├── comercial.ts          # Types do comercial
+│   │   │   ├── production.ts         # Types da produção
+│   │   │   ├── finance.ts            # Types financeiro
+│   │   │   ├── shared.ts             # Types compartilhados
+│   │   │   └── index.ts              # Exports centralizados
+│   │   ├── utils.ts                  # Funções utilitárias
+│   │   ├── constants.ts              # Constantes do sistema
+│   │   ├── permissions.ts            # Sistema RBAC
+│   │   ├── validations.ts            # Schemas de validação
+│   │   └── formatters.ts             # Formatadores (data, moeda, etc.)
+│   ├── 📁 pages/                     # 📄 API Routes (legacy - manter)
+│   │   └── api/getUserRole.ts
+│   └── middleware.ts                 # 🛡️ Middleware de proteção
+├── .env.local                        # 🔐 Variáveis de ambiente
+├── .firebaserc                       # ✅ Config Firebase
+├── firebase.json                     # ✅ Config Firebase (atualizar)
+├── package.json                      # ✅ Dependências
+├── tsconfig.json                     # ✅ Config TypeScript
+└── README.md                         # ✅ Documentação básica
+```
+
+---
+
+## 🎨 Design System
+
+### **Paleta de Cores**
+
+- **Primary:** `#1e293b` (slate-800) - Sidebar, headers
+- **Secondary:** `#626c71` (slate-500) - Textos secundários
+- **Accent:** `#32b8c6` (blue-500) - Links e ações primárias
+- **Success:** `#21808d` (emerald-500) - Status positivos
+- **Warning:** `#f59e0b` (amber-500) - Alertas
+- **Danger:** `#c0152f (red-500) - Erros e status críticos
+- **Background:** `#f8fafc` (slate-50) - Fundo principal
+- **Card:** `#ffffff` - Fundo dos cards com shadow suave
+
+### **Tipografia**
+
+- **Font Family:** `Inter, system-ui, sans-serif` (fonte delicada)
+- **Tamanhos:** xs(11px), sm(12px), base(14px), lg(16px), xl(18px), 2xl(20px), 3xl(24px), 4xl(30px)
+- **Pesos:** normal(400), medium(500), semibold(550), bold(600)
+- **Características:** Texto pequeno e delicado para alta densidade de informação
+
+### **Componentes Visuais**
+
+- **Cards:** `rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md`
+- **Buttons:** `rounded-lg px-4 py-2 font-medium transition-colors duration-200`
+- **Inputs:** `rounded-lg border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`
+- **Badges:** `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium`
+- **Modais:** `rounded-xl shadow-2xl border-0 backdrop-blur-sm`
+
+### **Gráficos e Charts**
+
+- **Estilo:** Modernos com cantos arredondados e gradientes suaves
+- **Cores:** `['#5995f4ff', '#10b9b3ff', '#d7b263ff', '#e15e5eff', '#8e76c5ff', '#06b6d4]`
+- **Disco/Pizza:** Com gradientes radiais e animações suaves
+- **Barras:** Cantos arredondados, cores complementares
+- **Linhas:** Curvas suaves com pontos destacados
+- **Animações:** Transições suaves de 300ms
+
+---
+
+## 📊 Dashboards Especializados Detalhados
+
+### 🎯 **Dashboard Comercial - `/crm/dashboard`**
+
+**Componente:** `CommercialDashboard.tsx`
+
+**Métricas Principais:**
+
+- Funil por `leads.stage` (em negociação ordenado por `lastActivityAt` asc)
+- Receita ganha vs perdida (soma `quotes.grandTotal`)
+- Taxa de conversão por fonte (`leads.source`)
+- Performance por vendedor (`ownerId`)
+- Orçamentos pendentes de assinatura (`quotes.status = 'sent'`)
+- Projetos em andamento (`projects.status = 'open'`)
+- SLA de aprovações (`clientApprovalTasks.status = 'pending'`)
+- Projetos críticos (próximos do `dueDate`)
+
+**Visualizações:**
+
+- Kanban de leads por estágio
+- Gráfico de funil com conversão
+- Cards de métricas (receita, conversão, performance)
+- Tabela de projetos críticos
+- Feed de atividades recentes
+- Gráfico de performance por vendedor
+
+### 🎨 **Dashboard Produção - `/production/dashboard`**
+
+**Componente:** `ProductionDashboard.tsx`
+
+**Métricas Principais:**
+
+- Kanban de projetos por `projects.status`
+- Calendário por `dueDate` com criticidade
+- Fila de produção ordenada por prioridade
+- Aprovações pendentes (`clientApprovalTasks.status = 'pending'`)
+- Provas em revisão (`proofs.status = 'in_review'`)
+- Capacidade vs demanda (projetos vs recursos)
+- Tempo médio por etapa de produção
+
+**Visualizações:**
+
+- Kanban de projetos
+- Calendário com timeline
+- Lista de aprovações pendentes
+- Cards de status e métricas
+- Gráfico de capacidade vs demanda
+
+### 💰 **Dashboard Financeiro - `/finance/dashboard`**
+
+**Componente:** `FinanceDashboard.tsx`
+
+**Métricas Principais:**
+
+- Receita vs despesa (`invoices.paid` vs `purchases.paga`)
+- Contas a receber (`invoices.status = 'pending'`)
+- Contas a pagar (`purchases.contratada = true && paga = false`)
+- Fluxo de caixa projetado (próximos 90 dias)
+- Taxa de inadimplência
+- Margem de lucro por projeto
+
+**Visualizações:**
+
+- Gráfico de linha (receita/despesa mensal)
+- Cards de KPIs financeiros
+- Tabela de contas a receber (destacar vencidas)
+- Tabela de contas a pagar
+- Gráfico de fluxo de caixa projetado
+
+### 🛒 **Dashboard Compras - `/purchases/dashboard`**
+
+**Componente:** `PurchasesDashboard.tsx`
+
+**Métricas Principais:**
+
+- Distribuição por categoria (gráfico pizza)
+- Cotações em andamento (ranking por `vendorName`)
+- Performance de fornecedores
+- Gastos por categoria temporal
+- Tempo médio de cotação
+- Economia gerada por negociações
+
+**Visualizações:**
+
+- Gráfico pizza por categoria
+- Ranking de fornecedores
+- Cards de economia e performance
+- Tabela de cotações em andamento
+
+### ✅ **Dashboard Qualidade - `/quality/dashboard`**
+
+**Componente:** `QualityDashboard.tsx`
+
+**Métricas Principais:**
+
+- Provas `in_review` com tempo de espera
+- Média de ciclos de revisão (`projects.proofsCount`)
+- Taxa de aprovação first-time
+- Tempo médio de revisão por tipo
+- Backlog de provas por prioridade
+- Projetos aguardando aprovação do cliente
+
+**Visualizações:**
+
+- Fila de revisão com priorização
+- Cards de métricas de qualidade
+- Gráfico de tempo médio de revisão
+- Lista de backlog organizada
+
+### 🚚 **Dashboard Logística - `/logistics/dashboard`**
+
+**Componente:** `LogisticsDashboard.tsx`
+
+**Métricas Principais:**
+
+- Envios pendentes/em trânsito
+- Performance por transportadora
+- Tempo médio de entrega por região
+- Entregas atrasadas (críticas)
+- Custo de frete por região/peso
+- Status de rastreamentos ativos
+
+**Visualizações:**
+
+- Mapa de entregas em tempo real
+- Lista de rastreamentos ativos
+- Cards de performance por transportadora
+- Gráfico de tempo médio por região
+
+### 📣 **Dashboard Marketing - `/marketing/dashboard`**
+
+**Componente:** `MarketingDashboard.tsx`
+
+**Métricas Principais:**
+
+- Campanhas ativas com progresso
+- Status de criativos (kanban)
+- ROI por canal de marketing
+- Leads gerados por campanha
+- CPC, CTR, conversões por canal
+- Performance de públicos-alvo
+
+**Visualizações:**
+
+- Cards de campanhas com progresso
+- Kanban de status de criativos
+- Gráficos de ROI e performance
+- Métricas de performance por canal
+
+### 📊 **Dashboard Executivo - `/dashboard` (Principal)**
+
+**Componente:** `ExecutiveDashboard.tsx`
+
+**Métricas Principais:**
+
+- KPIs consolidados (receita, fluxo de caixa, inadimplência)
+- Visão consolidada de todos os setores
+- Indicadores de conversão e gargalos
+- Projetos críticos (todas as áreas)
+- Performance geral da empresa
+- Alertas e notificações importantes
+
+**Visualizações:**
+
+- Cards de KPIs principais
+- Gráficos consolidados de performance
+- Lista de alertas e projetos críticos
+- Visão resumida de cada setor
+
+---
+
 ## 1. Visão Geral e Princípios
 
 O **DDM Sistema** é a plataforma interna da editora para gerenciar todo o ciclo de vida de um livro: do lead até a entrega final e o pós-venda.
@@ -11,7 +441,6 @@ O **DDM Sistema** é a plataforma interna da editora para gerenciar todo o ciclo
 - **\*\*Stack:\*\*** Next.js 14 + Tailwind • Firebase (Auth, Firestore, Functions Gen2 Node 20, Storage) • PDFKit
 
   \
-
 
 ## 2. Convenções Técnicas
 
@@ -28,13 +457,12 @@ O **DDM Sistema** é a plataforma interna da editora para gerenciar todo o ciclo
 
   \- \`amount\` ⇒ **\*\*\`value\`\*\*** (em \`invoices\`)
 
-  \- \`due\_at\` ⇒ **\*\*\`dueDate\`\*\***
+  \- \`due_at\` ⇒ **\*\*\`dueDate\`\*\***
 
-  \- \`client\_id\` ⇒ **\*\*\`clientId\`\*\***
+  \- \`client_id\` ⇒ **\*\*\`clientId\`\*\***
+
 - \- **\*\*Códigos e catálogos:\*\*** \`catalogCode = DDM{L/C/X}{clientNumber}[.N]\`.
 - \- **\*\*Status padronizados:\*\*** ver [Anexos]\(#anexos--enums-e-máscaras).
-
-
 
 ---
 
@@ -114,8 +542,6 @@ notes?: string
 \| owner{id,name,email} | object | responsável |
 
 \| createdAt/updatedAt | Timestamp | audit |
-
-
 
 Tela/Dashboard:
 
@@ -204,8 +630,6 @@ Tela/Dashboard:
 
 - `/projects`: Kanban por status + calendário.
 - `/projects/[id]`: ficha técnica + provas + tarefas.
-
-
 
 **\*\*assignClientNumber (onCreate clients):\*\*** numeração sequencial.
 
@@ -393,7 +817,7 @@ Tela/Dashboard:
 
 **Quotes**
 
-- `number: string` (ex.: `Q-0001`), `subtotal`, `discountTotal?`, `freight?`, `surcharge?`, `grandTotal`
+- `number: string` (ex.: `v5_0821.2221` - v(final do ano 2025 MMDD.HRMM)), `subtotal`, `discountTotal?`, `freight?`, `surcharge?`, `grandTotal`
 - Índices: `status + updatedAt desc`, `number asc`
 
 **Projects**
@@ -586,16 +1010,7 @@ Regras (resumo):
 
 ---
 
-## 7. Roadmap (MVPs)
-
-- **MVP-1:** Base (Auth, Clientes, Projetos, Faturas).
-- **MVP-2:** CRM Leads/Quotes + Orders + OS + Relatórios.
-- **MVP-3:** Compras + Logística + Marketing + Dashboards.
-- **MVP-4:** Integrações externas (pagamentos, assinatura digital, WhatsApp, IA).
-
----
-
-## 8. Convenções & Catálogos (para consulta rápida)
+## 7. Convenções & Catálogos (para consulta rápida)
 
 ### 8.1 Padrões de ID e códigos
 
@@ -607,13 +1022,34 @@ Regras (resumo):
 ### 8.2 Status — tabela mestra (usar sempre estes valores)
 
 ```ts
-export type LeadStage = 'primeiro_contato'|'proposta_enviada'|'negociacao'|'fechado_ganho'|'fechado_perdido'
-export type QuoteStatus = 'draft'|'sent'|'signed'|'refused'
-export type ProjectStatus = 'open'|'approved'|'in_progress'|'ready_for_review'|'revising'|'final_approved'|'done'
-export type ProofStatus = 'in_review'|'pending_fixes'|'approved'|'rejected'
-export type OrderStatus = 'aberto'|'fechado'
-export type InvoiceStatus = 'draft'|'pending'|'paid'|'canceled'
-export type PurchaseStatus = 'cotação_em_andamento'|'negociação'|'contratada'|'paga'|'concluída'
+export type LeadStage =
+  | "primeiro_contato"
+  | "proposta_enviada"
+  | "negociacao"
+  | "fechado_ganho"
+  | "fechado_perdido";
+export type QuoteStatus = "draft" | "sent" | "signed" | "refused";
+export type ProjectStatus =
+  | "open"
+  | "approved"
+  | "in_progress"
+  | "ready_for_review"
+  | "revising"
+  | "final_approved"
+  | "done";
+export type ProofStatus =
+  | "in_review"
+  | "pending_fixes"
+  | "approved"
+  | "rejected";
+export type OrderStatus = "aberto" | "fechado";
+export type InvoiceStatus = "draft" | "pending" | "paid" | "canceled";
+export type PurchaseStatus =
+  | "cotação_em_andamento"
+  | "negociação"
+  | "contratada"
+  | "paga"
+  | "concluída";
 ```
 
 ### 8.3 Storage — caminhos e nomes
@@ -637,18 +1073,28 @@ export type PurchaseStatus = 'cotação_em_andamento'|'negociação'|'contratada
 
 ```ts
 // src/lib/constants.ts
-export const APP_REGION = 'southamerica-east1'
+export const APP_REGION = "southamerica-east1";
 export const COLLECTIONS = {
-  clients: 'clients', leads: 'leads', quotes: 'quotes', projects: 'projects',
-  proofs: 'proofs', orders: 'orders', invoices: 'invoices', purchases: 'purchases'
-} as const
+  clients: "clients",
+  leads: "leads",
+  quotes: "quotes",
+  projects: "projects",
+  proofs: "proofs",
+  orders: "orders",
+  invoices: "invoices",
+  purchases: "purchases",
+} as const;
 
 export const STORAGE_PATHS = {
-  proof: (projectId: string, n: number) => `projects/${projectId}/proofs/proof-${n}.pdf`,
-  projectFinal: (projectId: string, code: string) => `projects/${projectId}/final/final-${code}.pdf`,
-  quotePdf: (quoteId: string, number: string) => `quotes/${quoteId}/quote-${number}.pdf`,
-  invoicePdf: (invoiceId: string, number: string | null) => `invoices/${invoiceId}/invoice-${number ?? invoiceId}.pdf`,
-} as const
+  proof: (projectId: string, n: number) =>
+    `projects/${projectId}/proofs/proof-${n}.pdf`,
+  projectFinal: (projectId: string, code: string) =>
+    `projects/${projectId}/final/final-${code}.pdf`,
+  quotePdf: (quoteId: string, number: string) =>
+    `quotes/${quoteId}/quote-${number}.pdf`,
+  invoicePdf: (invoiceId: string, number: string | null) =>
+    `invoices/${invoiceId}/invoice-${number ?? invoiceId}.pdf`,
+} as const;
 ```
 
 ### 9.2 `functions/src/contracts.ts` (contratos de eventos/DTOs)
@@ -656,19 +1102,22 @@ export const STORAGE_PATHS = {
 ```ts
 // functions/src/contracts.ts
 export interface QuoteSignedEvent {
-  quoteId: string
-  client: { id?: string|null; name: string; email?: string|null }
-  totals: { grandTotal: number }
-  signedAt: FirebaseFirestore.Timestamp
+  quoteId: string;
+  client: { id?: string | null; name: string; email?: string | null };
+  totals: { grandTotal: number };
+  signedAt: FirebaseFirestore.Timestamp;
 }
 
 export interface ProofUploadedEvent {
-  projectId: string
-  filePath: string // storage path
-  uploadedAt: FirebaseFirestore.Timestamp
+  projectId: string;
+  filePath: string; // storage path
+  uploadedAt: FirebaseFirestore.Timestamp;
 }
 
-export interface InvoiceReminderJob { invoiceId: string; dueDate: string }
+export interface InvoiceReminderJob {
+  invoiceId: string;
+  dueDate: string;
+}
 ```
 
 ### 9.3 `functions/src/utils/paths.ts`
@@ -676,11 +1125,14 @@ export interface InvoiceReminderJob { invoiceId: string; dueDate: string }
 ```ts
 // functions/src/utils/paths.ts
 export const path = {
-  proof: (projectId: string, n: number) => `projects/${projectId}/proofs/proof-${n}.pdf`,
-  final: (projectId: string, code: string) => `projects/${projectId}/final/final-${code}.pdf`,
+  proof: (projectId: string, n: number) =>
+    `projects/${projectId}/proofs/proof-${n}.pdf`,
+  final: (projectId: string, code: string) =>
+    `projects/${projectId}/final/final-${code}.pdf`,
   quote: (quoteId: string, num: string) => `quotes/${quoteId}/quote-${num}.pdf`,
-  invoice: (invoiceId: string, num?: string) => `invoices/${invoiceId}/invoice-${num ?? invoiceId}.pdf`,
-}
+  invoice: (invoiceId: string, num?: string) =>
+    `invoices/${invoiceId}/invoice-${num ?? invoiceId}.pdf`,
+};
 ```
 
 ### 9.4 `src/lib/env.ts` (variáveis obrigatórias)
@@ -699,12 +1151,13 @@ const schema = z.object({
 })
 
 export const ENV = schema.parse({
-  NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+ NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyD9_vAO_-xcMGtlDXkHqrhtlbjjUF3Y1Uc
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=sistemaddm-dev.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=sistemaddm-dev
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=sistemaddm-dev.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=825537655768
+NEXT_PUBLIC_FIREBASE_APP_ID=1:825537655768:web:bcfc023a6bb872cd8ef8ad
+
 })
 ```
 
@@ -712,9 +1165,13 @@ export const ENV = schema.parse({
 
 ```ts
 // src/lib/permissions.ts
-export type Role = 'admin'|'producao'|'financeiro'|'cliente'
-export function canReadInvoice(role: Role) { return role==='admin' || role==='financeiro' }
-export function canReadProject(role: Role) { return role!=='cliente' ? true : true }
+export type Role = "admin" | "producao" | "financeiro" | "cliente";
+export function canReadInvoice(role: Role) {
+  return role === "admin" || role === "financeiro";
+}
+export function canReadProject(role: Role) {
+  return role !== "cliente" ? true : true;
+}
 // Expanda conforme necessidade
 ```
 
@@ -771,11 +1228,46 @@ service firebase.storage {
 ```json
 {
   "indexes": [
-    {"collectionGroup": "leads", "queryScope": "COLLECTION", "fields": [{"fieldPath": "stage", "order": "ASCENDING"}, {"fieldPath": "updatedAt", "order": "DESCENDING"}]},
-    {"collectionGroup": "quotes", "queryScope": "COLLECTION", "fields": [{"fieldPath": "status", "order": "ASCENDING"}, {"fieldPath": "updatedAt", "order": "DESCENDING"}]},
-    {"collectionGroup": "projects", "queryScope": "COLLECTION", "fields": [{"fieldPath": "status", "order": "ASCENDING"}, {"fieldPath": "updatedAt", "order": "DESCENDING"}]},
-    {"collectionGroup": "proofs", "queryScope": "COLLECTION", "fields": [{"fieldPath": "projectId", "order": "ASCENDING"}, {"fieldPath": "proofNumber", "order": "ASCENDING"}]},
-    {"collectionGroup": "invoices", "queryScope": "COLLECTION", "fields": [{"fieldPath": "status", "order": "ASCENDING"}, {"fieldPath": "dueDate", "order": "ASCENDING"}]}
+    {
+      "collectionGroup": "leads",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "stage", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "quotes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "projects",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "proofs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "projectId", "order": "ASCENDING" },
+        { "fieldPath": "proofNumber", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "invoices",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "dueDate", "order": "ASCENDING" }
+      ]
+    }
   ],
   "fieldOverrides": []
 }
@@ -788,8 +1280,8 @@ service firebase.storage {
 ```ts
 // functions/src/utils/log.ts
 export const log = (scope: string, data: Record<string, unknown>) => {
-  console.log(JSON.stringify({ scope, ...data }))
-}
+  console.log(JSON.stringify({ scope, ...data }));
+};
 ```
 
 - Padrão: um `scope` por função/evento e payload serializado.
@@ -828,8 +1320,16 @@ export const exportCsv = onRequest(async (_req, res) => {
 
 ```ts
 // scripts/seed.ts (sugestão)
-export const demoClient = { name: 'Autor Demo', email: 'autor@demo.com', status: 'ativo' }
-export const demoProject = { title: 'Livro Demo', clientId: 'CLIENT_ID', status: 'open' }
+export const demoClient = {
+  name: "Autor Demo",
+  email: "autor@demo.com",
+  status: "ativo",
+};
+export const demoProject = {
+  title: "Livro Demo",
+  clientId: "CLIENT_ID",
+  status: "open",
+};
 ```
 
 ---
@@ -842,18 +1342,10 @@ export const demoProject = { title: 'Livro Demo', clientId: 'CLIENT_ID', status:
 
 \- **\*\*Invoices.status:\*\*** \`draft\`, \`pending\`, \`paid\`, \`canceled\`.
 
-\- **\*\*Projects.status:\*\*** \`open\`, \`approved\`, \`in\_progress\`, \`done\`.
+\- **\*\*Projects.status:\*\*** \`open\`, \`approved\`, \`in_progress\`, \`done\`.
 
 \- **\*\*Máscaras:\*\*** CPF/CNPJ, telefone, CEP, BRL (UI); datas \`YYYY-MM-DD\` (UI) → Timestamp (Firestore).
 
 \
 
-
-
-
-
-
-
-
 > Estas seções adicionadas servem de **cola operacional**: padrões, contratos, regras e arquivos que vamos consultar e reutilizar durante o desenvolvimento. Ajusto qualquer parte conforme decidirmos os detalhes finais.
-

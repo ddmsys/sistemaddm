@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface FunnelStage {
   stage: string;
@@ -26,7 +26,7 @@ export function useFunnelData(period?: { start: Date; end: Date }) {
         // ✅ DADOS MOCKADOS SEM PERCENTAGE (será calculado)
         const mockData: Omit<FunnelStage, "percentage">[] = [
           {
-            stage: "primeiro-contato",
+            stage: "primeiro_contato",
             label: "Primeiro Contato",
             count: 150,
             value: 750000,
@@ -42,7 +42,7 @@ export function useFunnelData(period?: { start: Date; end: Date }) {
             conversionRate: 63.3,
           },
           {
-            stage: "proposta-enviada",
+            stage: "proposta_enviada",
             label: "Proposta Enviada",
             count: 68,
             value: 408000,
@@ -58,7 +58,7 @@ export function useFunnelData(period?: { start: Date; end: Date }) {
             conversionRate: 66.2,
           },
           {
-            stage: "fechado-ganho",
+            stage: "fechado_ganho",
             label: "Fechado Ganho",
             count: 28,
             value: 168000,
@@ -66,7 +66,7 @@ export function useFunnelData(period?: { start: Date; end: Date }) {
             conversionRate: 62.2,
           },
           {
-            stage: "fechado-perdido",
+            stage: "fechado_perdido",
             label: "Fechado Perdido",
             count: 17,
             value: 0,
@@ -106,11 +106,11 @@ export function useFunnelData(period?: { start: Date; end: Date }) {
   const stats = useMemo(() => {
     const totalLeads = funnelData.reduce((sum, stage) => sum + stage.count, 0);
     const totalValue = funnelData
-      .filter((stage) => stage.stage !== "fechado-perdido")
+      .filter((stage) => stage.stage !== "fechado_perdido")
       .reduce((sum, stage) => sum + stage.value, 0);
 
     const wonDeals =
-      funnelData.find((s) => s.stage === "fechado-ganho")?.count || 0;
+      funnelData.find((s) => s.stage === "fechado_ganho")?.count || 0;
     const conversionRate = totalLeads > 0 ? (wonDeals / totalLeads) * 100 : 0;
 
     return {

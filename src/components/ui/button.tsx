@@ -1,52 +1,74 @@
-import React from "react";
 import { cn } from "@/lib/utils";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
+import { ButtonHTMLAttributes, forwardRef } from "react";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "outline" | "ghost";
-  size?: "default" | "sm" | "lg";
+const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+  {
+    variants: {
+      variant: {
+        default: "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800",
+        destructive: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",
+        outline:
+          "border border-primary-200 bg-white hover:bg-primary-50 text-primary-900",
+        secondary:
+          "bg-primary-100 text-primary-900 hover:bg-primary-200 active:bg-primary-300",
+        ghost: "hover:bg-primary-100 text-primary-900 hover:text-primary-900",
+        link: "text-blue-600 underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 py-2 px-4",
+        sm: "h-9 px-3 rounded-md",
+        lg: "h-11 px-8 rounded-md",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
+
+export interface ButtonProps
+  extends ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
   loading?: boolean;
-  children: React.ReactNode; // ✅ OBRIGATÓRIO
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
-export function Button({
-  children,
-  variant = "default",
-  size = "default",
-  loading = false,
-  disabled,
-  className,
-  ...props
-}: ButtonProps) {
-  const baseStyles =
-    "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant,
+      size,
+      loading,
+      leftIcon,
+      rightIcon,
+      children,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={disabled || loading}
+        {...props}
+      >
+        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {leftIcon && !loading && <span className="mr-2">{leftIcon}</span>}
+        {children}
+        {rightIcon && <span className="ml-2">{rightIcon}</span>}
+      </button>
+    );
+  }
+);
+Button.displayName = "Button";
 
-  const variants = {
-    default: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-    outline:
-      "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-blue-500",
-    ghost: "text-slate-700 hover:bg-slate-100 focus:ring-blue-500",
-  };
-
-  const sizes = {
-    default: "h-10 px-4 py-2 text-sm",
-    sm: "h-8 px-3 py-1 text-xs",
-    lg: "h-12 px-6 py-3 text-base",
-  };
-
-  return (
-    <button
-      className={cn(baseStyles, variants[variant], sizes[size], className)}
-      disabled={disabled || loading}
-      {...props}
-    >
-      {loading ? (
-        <div className="flex items-center gap-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-          {children}
-        </div>
-      ) : (
-        children
-      )}
-    </button>
-  );
-}
+export { Button, buttonVariants };

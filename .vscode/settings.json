@@ -1,5 +1,18 @@
 {
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "eslint.validate": [
+    "typescript",
+    "typescriptreact",
+    "javascript",
+    "javascriptreact"
+  ],
   "cSpell.words": [
-    "planejamento"
+    "comercial",
+    "Formatadores",
+    "southamerica"
   ]
 }

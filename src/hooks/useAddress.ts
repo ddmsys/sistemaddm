@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
 import { fetchAddressByCep } from "@/lib/services/cep";
+import { useCallback, useState } from "react";
 
 interface Address {
   street: string;

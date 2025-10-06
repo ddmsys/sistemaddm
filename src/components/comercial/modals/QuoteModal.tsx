@@ -1,414 +1,467 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Quote } from "@/lib/types/comercial";
-import { useLeads } from "@/hooks/comercial/useLeads";
-import { useClients } from "@/hooks/comercial/useClients";
+import { Client, Quote, QuoteFormData } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
+import { Plus, Trash2, X } from "lucide-react";
+import { useState } from "react";
+
+interface QuoteItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+}
 
 interface QuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  quote: Quote | null;
-  onSave: (data: any) => Promise<void>;
-  loading?: boolean;
+  onSubmit: (data: QuoteFormData) => Promise<void>;
+  quote?: Quote | null;
+  clients: Client[];
 }
 
 export function QuoteModal({
   isOpen,
   onClose,
+  onSubmit,
   quote,
-  onSave,
-  loading = false,
+  clients,
 }: QuoteModalProps) {
-  // ✅ HOOKS PARA BUSCAR DADOS (IGUAL CLIENTE)
-  const { leads } = useLeads();
-  const { clients } = useClients();
-
-  // ✅ FORM STATE (SIMPLIFICADO COMO CLIENTE)
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    clientType: "client" as "client" | "lead",
-    clientId: "",
-    leadId: "",
-    validUntil: "",
-    status: "draft" as "draft" | "sent" | "approved" | "rejected",
-    total: "",
-    terms: "",
-    notes: "",
+    client_id: quote?.client_id || "",
+    title: quote?.title || "",
+    description: quote?.description || "",
+    discount_percentage: quote?.discount_percentage || 0,
+    valid_until: quote?.valid_until
+      ? (quote.valid_until as any).seconds
+        ? new Date(quote.valid_until.seconds * 1000).toISOString().split("T")[0]
+        : new Date(quote.valid_until).toISOString().split("T")[0]
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+    notes: quote?.notes || "",
+    terms_conditions: quote?.terms_conditions || "",
   });
 
+  const [items, setItems] = useState<QuoteItem[]>(
+    quote?.items?.map((item) => ({
+      description: item.description,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+    })) || [{ description: "", quantity: 1, unit_price: 0 }]
+  );
+
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // ✅ POPULATE FORM WHEN EDITING (IGUAL CLIENTE)
-  useEffect(() => {
-    if (quote) {
-      setFormData({
-        title: quote.title || "",
-        description: quote.description || "",
-        clientType: quote.clientId ? "client" : "lead",
-        clientId: quote.clientId || "",
-        leadId: quote.leadId || "",
-        validUntil: "", // ✅ SEMPRE VAZIO PARA EVITAR ERRO
-        status: "draft", // ✅ SEMPRE DRAFT PARA EVITAR ERRO
-        total: "", // ✅ SEMPRE VAZIO PARA EVITAR ERRO
-        terms: "", // ✅ SEMPRE VAZIO PARA EVITAR ERRO
-        notes: "", // ✅ SEMPRE VAZIO PARA EVITAR ERRO
-      });
-    } else {
-      setFormData({
-        title: "",
-        description: "",
-        clientType: "client",
-        clientId: "",
-        leadId: "",
-        validUntil: "",
-        status: "draft",
-        total: "",
-        terms: "",
-        notes: "",
-      });
-    }
-    setErrors({});
-  }, [quote, isOpen]);
+  if (!isOpen) return null;
 
-  // ✅ VALIDATION (IGUAL CLIENTE)
-  const validateForm = async (): Promise<boolean> => {
+  const addItem = () => {
+    setItems([...items, { description: "", quantity: 1, unit_price: 0 }]);
+  };
+
+  const removeItem = (index: number) => {
+    if (items.length > 1) {
+      setItems(items.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateItem = (
+    index: number,
+    field: keyof QuoteItem,
+    value: string | number
+  ) => {
+    const newItems = [...items];
+    if (field === "quantity" || field === "unit_price") {
+      newItems[index] = { ...newItems[index], [field]: Number(value) || 0 };
+    } else {
+      newItems[index] = { ...newItems[index], [field]: value };
+    }
+    setItems(newItems);
+  };
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.quantity * item.unit_price,
+    0
+  );
+  const discountAmount = (subtotal * formData.discount_percentage) / 100;
+  const total = subtotal - discountAmount;
+
+  const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
 
-    // ✅ CAMPOS OBRIGATÓRIOS
-    if (!formData.title?.trim()) newErrors.title = "Título é obrigatório";
+    if (!formData.client_id) newErrors.client_id = "Cliente é obrigatório";
+    if (!formData.title.trim()) newErrors.title = "Título é obrigatório";
+    if (!formData.valid_until)
+      newErrors.valid_until = "Data de validade é obrigatória";
 
-    if (formData.clientType === "client" && !formData.clientId) {
-      newErrors.clientId = "Selecione um cliente";
-    }
-    if (formData.clientType === "lead" && !formData.leadId) {
-      newErrors.leadId = "Selecione um lead";
-    }
-
-    // ✅ VALIDAÇÃO DE TOTAL
-    if (formData.total && isNaN(Number(formData.total))) {
-      newErrors.total = "Valor deve ser um número válido";
+    const hasEmptyItems = items.some((item) => !item.description.trim());
+    if (hasEmptyItems) {
+      newErrors.items = "Todos os itens devem ter descrição";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const hasInvalidQuantity = items.some((item) => item.quantity <= 0);
+    if (hasInvalidQuantity) {
+      newErrors.items = "Quantidade deve ser maior que zero";
+    }
+
+    return newErrors;
   };
 
-  // ✅ SUBMIT (IGUAL CLIENTE)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const isValid = await validateForm();
-    if (!isValid) return;
+    setLoading(true);
 
     try {
-      // ✅ PREPARAR DADOS PARA SALVAR (IGUAL CLIENTE)
-      const quoteData: any = {
-        title: formData.title,
-        status: formData.status,
-      };
+      const validationErrors = validateForm();
 
-      // ✅ DEFINIR CLIENTE OU LEAD
-      if (formData.clientType === "client") {
-        quoteData.clientId = formData.clientId;
-      } else {
-        quoteData.leadId = formData.leadId;
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
       }
 
-      // ✅ ADICIONAR CAMPOS SE PREENCHIDOS (IGUAL CLIENTE)
-      if (formData.description?.trim())
-        quoteData.description = formData.description;
-      if (formData.validUntil?.trim())
-        quoteData.validUntil = formData.validUntil;
-      if (formData.total?.trim()) quoteData.total = Number(formData.total);
-      if (formData.terms?.trim()) quoteData.terms = formData.terms;
-      if (formData.notes?.trim()) quoteData.notes = formData.notes;
+      const submitData: QuoteFormData = {
+        ...formData,
+        items: items.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        })),
+      };
 
-      await onSave(quoteData);
+      await onSubmit(submitData);
       onClose();
+
+      // Reset form
+      setFormData({
+        client_id: "",
+        title: "",
+        description: "",
+        discount_percentage: 0,
+        valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        notes: "",
+        terms_conditions: "",
+      });
+      setItems([{ description: "", quantity: 1, unit_price: 0 }]);
+      setErrors({});
     } catch (error) {
       console.error("Erro ao salvar orçamento:", error);
+      setErrors({ general: "Erro ao salvar orçamento. Tente novamente." });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ CLOSE HANDLER (IGUAL CLIENTE)
   const handleClose = () => {
-    setFormData({
-      title: "",
-      description: "",
-      clientType: "client",
-      clientId: "",
-      leadId: "",
-      validUntil: "",
-      status: "draft",
-      total: "",
-      terms: "",
-      notes: "",
-    });
     setErrors({});
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <Modal onClose={handleClose}>
-      <div className="w-full max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-semibold text-primary-900">
             {quote ? "Editar Orçamento" : "Novo Orçamento"}
           </h2>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-600 text-2xl"
+            className="text-primary-400 hover:text-primary-600 p-1"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* ✅ INFORMAÇÕES BÁSICAS */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">Título do Orçamento *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, title: e.target.value }))
-                }
-                placeholder="Orçamento para Website"
-                error={errors.title}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="description">Descrição</Label>
-              <textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="Descreva o orçamento..."
-                rows={4}
-                className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
-            </div>
-          </div>
-
-          {/* ✅ VINCULAÇÃO CLIENTE/LEAD */}
-          <div className="space-y-4 border rounded-lg p-4 bg-gray-50">
-            <Label>Vinculação</Label>
-
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="clientType"
-                  value="client"
-                  checked={formData.clientType === "client"}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      clientType: "client",
-                      clientId: "",
-                      leadId: "",
-                    }))
-                  }
-                  className="text-blue-500"
-                />
-                <span>Cliente Existente</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="clientType"
-                  value="lead"
-                  checked={formData.clientType === "lead"}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      clientType: "lead",
-                      clientId: "",
-                      leadId: "",
-                    }))
-                  }
-                  className="text-blue-500"
-                />
-                <span>Lead (Potencial)</span>
-              </label>
-            </div>
-
-            {formData.clientType === "client" ? (
-              <div>
-                <Label htmlFor="clientId">Cliente *</Label>
-                <select
-                  id="clientId"
-                  value={formData.clientId}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      clientId: e.target.value,
-                    }))
-                  }
-                  className="flex h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                >
-                  <option value="">Selecione um cliente</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name || client.companyName || "Cliente sem nome"}
-                    </option>
-                  ))}
-                </select>
-                {errors.clientId && (
-                  <p className="text-sm text-red-600 mt-1">{errors.clientId}</p>
-                )}
-              </div>
-            ) : (
-              <div>
-                <Label htmlFor="leadId">Lead *</Label>
-                <select
-                  id="leadId"
-                  value={formData.leadId}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, leadId: e.target.value }))
-                  }
-                  className="flex h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                >
-                  <option value="">Selecione um lead</option>
-                  {leads.map((lead) => (
-                    <option key={lead.id} value={lead.id}>
-                      {lead.name} - {lead.company || "Sem empresa"}
-                    </option>
-                  ))}
-                </select>
-                {errors.leadId && (
-                  <p className="text-sm text-red-600 mt-1">{errors.leadId}</p>
-                )}
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {errors.general && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {errors.general}
               </div>
             )}
-          </div>
 
-          {/* ✅ VALORES E STATUS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Dados Básicos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-primary-700 mb-1">
+                  Cliente *
+                </label>
+                <select
+                  className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  value={formData.client_id}
+                  onChange={(e) => {
+                    setFormData({ ...formData, client_id: e.target.value });
+                    if (errors.client_id)
+                      setErrors({ ...errors, client_id: "" });
+                  }}
+                >
+                  <option value="">Selecione o cliente</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name} ({client.client_number})
+                    </option>
+                  ))}
+                </select>
+                {errors.client_id && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.client_id}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary-700 mb-1">
+                  Válido até *
+                </label>
+                <input
+                  type="date"
+                  className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  value={formData.valid_until}
+                  onChange={(e) => {
+                    setFormData({ ...formData, valid_until: e.target.value });
+                    if (errors.valid_until)
+                      setErrors({ ...errors, valid_until: "" });
+                  }}
+                />
+                {errors.valid_until && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.valid_until}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="total">Valor Total (R$)</Label>
-              <Input
-                id="total"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.total}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, total: e.target.value }))
-                }
-                placeholder="0.00"
-                error={errors.total}
+              <label className="block text-sm font-medium text-primary-700 mb-1">
+                Título do orçamento *
+              </label>
+              <input
+                type="text"
+                className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                value={formData.title}
+                onChange={(e) => {
+                  setFormData({ ...formData, title: e.target.value });
+                  if (errors.title) setErrors({ ...errors, title: "" });
+                }}
+                placeholder="Ex: Impressão de livro infantil"
               />
-            </div>
-
-            <div>
-              <Label htmlFor="validUntil">Válido até</Label>
-              <Input
-                id="validUntil"
-                type="date"
-                value={formData.validUntil}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    validUntil: e.target.value,
-                  }))
-                }
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    status: e.target.value as any,
-                  }))
-                }
-                className="flex h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="draft">Rascunho</option>
-                <option value="sent">Enviado</option>
-                <option value="approved">Aprovado</option>
-                <option value="rejected">Rejeitado</option>
-              </select>
-            </div>
-          </div>
-
-          {/* ✅ TERMOS E OBSERVAÇÕES */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="terms">Termos e Condições</Label>
-              <textarea
-                id="terms"
-                value={formData.terms}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, terms: e.target.value }))
-                }
-                placeholder="Pagamento 50% antecipado, prazo 30 dias..."
-                rows={3}
-                className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="notes">Observações Internas</Label>
-              <textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
-                }
-                placeholder="Observações que não aparecerão no orçamento..."
-                rows={2}
-                className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
-            </div>
-          </div>
-
-          {/* ✅ BUTTONS (IGUAL CLIENTE) */}
-          <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading} className="min-w-[120px]">
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                  Salvando...
-                </div>
-              ) : quote ? (
-                "Atualizar"
-              ) : (
-                "Criar Orçamento"
+              {errors.title && (
+                <p className="text-sm text-red-600 mt-1">{errors.title}</p>
               )}
-            </Button>
-          </div>
-        </form>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-primary-700 mb-1">
+                Descrição
+              </label>
+              <textarea
+                rows={3}
+                className="w-full px-3 py-2 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="Descrição detalhada do projeto..."
+              />
+            </div>
+
+            {/* Itens */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-primary-900">
+                  Itens do Orçamento
+                </h3>
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="flex items-center gap-1 px-3 py-2 text-sm text-blue-600 border border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Adicionar Item
+                </button>
+              </div>
+
+              {errors.items && (
+                <p className="text-sm text-red-600">{errors.items}</p>
+              )}
+
+              <div className="space-y-3">
+                {items.map((item, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-12 gap-2 items-end bg-primary-50 p-3 rounded-lg"
+                  >
+                    <div className="col-span-5">
+                      <label className="block text-xs font-medium text-primary-700 mb-1">
+                        Descrição
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full h-10 px-2 border border-primary-200 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+                        value={item.description}
+                        onChange={(e) =>
+                          updateItem(index, "description", e.target.value)
+                        }
+                        placeholder="Descrição do item"
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="block text-xs font-medium text-primary-700 mb-1">
+                        Qtd
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        className="w-full h-10 px-2 border border-primary-200 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateItem(index, "quantity", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="col-span-3">
+                      <label className="block text-xs font-medium text-primary-700 mb-1">
+                        Preço Unit.
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="w-full h-10 px-2 border border-primary-200 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+                        value={item.unit_price}
+                        onChange={(e) =>
+                          updateItem(index, "unit_price", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="col-span-1 text-center">
+                      <div className="text-xs text-primary-700 mb-1">Total</div>
+                      <div className="text-sm font-medium">
+                        {formatCurrency(item.quantity * item.unit_price)}
+                      </div>
+                    </div>
+
+                    <div className="col-span-1 text-center">
+                      {items.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeItem(index)}
+                          className="p-1 text-red-600 hover:text-red-700 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Totais */}
+              <div className="bg-primary-100 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span className="font-medium">
+                    {formatCurrency(subtotal)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>Desconto:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      className="w-16 h-8 px-2 border border-primary-200 rounded text-sm"
+                      value={formData.discount_percentage}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          discount_percentage: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                    />
+                    <span>%</span>
+                  </div>
+                  <span className="font-medium text-red-600">
+                    -{formatCurrency(discountAmount)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-lg font-bold text-primary-900 pt-2 border-t border-primary-300">
+                  <span>Total:</span>
+                  <span>{formatCurrency(total)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Observações */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-primary-700 mb-1">
+                  Observações
+                </label>
+                <textarea
+                  rows={3}
+                  className="w-full px-3 py-2 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  value={formData.notes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
+                  placeholder="Observações internas..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary-700 mb-1">
+                  Termos e Condições
+                </label>
+                <textarea
+                  rows={3}
+                  className="w-full px-3 py-2 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  value={formData.terms_conditions}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      terms_conditions: e.target.value,
+                    })
+                  }
+                  placeholder="Termos específicos deste orçamento..."
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 bg-primary-50 border-t">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="px-4 py-2 text-primary-700 border border-primary-300 rounded-md hover:bg-primary-100 transition-colors"
+            disabled={loading}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+          >
+            {loading && (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            )}
+            {quote ? "Salvar Alterações" : "Criar Orçamento"}
+          </button>
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 }
