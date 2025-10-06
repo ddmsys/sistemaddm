@@ -1,29 +1,29 @@
 // src/components/ui/ThemeToggle.tsx
-"use client";
+'use client';
 
-import { useTheme } from "@/components/providers/ThemeProvider";
-import { Button } from "@/components/ui/button";
+import { useTheme } from '@/components/providers/ThemeProvider';
+import { Button } from '@/components/ui/button';
 
 export function ThemeToggle() {
   const { theme, toggleTheme, actualTheme } = useTheme();
 
   const getIcon = () => {
-    if (theme === "system") {
-      return actualTheme === "dark" ? "🌙" : "☀️";
+    if (theme === 'system') {
+      return actualTheme === 'dark' ? '🌙' : '☀️';
     }
-    return theme === "dark" ? "🌙" : "☀️";
+    return theme === 'dark' ? '🌙' : '☀️';
   };
 
   const getLabel = () => {
     switch (theme) {
-      case "light":
-        return "Claro";
-      case "dark":
-        return "Escuro";
-      case "system":
-        return `Sistema (${actualTheme === "dark" ? "Escuro" : "Claro"})`;
+      case 'light':
+        return 'Claro';
+      case 'dark':
+        return 'Escuro';
+      case 'system':
+        return `Sistema (${actualTheme === 'dark' ? 'Escuro' : 'Claro'})`;
       default:
-        return "Tema";
+        return 'Tema';
     }
   };
 

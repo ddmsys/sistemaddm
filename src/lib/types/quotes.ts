@@ -1,12 +1,6 @@
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
-export type QuoteStatus =
-  | "draft"
-  | "sent"
-  | "viewed"
-  | "signed"
-  | "rejected"
-  | "expired";
+export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'rejected' | 'expired';
 
 // Filtro de Quotes
 export interface QuoteFilters {
@@ -42,7 +36,7 @@ export interface Quote {
   leadId?: string;
   projectTitle: string;
   description?: string; // Para compatibilidade
-  quoteType: "producao" | "impressao" | "misto";
+  quoteType: 'producao' | 'impressao' | 'misto';
   issueDate: string;
   validityDays: number;
   expiryDate?: string;
@@ -51,7 +45,7 @@ export interface Quote {
   totals: {
     subtotal: number;
     discount: number;
-    discountType: "percentage" | "fixed";
+    discountType: 'percentage' | 'fixed';
     freight: number;
     taxes: number;
     total: number;
@@ -81,7 +75,7 @@ export interface Quote {
 export interface QuoteItem {
   id?: string;
   description: string;
-  kind: "etapa" | "impressao";
+  kind: 'etapa' | 'impressao';
   specifications?: string;
   qty?: number;
   unitPrice?: number;
@@ -105,18 +99,18 @@ export interface QuoteFormData {
   title: string;
   description?: string;
   projectTitle: string;
-  quoteType: "producao" | "impressao" | "misto";
+  quoteType: 'producao' | 'impressao' | 'misto';
   issueDate: string;
   validUntil?: string | Date;
   expiryDate?: string;
   status?: QuoteStatus;
   items: QuoteItem[];
   discount?: number;
-  discountType?: "percentage" | "fixed";
+  discountType?: 'percentage' | 'fixed';
   totals?: {
     subtotal: number;
     discount: number;
-    discountType: "percentage" | "fixed";
+    discountType: 'percentage' | 'fixed';
     freight: number;
     taxes: number;
     total: number;

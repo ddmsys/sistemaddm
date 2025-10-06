@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import { Client, Project, ProjectFormData, ProjectType } from "@/lib/types";
-import { Calendar, X } from "lucide-react";
-import { useState } from "react";
+import { Calendar, X } from 'lucide-react';
+import { useState } from 'react';
+
+import { Client, Project, ProjectFormData, ProjectType } from '@/lib/types';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -14,20 +15,20 @@ interface ProjectModalProps {
 }
 
 const projectTypes = [
-  { value: "livro_fisico", label: "Livro Físico" },
-  { value: "ebook", label: "E-book" },
-  { value: "audiobook", label: "Audiobook" },
-  { value: "revista", label: "Revista" },
-  { value: "catalogo", label: "Catálogo" },
-  { value: "material_promocional", label: "Material Promocional" },
-  { value: "outros", label: "Outros" },
+  { value: 'livro_fisico', label: 'Livro Físico' },
+  { value: 'ebook', label: 'E-book' },
+  { value: 'audiobook', label: 'Audiobook' },
+  { value: 'revista', label: 'Revista' },
+  { value: 'catalogo', label: 'Catálogo' },
+  { value: 'material_promocional', label: 'Material Promocional' },
+  { value: 'outros', label: 'Outros' },
 ];
 
 const priorities = [
-  { value: "low", label: "Baixa" },
-  { value: "medium", label: "Média" },
-  { value: "high", label: "Alta" },
-  { value: "urgent", label: "Urgente" },
+  { value: 'low', label: 'Baixa' },
+  { value: 'medium', label: 'Média' },
+  { value: 'high', label: 'Alta' },
+  { value: 'urgent', label: 'Urgente' },
 ];
 
 export function ProjectModal({
@@ -39,31 +40,29 @@ export function ProjectModal({
   users,
 }: ProjectModalProps) {
   const [formData, setFormData] = useState<ProjectFormData>({
-    title: project?.title || "",
-    description: project?.description || "",
-    client_id: project?.client_id || "",
-    type: project?.type || "livro_fisico",
-    priority: project?.priority || "medium",
+    title: project?.title || '',
+    description: project?.description || '',
+    client_id: project?.client_id || '',
+    type: project?.type || 'livro_fisico',
+    priority: project?.priority || 'medium',
     start_date: project?.start_date
-      ? new Date(project.start_date.seconds * 1000).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0],
+      ? new Date(project.start_date.seconds * 1000).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0],
     due_date: project?.due_date
-      ? new Date(project.due_date.seconds * 1000).toISOString().split("T")[0]
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
+      ? new Date(project.due_date.seconds * 1000).toISOString().split('T')[0]
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     budget: project?.budget || 0,
     team_members: project?.team_members || [],
-    project_manager: project?.project_manager || "",
+    project_manager: project?.project_manager || '',
     specifications: {
-      format: project?.specifications?.format || "",
+      format: project?.specifications?.format || '',
       pages: project?.specifications?.pages || undefined,
       copies: project?.specifications?.copies || undefined,
-      paper_type: project?.specifications?.paper_type || "",
-      binding: project?.specifications?.binding || "",
-      colors: project?.specifications?.colors || "",
+      paper_type: project?.specifications?.paper_type || '',
+      binding: project?.specifications?.binding || '',
+      colors: project?.specifications?.colors || '',
       finishing: project?.specifications?.finishing || [],
-      special_requirements: project?.specifications?.special_requirements || "",
+      special_requirements: project?.specifications?.special_requirements || '',
     },
   });
 
@@ -78,12 +77,10 @@ export function ProjectModal({
 
     // Validação simples
     const newErrors: Record<string, string> = {};
-    if (!formData.title) newErrors.title = "Título é obrigatório";
-    if (!formData.client_id) newErrors.client_id = "Cliente é obrigatório";
-    if (!formData.project_manager)
-      newErrors.project_manager = "Gerente é obrigatório";
-    if (formData.budget <= 0)
-      newErrors.budget = "Orçamento deve ser maior que zero";
+    if (!formData.title) newErrors.title = 'Título é obrigatório';
+    if (!formData.client_id) newErrors.client_id = 'Cliente é obrigatório';
+    if (!formData.project_manager) newErrors.project_manager = 'Gerente é obrigatório';
+    if (formData.budget <= 0) newErrors.budget = 'Orçamento deve ser maior que zero';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -95,7 +92,7 @@ export function ProjectModal({
       await onSubmit(formData);
       onClose();
     } catch (error) {
-      console.error("Erro ao salvar projeto:", error);
+      console.error('Erro ao salvar projeto:', error);
     } finally {
       setLoading(false);
     }
@@ -103,58 +100,47 @@ export function ProjectModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between border-b p-6">
           <h2 className="text-xl font-semibold text-primary-900">
-            {project ? "Editar Projeto" : "Novo Projeto"}
+            {project ? 'Editar Projeto' : 'Novo Projeto'}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-primary-400 hover:text-primary-600 p-1"
-          >
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="p-1 text-primary-400 hover:text-primary-600">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div className="max-h-[calc(90vh-140px)] overflow-y-auto p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Dados Básicos */}
             <div>
-              <h3 className="text-lg font-medium text-primary-900 mb-4">
-                Informações Básicas
-              </h3>
+              <h3 className="mb-4 text-lg font-medium text-primary-900">Informações Básicas</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-primary-700">
                     Título do Projeto *
                   </label>
                   <input
                     type="text"
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="Nome do projeto"
                   />
-                  {errors.title && (
-                    <p className="text-sm text-red-600 mt-1">{errors.title}</p>
-                  )}
+                  {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-primary-700">
                     Cliente *
                   </label>
                   <select
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     value={formData.client_id}
-                    onChange={(e) =>
-                      setFormData({ ...formData, client_id: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
                   >
                     <option value="">Selecione o cliente</option>
                     {clients.map((client) => (
@@ -164,35 +150,29 @@ export function ProjectModal({
                     ))}
                   </select>
                   {errors.client_id && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.client_id}
-                    </p>
+                    <p className="mt-1 text-sm text-red-600">{errors.client_id}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-primary-700 mb-1">
-                  Descrição
-                </label>
+                <label className="mb-1 block text-sm font-medium text-primary-700">Descrição</label>
                 <textarea
                   rows={3}
-                  className="w-full px-3 py-2 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-md border border-primary-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descrição detalhada do projeto..."
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-primary-700">
                     Tipo de Projeto
                   </label>
                   <select
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     value={formData.type}
                     onChange={(e) =>
                       setFormData({
@@ -210,11 +190,11 @@ export function ProjectModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-primary-700">
                     Prioridade
                   </label>
                   <select
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     value={formData.priority}
                     onChange={(e) =>
                       setFormData({
@@ -232,14 +212,14 @@ export function ProjectModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-primary-700">
                     Orçamento *
                   </label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     value={formData.budget}
                     onChange={(e) =>
                       setFormData({
@@ -249,50 +229,44 @@ export function ProjectModal({
                     }
                     placeholder="0.00"
                   />
-                  {errors.budget && (
-                    <p className="text-sm text-red-600 mt-1">{errors.budget}</p>
-                  )}
+                  {errors.budget && <p className="mt-1 text-sm text-red-600">{errors.budget}</p>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    <Calendar className="inline w-4 h-4 mr-1" />
+                  <label className="mb-1 block text-sm font-medium text-primary-700">
+                    <Calendar className="mr-1 inline h-4 w-4" />
                     Data de Início
                   </label>
                   <input
                     type="date"
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     value={formData.start_date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, start_date: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    <Calendar className="inline w-4 h-4 mr-1" />
+                  <label className="mb-1 block text-sm font-medium text-primary-700">
+                    <Calendar className="mr-1 inline h-4 w-4" />
                     Data de Entrega
                   </label>
                   <input
                     type="date"
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     value={formData.due_date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, due_date: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-primary-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-primary-700">
                   Gerente do Projeto *
                 </label>
                 <select
-                  className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   value={formData.project_manager}
                   onChange={(e) =>
                     setFormData({
@@ -309,38 +283,34 @@ export function ProjectModal({
                   ))}
                 </select>
                 {errors.project_manager && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {errors.project_manager}
-                  </p>
+                  <p className="mt-1 text-sm text-red-600">{errors.project_manager}</p>
                 )}
               </div>
             </div>
 
             {/* Especificações Técnicas */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-primary-900">
-                  Especificações Técnicas
-                </h3>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-medium text-primary-900">Especificações Técnicas</h3>
                 <button
                   type="button"
                   onClick={() => setShowSpecs(!showSpecs)}
-                  className="text-blue-600 hover:text-blue-700 text-sm"
+                  className="text-sm text-blue-600 hover:text-blue-700"
                 >
-                  {showSpecs ? "Ocultar" : "Mostrar"} Especificações
+                  {showSpecs ? 'Ocultar' : 'Mostrar'} Especificações
                 </button>
               </div>
 
               {showSpecs && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
-                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                      <label className="mb-1 block text-sm font-medium text-primary-700">
                         Formato
                       </label>
                       <input
                         type="text"
-                        className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                         value={formData.specifications?.format}
                         onChange={(e) =>
                           setFormData({
@@ -356,14 +326,14 @@ export function ProjectModal({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                      <label className="mb-1 block text-sm font-medium text-primary-700">
                         Páginas
                       </label>
                       <input
                         type="number"
                         min="1"
-                        className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={formData.specifications?.pages || ""}
+                        className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                        value={formData.specifications?.pages || ''}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
@@ -378,14 +348,14 @@ export function ProjectModal({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                      <label className="mb-1 block text-sm font-medium text-primary-700">
                         Tiragem
                       </label>
                       <input
                         type="number"
                         min="1"
-                        className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={formData.specifications?.copies || ""}
+                        className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                        value={formData.specifications?.copies || ''}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
@@ -400,14 +370,14 @@ export function ProjectModal({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
-                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                      <label className="mb-1 block text-sm font-medium text-primary-700">
                         Tipo de Papel
                       </label>
                       <input
                         type="text"
-                        className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                         value={formData.specifications?.paper_type}
                         onChange={(e) =>
                           setFormData({
@@ -423,12 +393,12 @@ export function ProjectModal({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                      <label className="mb-1 block text-sm font-medium text-primary-700">
                         Encadernação
                       </label>
                       <input
                         type="text"
-                        className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                         value={formData.specifications?.binding}
                         onChange={(e) =>
                           setFormData({
@@ -444,12 +414,12 @@ export function ProjectModal({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-primary-700 mb-1">
+                      <label className="mb-1 block text-sm font-medium text-primary-700">
                         Cores
                       </label>
                       <input
                         type="text"
-                        className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="h-12 w-full rounded-md border border-primary-200 px-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                         value={formData.specifications?.colors}
                         onChange={(e) =>
                           setFormData({
@@ -466,12 +436,12 @@ export function ProjectModal({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-primary-700 mb-1">
+                    <label className="mb-1 block text-sm font-medium text-primary-700">
                       Requisitos Especiais
                     </label>
                     <textarea
                       rows={3}
-                      className="w-full px-3 py-2 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full rounded-md border border-primary-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                       value={formData.specifications?.special_requirements}
                       onChange={(e) =>
                         setFormData({
@@ -492,11 +462,11 @@ export function ProjectModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 bg-primary-50 border-t">
+        <div className="flex items-center justify-end gap-3 border-t bg-primary-50 px-6 py-4">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-primary-700 border border-primary-300 rounded-md hover:bg-primary-100"
+            className="rounded-md border border-primary-300 px-4 py-2 text-primary-700 hover:bg-primary-100"
             disabled={loading}
           >
             Cancelar
@@ -504,12 +474,12 @@ export function ProjectModal({
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            className="flex items-center gap-2 rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {loading && (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
             )}
-            {project ? "Salvar Alterações" : "Criar Projeto"}
+            {project ? 'Salvar Alterações' : 'Criar Projeto'}
           </button>
         </div>
       </div>

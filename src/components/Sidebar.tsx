@@ -1,8 +1,6 @@
-"use client";
+'use client';
 
-import { UserRole } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, Transition } from '@headlessui/react';
 import {
   BarChart3,
   Briefcase,
@@ -16,10 +14,13 @@ import {
   Truck,
   Users,
   X,
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Fragment } from "react";
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Fragment } from 'react';
+
+import { UserRole } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface NavigationItem {
   name: string;
@@ -32,233 +33,225 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
   {
-    name: "Dashboard",
-    href: "/",
+    name: 'Dashboard',
+    href: '/',
     icon: BarChart3,
-    roles: [
-      "admin",
-      "comercial",
-      "producao",
-      "financeiro",
-      "compras",
-      "logistica",
-      "marketing",
-    ],
+    roles: ['admin', 'comercial', 'producao', 'financeiro', 'compras', 'logistica', 'marketing'],
   },
   {
-    name: "CRM/Comercial",
-    href: "/crm",
+    name: 'CRM/Comercial',
+    href: '/crm',
     icon: Users,
-    roles: ["admin", "comercial"],
+    roles: ['admin', 'comercial'],
     children: [
       {
-        name: "Dashboard",
-        href: "/crm",
+        name: 'Dashboard',
+        href: '/crm',
         icon: BarChart3,
-        roles: ["admin", "comercial"],
+        roles: ['admin', 'comercial'],
       },
       {
-        name: "Leads",
-        href: "/crm/leads",
+        name: 'Leads',
+        href: '/crm/leads',
         icon: Users,
-        roles: ["admin", "comercial"],
+        roles: ['admin', 'comercial'],
       },
       {
-        name: "Orçamentos",
-        href: "/crm/quotes",
+        name: 'Orçamentos',
+        href: '/crm/quotes',
         icon: FileText,
-        roles: ["admin", "comercial"],
+        roles: ['admin', 'comercial'],
       },
       {
-        name: "Projetos",
-        href: "/crm/projects",
+        name: 'Projetos',
+        href: '/crm/projects',
         icon: Briefcase,
-        roles: ["admin", "comercial"],
+        roles: ['admin', 'comercial'],
       },
       {
-        name: "Clientes",
-        href: "/crm/clients",
+        name: 'Clientes',
+        href: '/crm/clients',
         icon: Users,
-        roles: ["admin", "comercial"],
+        roles: ['admin', 'comercial'],
       },
     ],
   },
   {
-    name: "Produção",
-    href: "/production",
+    name: 'Produção',
+    href: '/production',
     icon: Briefcase,
-    roles: ["admin", "producao"],
+    roles: ['admin', 'producao'],
     children: [
       {
-        name: "Dashboard",
-        href: "/production",
+        name: 'Dashboard',
+        href: '/production',
         icon: BarChart3,
-        roles: ["admin", "producao"],
+        roles: ['admin', 'producao'],
       },
       {
-        name: "Fila de Produção",
-        href: "/production/queue",
+        name: 'Fila de Produção',
+        href: '/production/queue',
         icon: Briefcase,
-        roles: ["admin", "producao"],
+        roles: ['admin', 'producao'],
       },
       {
-        name: "Provas",
-        href: "/production/proofs",
+        name: 'Provas',
+        href: '/production/proofs',
         icon: FileText,
-        roles: ["admin", "producao"],
+        roles: ['admin', 'producao'],
       },
       {
-        name: "Qualidade",
-        href: "/production/quality",
+        name: 'Qualidade',
+        href: '/production/quality',
         icon: Settings,
-        roles: ["admin", "producao"],
+        roles: ['admin', 'producao'],
       },
     ],
   },
   {
-    name: "Financeiro",
-    href: "/finance",
+    name: 'Financeiro',
+    href: '/finance',
     icon: DollarSign,
-    roles: ["admin", "financeiro"],
+    roles: ['admin', 'financeiro'],
     children: [
       {
-        name: "Dashboard",
-        href: "/finance",
+        name: 'Dashboard',
+        href: '/finance',
         icon: BarChart3,
-        roles: ["admin", "financeiro"],
+        roles: ['admin', 'financeiro'],
       },
       {
-        name: "Faturas",
-        href: "/finance/invoices",
+        name: 'Faturas',
+        href: '/finance/invoices',
         icon: FileText,
-        roles: ["admin", "financeiro"],
+        roles: ['admin', 'financeiro'],
       },
       {
-        name: "Contas a Receber",
-        href: "/finance/receivables",
+        name: 'Contas a Receber',
+        href: '/finance/receivables',
         icon: DollarSign,
-        roles: ["admin", "financeiro"],
+        roles: ['admin', 'financeiro'],
       },
     ],
   },
   {
-    name: "Compras",
-    href: "/purchases",
+    name: 'Compras',
+    href: '/purchases',
     icon: ShoppingCart,
-    roles: ["admin", "compras"],
+    roles: ['admin', 'compras'],
     children: [
       {
-        name: "Dashboard",
-        href: "/purchases",
+        name: 'Dashboard',
+        href: '/purchases',
         icon: BarChart3,
-        roles: ["admin", "compras"],
+        roles: ['admin', 'compras'],
       },
       {
-        name: "Fornecedores",
-        href: "/purchases/suppliers",
+        name: 'Fornecedores',
+        href: '/purchases/suppliers',
         icon: Users,
-        roles: ["admin", "compras"],
+        roles: ['admin', 'compras'],
       },
       {
-        name: "Pedidos",
-        href: "/purchases/orders",
+        name: 'Pedidos',
+        href: '/purchases/orders',
         icon: ShoppingCart,
-        roles: ["admin", "compras"],
+        roles: ['admin', 'compras'],
       },
     ],
   },
   {
-    name: "Logística",
-    href: "/logistics",
+    name: 'Logística',
+    href: '/logistics',
     icon: Truck,
-    roles: ["admin", "logistica"],
+    roles: ['admin', 'logistica'],
     children: [
       {
-        name: "Dashboard",
-        href: "/logistics",
+        name: 'Dashboard',
+        href: '/logistics',
         icon: BarChart3,
-        roles: ["admin", "logistica"],
+        roles: ['admin', 'logistica'],
       },
       {
-        name: "Envios",
-        href: "/logistics/shipments",
+        name: 'Envios',
+        href: '/logistics/shipments',
         icon: Truck,
-        roles: ["admin", "logistica"],
+        roles: ['admin', 'logistica'],
       },
       {
-        name: "Rastreamento",
-        href: "/logistics/tracking",
+        name: 'Rastreamento',
+        href: '/logistics/tracking',
         icon: Globe,
-        roles: ["admin", "logistica"],
+        roles: ['admin', 'logistica'],
       },
     ],
   },
   {
-    name: "Marketing",
-    href: "/marketing",
+    name: 'Marketing',
+    href: '/marketing',
     icon: Megaphone,
-    roles: ["admin", "marketing"],
+    roles: ['admin', 'marketing'],
     children: [
       {
-        name: "Dashboard",
-        href: "/marketing",
+        name: 'Dashboard',
+        href: '/marketing',
         icon: BarChart3,
-        roles: ["admin", "marketing"],
+        roles: ['admin', 'marketing'],
       },
       {
-        name: "Campanhas",
-        href: "/marketing/campaigns",
+        name: 'Campanhas',
+        href: '/marketing/campaigns',
         icon: Megaphone,
-        roles: ["admin", "marketing"],
+        roles: ['admin', 'marketing'],
       },
       {
-        name: "Criativos",
-        href: "/marketing/creatives",
+        name: 'Criativos',
+        href: '/marketing/creatives',
         icon: FileText,
-        roles: ["admin", "marketing"],
+        roles: ['admin', 'marketing'],
       },
     ],
   },
   {
-    name: "Portal Cliente",
-    href: "/portal",
+    name: 'Portal Cliente',
+    href: '/portal',
     icon: Globe,
-    roles: ["cliente"],
+    roles: ['cliente'],
     children: [
       {
-        name: "Meus Projetos",
-        href: "/portal/projects",
+        name: 'Meus Projetos',
+        href: '/portal/projects',
         icon: Briefcase,
-        roles: ["cliente"],
+        roles: ['cliente'],
       },
       {
-        name: "Aprovações",
-        href: "/portal/approvals",
+        name: 'Aprovações',
+        href: '/portal/approvals',
         icon: FileText,
-        roles: ["cliente"],
+        roles: ['cliente'],
       },
       {
-        name: "Histórico",
-        href: "/portal/history",
+        name: 'Histórico',
+        href: '/portal/history',
         icon: BarChart3,
-        roles: ["cliente"],
+        roles: ['cliente'],
       },
     ],
   },
   {
-    name: "Administração",
-    href: "/admin",
+    name: 'Administração',
+    href: '/admin',
     icon: Settings,
-    roles: ["admin"],
+    roles: ['admin'],
     children: [
-      { name: "Usuários", href: "/admin/users", icon: Users, roles: ["admin"] },
+      { name: 'Usuários', href: '/admin/users', icon: Users, roles: ['admin'] },
       {
-        name: "Configurações",
-        href: "/admin/settings",
+        name: 'Configurações',
+        href: '/admin/settings',
         icon: Settings,
-        roles: ["admin"],
+        roles: ['admin'],
       },
-      { name: "Logs", href: "/admin/logs", icon: FileText, roles: ["admin"] },
+      { name: 'Logs', href: '/admin/logs', icon: FileText, roles: ['admin'] },
     ],
   },
 ];
@@ -272,27 +265,24 @@ interface SidebarProps {
 export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
 
-  const filteredNavigation = navigation.filter((item) =>
-    item.roles.includes(userRole)
-  );
+  const filteredNavigation = navigation.filter((item) => item.roles.includes(userRole));
 
   const NavigationItems = ({ items }: { items: NavigationItem[] }) => (
     <ul className="space-y-1">
       {items.map((item) => {
         const isActive =
           pathname === item.href ||
-          (item.children &&
-            item.children.some((child) => pathname === child.href));
+          (item.children && item.children.some((child) => pathname === child.href));
 
         return (
           <li key={item.name}>
             <Link
               href={item.href}
               className={cn(
-                "group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors",
+                'group flex items-center rounded-md px-2 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? "bg-blue-100 text-blue-700"
-                  : "text-primary-600 hover:bg-primary-100 hover:text-primary-900"
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-primary-600 hover:bg-primary-100 hover:text-primary-900',
               )}
               onClick={() => {
                 if (window.innerWidth < 768) {
@@ -302,23 +292,21 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
             >
               <item.icon
                 className={cn(
-                  "mr-3 flex-shrink-0 h-5 w-5",
-                  isActive
-                    ? "text-blue-500"
-                    : "text-primary-400 group-hover:text-primary-500"
+                  'mr-3 h-5 w-5 flex-shrink-0',
+                  isActive ? 'text-blue-500' : 'text-primary-400 group-hover:text-primary-500',
                 )}
               />
               {item.name}
               {item.badge && item.badge > 0 && (
-                <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <span className="ml-auto inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
                   {item.badge}
                 </span>
               )}
               {item.children && (
                 <ChevronRight
                   className={cn(
-                    "ml-auto h-4 w-4 transition-transform",
-                    isActive ? "rotate-90" : ""
+                    'ml-auto h-4 w-4 transition-transform',
+                    isActive ? 'rotate-90' : '',
                   )}
                 />
               )}
@@ -333,10 +321,10 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                       <Link
                         href={child.href}
                         className={cn(
-                          "group flex items-center px-2 py-2 text-sm rounded-md transition-colors",
+                          'group flex items-center rounded-md px-2 py-2 text-sm transition-colors',
                           pathname === child.href
-                            ? "bg-blue-50 text-blue-700 font-medium"
-                            : "text-primary-500 hover:bg-primary-50 hover:text-primary-700"
+                            ? 'bg-blue-50 font-medium text-blue-700'
+                            : 'text-primary-500 hover:bg-primary-50 hover:text-primary-700',
                         )}
                         onClick={() => {
                           if (window.innerWidth < 768) {
@@ -362,14 +350,12 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
       {/* Desktop sidebar */}
       <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
         <div className="flex min-h-0 flex-1 flex-col border-r border-primary-200 bg-white">
-          <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
+          <div className="flex flex-1 flex-col overflow-y-auto pb-4 pt-5">
             <div className="flex flex-shrink-0 items-center px-4">
-              <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">DDM</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600">
+                <span className="text-sm font-bold text-white">DDM</span>
               </div>
-              <span className="ml-2 text-lg font-semibold text-primary-900">
-                Sistema DDM
-              </span>
+              <span className="ml-2 text-lg font-semibold text-primary-900">Sistema DDM</span>
             </div>
             <nav className="mt-8 flex-1 space-y-1 px-2">
               <NavigationItems items={filteredNavigation} />
@@ -413,7 +399,7 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                   leaveFrom="opacity-100"
                   leaveTo="opacity-0"
                 >
-                  <div className="absolute top-0 right-0 -mr-12 pt-2">
+                  <div className="absolute right-0 top-0 -mr-12 pt-2">
                     <button
                       type="button"
                       className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
@@ -424,14 +410,12 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                   </div>
                 </Transition.Child>
 
-                <div className="h-0 flex-1 overflow-y-auto pt-5 pb-4">
+                <div className="h-0 flex-1 overflow-y-auto pb-4 pt-5">
                   <div className="flex flex-shrink-0 items-center px-4">
-                    <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">DDM</span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600">
+                      <span className="text-sm font-bold text-white">DDM</span>
                     </div>
-                    <span className="ml-2 text-lg font-semibold text-primary-900">
-                      Sistema DDM
-                    </span>
+                    <span className="ml-2 text-lg font-semibold text-primary-900">Sistema DDM</span>
                   </div>
                   <nav className="mt-8 space-y-1 px-2">
                     <NavigationItems items={filteredNavigation} />

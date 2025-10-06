@@ -1,5 +1,5 @@
 // src/lib/types/projects.ts
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
 export interface Project {
   id?: string;
@@ -25,26 +25,21 @@ export interface Project {
 }
 
 export type ProjectStatus =
-  | "open"
-  | "design"
-  | "review"
-  | "production"
-  | "shipped"
-  | "done"
-  | "cancelled";
+  | 'open'
+  | 'design'
+  | 'review'
+  | 'production'
+  | 'shipped'
+  | 'done'
+  | 'cancelled';
 
-export type ProjectPriority = "low" | "medium" | "high" | "urgent";
-export type ProjectCategory =
-  | "book"
-  | "magazine"
-  | "catalog"
-  | "brochure"
-  | "other";
+export type ProjectPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type ProjectCategory = 'book' | 'magazine' | 'catalog' | 'brochure' | 'other';
 
 export interface ApprovalTask {
   id: string;
   description: string;
-  status: "pending" | "approved" | "rejected";
+  status: 'pending' | 'approved' | 'rejected';
   dueDate?: Timestamp;
   createdAt: Timestamp;
   resolvedAt?: Timestamp;
@@ -98,13 +93,13 @@ export interface DateRange {
   end?: Date;
 }
 export type ProductType =
-  | "L" // Livro
-  | "E" // E-book
-  | "K" // kindle
-  | "C" // CD
-  | "D" // DVD
-  | "G" // Gráfica
-  | "P" // PlatafDigital
-  | "S" // Single
-  | "X" // LivroTerc
-  | "A"; // Arte
+  | 'L' // Livro
+  | 'E' // E-book
+  | 'K' // kindle
+  | 'C' // CD
+  | 'D' // DVD
+  | 'G' // Gráfica
+  | 'P' // PlatafDigital
+  | 'S' // Single
+  | 'X' // LivroTerc
+  | 'A'; // Arte

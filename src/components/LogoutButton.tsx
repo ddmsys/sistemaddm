@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+
+import { auth } from '@/lib/firebase';
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -10,18 +11,16 @@ export default function LogoutButton() {
   async function handleLogout() {
     try {
       await signOut(auth);
-      alert("Logout realizado com sucesso");
-      router.push("/login");
-    } catch (err) {
-      alert("Erro ao fazer logout");
+      alert('Logout realizado com sucesso');
+      router.push('/login');
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      alert('Erro ao fazer logout');
     }
   }
 
   return (
-    <button
-      onClick={handleLogout}
-      className="px-4 py-2 bg-red-600 text-white rounded"
-    >
+    <button onClick={handleLogout} className="rounded bg-red-600 px-4 py-2 text-white">
       Sair
     </button>
   );

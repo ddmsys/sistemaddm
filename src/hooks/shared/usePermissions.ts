@@ -1,5 +1,5 @@
-import { useAuth } from "@/context/AuthContext";
-import { hasPermission, Permission } from "@/lib/permissions";
+import { useAuth } from '@/context/AuthContext';
+import { hasPermission, Permission } from '@/lib/permissions';
 
 export function usePermissions() {
   const { user } = useAuth();

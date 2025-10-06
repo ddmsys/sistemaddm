@@ -1,23 +1,23 @@
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
 export type LeadSource =
-  | "website"
-  | "email"
-  | "phone"
-  | "referral"
-  | "socialmedia"
-  | "coldcall"
-  | "event"
-  | "advertising"
-  | "other";
+  | 'website'
+  | 'email'
+  | 'phone'
+  | 'referral'
+  | 'socialmedia'
+  | 'coldcall'
+  | 'event'
+  | 'advertising'
+  | 'other';
 
 export type LeadStage =
-  | "primeiro_contato"
-  | "qualificado"
-  | "proposta_enviada"
-  | "negociacao"
-  | "fechado_ganho"
-  | "fechado_perdido";
+  | 'primeiro_contato'
+  | 'qualificado'
+  | 'proposta_enviada'
+  | 'negociacao'
+  | 'fechado_ganho'
+  | 'fechado_perdido';
 
 export interface Lead {
   id?: string;

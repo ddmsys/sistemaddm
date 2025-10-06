@@ -119,17 +119,17 @@ Uso de constantes, tipos e funções não importadas, causando erros de compila�
 
 ```typescript
 // ✅ Adicionado em ProjectCard.tsx e projects/[id]/page.tsx
-import { PRODUCT_TYPE_LABELS } from "@/lib/types/shared";
-import { ProjectCardProps } from "@/lib/types/comercial";
+import { PRODUCT_TYPE_LABELS } from '@/lib/types/shared';
+import { ProjectCardProps } from '@/lib/types/comercial';
 
 // ✅ Função formatDate criada localmente em QuoteCard.tsx
 const formatDate = (date: any) => {
-  if (!date) return "Data não definida";
+  if (!date) return 'Data não definida';
   try {
     const dateObj = date.toDate ? date.toDate() : new Date(date);
-    return dateObj.toLocaleDateString("pt-BR");
+    return dateObj.toLocaleDateString('pt-BR');
   } catch {
-    return "Data inválida";
+    return 'Data inválida';
   }
 };
 ```
@@ -198,7 +198,7 @@ export interface Quote {
 export interface QuoteItem {
   id?: string; // Era obrigatório, agora opcional
   description: string;
-  kind: "etapa" | "impressao";
+  kind: 'etapa' | 'impressao';
   specifications?: string;
   quantity: number;
   unitPrice?: number; // Era obrigatório, agora opcional
@@ -233,21 +233,21 @@ Inconsistências entre status usando hífen (`primeiro-contato`) vs underscore (
 ```typescript
 // ✅ LeadStatus - Padronizado
 export type LeadStatus =
-  | "primeiro_contato" // era "primeiro-contato"
-  | "qualificado"
-  | "proposta_enviada" // era "proposta-enviada"
-  | "negociacao"
-  | "fechado_ganho" // era "fechado-ganho"
-  | "fechado_perdido"; // era "fechado-perdido"
+  | 'primeiro_contato' // era "primeiro-contato"
+  | 'qualificado'
+  | 'proposta_enviada' // era "proposta-enviada"
+  | 'negociacao'
+  | 'fechado_ganho' // era "fechado-ganho"
+  | 'fechado_perdido'; // era "fechado-perdido"
 
 // ✅ QuoteStatus - Harmonizado
 export type QuoteStatus =
-  | "draft"
-  | "sent"
-  | "viewed" // ✅ Adicionado
-  | "signed"
-  | "rejected" // era "refused"
-  | "expired";
+  | 'draft'
+  | 'sent'
+  | 'viewed' // ✅ Adicionado
+  | 'signed'
+  | 'rejected' // era "refused"
+  | 'expired';
 ```
 
 #### **Arquivos Atualizados:**
@@ -342,19 +342,19 @@ Campos obrigatórios faltando na criação de entidades via hooks.
 
 ```typescript
 // ✅ Campo status adicionado (era obrigatório mas faltava)
-const leadData: Omit<Lead, "id"> = {
+const leadData: Omit<Lead, 'id'> = {
   name: data.name,
   email: data.email,
   phone: data.phone,
   company: data.company,
   source: data.source,
-  stage: "primeiro_contato",
-  status: "primeiro_contato", // ✅ Adicionado para compatibilidade
+  stage: 'primeiro_contato',
+  status: 'primeiro_contato', // ✅ Adicionado para compatibilidade
   value: data.value || 0,
   probability: data.probability || 0,
   ownerId: user.uid,
-  ownerName: user.displayName || user.email || "Usuário",
-  notes: data.notes || "",
+  ownerName: user.displayName || user.email || 'Usuário',
+  notes: data.notes || '',
   tags: data.tags || [],
   lastActivityAt: Timestamp.now(),
   createdAt: Timestamp.now(),
@@ -366,13 +366,13 @@ const leadData: Omit<Lead, "id"> = {
 
 ```typescript
 // ✅ Campo clientName adicionado (era obrigatório mas faltava)
-const quoteData: Omit<Quote, "id" | "number"> = {
+const quoteData: Omit<Quote, 'id' | 'number'> = {
   leadId: data.leadId,
   clientId: data.clientId,
-  clientName: data.client?.name || "Cliente", // ✅ Obrigatório
+  clientName: data.client?.name || 'Cliente', // ✅ Obrigatório
   client: data.client,
   projectTitle: data.title,
-  quoteType: "producao",
+  quoteType: 'producao',
   issueDate: new Date().toISOString(),
   validityDays: 30,
   // ... resto dos campos
@@ -615,12 +615,12 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 
 ### **🔄 Compatibility Improvements**
 
-| Módulo                 | Issue               | Solução      | Resultado       |
-| ---------------------- | ------------------- | ------------ | --------------- |
+| Módulo                  | Issue               | Solução      | Resultado       |
+| ----------------------- | ------------------- | ------------ | --------------- |
 | **quotes ↔ comercial** | Tipos incompatíveis | Harmonização | 100% Compatible |
-| **Date Handling**      | Date vs Timestamp   | Union types  | Flexível        |
-| **Status Enums**       | Hífen vs Underscore | Padronização | Consistente     |
-| **Props Interface**    | Faltantes           | Completas    | Total           |
+| **Date Handling**       | Date vs Timestamp   | Union types  | Flexível        |
+| **Status Enums**        | Hífen vs Underscore | Padronização | Consistente     |
+| **Props Interface**     | Faltantes           | Completas    | Total           |
 
 ### **📈 Developer Experience**
 

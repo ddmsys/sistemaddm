@@ -1,22 +1,50 @@
 "use client";
 
-import {
-  useState,
-  useEffect,
-  createContext,
-  useContext,
-  ReactNode,
-} from "react";
-import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  User as FirebaseUser,
-} from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
-import { User, UserRole } from "@/lib/types";
 
+import React, { createContext, useContext, useEffect, useState } from "react";
+import type { User } from "firebase/auth";
+import { onAuthStateChanged, signOut as fbSignOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+export type AuthContextValue = {
+user: User | null;
+loading: boolean;
+signOut: () => Promise<void>;
+};
+
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+const [user, setUser] = useState<User | null>(null);
+const [loading, setLoading] = useState<boolean>(true);
+
+useEffect(() => {
+const unsub = onAuthStateChanged(auth, (u) => {
+setUser(u ?? null);
+setLoading(false);
+});
+return () => unsub();
+}, []);
+
+
+const signOut = async () => {
+await fbSignOut(auth);
+};
+
+
+const value: AuthContextValue = { user, loading, signOut };
+
+return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+
+export function useAuth(): AuthContextValue {
+const ctx = useContext(AuthContext);
+if (!ctx) {
+throw new Error("useAuth deve ser usado dentro de <AuthProvider>");
+}
+return ctx;
+}
 interface AuthContextType {
   user: User | null;
   firebaseUser: FirebaseUser | null;

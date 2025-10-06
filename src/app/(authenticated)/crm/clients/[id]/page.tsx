@@ -1,10 +1,11 @@
 //src/app/(authenticated/crm/clients/[id]/page.tsx//
-"use client";
+'use client';
 
-import { useClients } from "@/hooks/comercial/useClients";
-import { Client } from "@/lib/types/comercial";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useParams, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+
+import { useClients } from '@/hooks/comercial/useClients';
+import { Client } from '@/lib/types/comercial';
 
 export default function ClientPage() {
   const router = useRouter();
@@ -12,30 +13,30 @@ export default function ClientPage() {
   const { clients } = useClients();
   const [client, setClient] = useState<Client | null>(null);
 
-  useEffect(() => {
-    if (!params?.id) {
-      router.push("/crm/clients");
-      return;
-    }
-
-    const id = params.id as string;
-    if (!id || typeof id !== "string") {
-      // Se id inválido, pode redirecionar ou mostrar erro simples
-      router.push("/crm/clients");
-      return;
-    }
-    loadClient(id);
-  }, [params?.id]);
-
-  function loadClient(id: string) {
+  const loadClient = useCallback((id: string) => {
     const foundClient = clients.find((c) => c.id === id);
     if (foundClient) {
       setClient(foundClient);
     } else {
       setClient(null);
-      router.push("/crm/clients");
+      router.push('/crm/clients');
     }
-  }
+  }, [clients, router]);
+
+  useEffect(() => {
+    if (!params || typeof params.id !== 'string') {
+      router.push('/crm/clients');
+      return;
+    }
+
+    const id = params.id as string;
+    if (!id || typeof id !== 'string') {
+      // Se id inválido, pode redirecionar ou mostrar erro simples
+      router.push('/crm/clients');
+      return;
+    }
+    loadClient(id);
+  }, [params, loadClient, router]);
 
   if (!client) {
     return <p>Cliente não encontrado ou carregando...</p>;

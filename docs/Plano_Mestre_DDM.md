@@ -1023,33 +1023,29 @@ Regras (resumo):
 
 ```ts
 export type LeadStage =
-  | "primeiro_contato"
-  | "proposta_enviada"
-  | "negociacao"
-  | "fechado_ganho"
-  | "fechado_perdido";
-export type QuoteStatus = "draft" | "sent" | "signed" | "refused";
+  | 'primeiro_contato'
+  | 'proposta_enviada'
+  | 'negociacao'
+  | 'fechado_ganho'
+  | 'fechado_perdido';
+export type QuoteStatus = 'draft' | 'sent' | 'signed' | 'refused';
 export type ProjectStatus =
-  | "open"
-  | "approved"
-  | "in_progress"
-  | "ready_for_review"
-  | "revising"
-  | "final_approved"
-  | "done";
-export type ProofStatus =
-  | "in_review"
-  | "pending_fixes"
-  | "approved"
-  | "rejected";
-export type OrderStatus = "aberto" | "fechado";
-export type InvoiceStatus = "draft" | "pending" | "paid" | "canceled";
+  | 'open'
+  | 'approved'
+  | 'in_progress'
+  | 'ready_for_review'
+  | 'revising'
+  | 'final_approved'
+  | 'done';
+export type ProofStatus = 'in_review' | 'pending_fixes' | 'approved' | 'rejected';
+export type OrderStatus = 'aberto' | 'fechado';
+export type InvoiceStatus = 'draft' | 'pending' | 'paid' | 'canceled';
 export type PurchaseStatus =
-  | "cotação_em_andamento"
-  | "negociação"
-  | "contratada"
-  | "paga"
-  | "concluída";
+  | 'cotação_em_andamento'
+  | 'negociação'
+  | 'contratada'
+  | 'paga'
+  | 'concluída';
 ```
 
 ### 8.3 Storage — caminhos e nomes
@@ -1073,25 +1069,23 @@ export type PurchaseStatus =
 
 ```ts
 // src/lib/constants.ts
-export const APP_REGION = "southamerica-east1";
+export const APP_REGION = 'southamerica-east1';
 export const COLLECTIONS = {
-  clients: "clients",
-  leads: "leads",
-  quotes: "quotes",
-  projects: "projects",
-  proofs: "proofs",
-  orders: "orders",
-  invoices: "invoices",
-  purchases: "purchases",
+  clients: 'clients',
+  leads: 'leads',
+  quotes: 'quotes',
+  projects: 'projects',
+  proofs: 'proofs',
+  orders: 'orders',
+  invoices: 'invoices',
+  purchases: 'purchases',
 } as const;
 
 export const STORAGE_PATHS = {
-  proof: (projectId: string, n: number) =>
-    `projects/${projectId}/proofs/proof-${n}.pdf`,
+  proof: (projectId: string, n: number) => `projects/${projectId}/proofs/proof-${n}.pdf`,
   projectFinal: (projectId: string, code: string) =>
     `projects/${projectId}/final/final-${code}.pdf`,
-  quotePdf: (quoteId: string, number: string) =>
-    `quotes/${quoteId}/quote-${number}.pdf`,
+  quotePdf: (quoteId: string, number: string) => `quotes/${quoteId}/quote-${number}.pdf`,
   invoicePdf: (invoiceId: string, number: string | null) =>
     `invoices/${invoiceId}/invoice-${number ?? invoiceId}.pdf`,
 } as const;
@@ -1125,10 +1119,8 @@ export interface InvoiceReminderJob {
 ```ts
 // functions/src/utils/paths.ts
 export const path = {
-  proof: (projectId: string, n: number) =>
-    `projects/${projectId}/proofs/proof-${n}.pdf`,
-  final: (projectId: string, code: string) =>
-    `projects/${projectId}/final/final-${code}.pdf`,
+  proof: (projectId: string, n: number) => `projects/${projectId}/proofs/proof-${n}.pdf`,
+  final: (projectId: string, code: string) => `projects/${projectId}/final/final-${code}.pdf`,
   quote: (quoteId: string, num: string) => `quotes/${quoteId}/quote-${num}.pdf`,
   invoice: (invoiceId: string, num?: string) =>
     `invoices/${invoiceId}/invoice-${num ?? invoiceId}.pdf`,
@@ -1165,12 +1157,12 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:825537655768:web:bcfc023a6bb872cd8ef8ad
 
 ```ts
 // src/lib/permissions.ts
-export type Role = "admin" | "producao" | "financeiro" | "cliente";
+export type Role = 'admin' | 'producao' | 'financeiro' | 'cliente';
 export function canReadInvoice(role: Role) {
-  return role === "admin" || role === "financeiro";
+  return role === 'admin' || role === 'financeiro';
 }
 export function canReadProject(role: Role) {
-  return role !== "cliente" ? true : true;
+  return role !== 'cliente' ? true : true;
 }
 // Expanda conforme necessidade
 ```
@@ -1321,14 +1313,14 @@ export const exportCsv = onRequest(async (_req, res) => {
 ```ts
 // scripts/seed.ts (sugestão)
 export const demoClient = {
-  name: "Autor Demo",
-  email: "autor@demo.com",
-  status: "ativo",
+  name: 'Autor Demo',
+  email: 'autor@demo.com',
+  status: 'ativo',
 };
 export const demoProject = {
-  title: "Livro Demo",
-  clientId: "CLIENT_ID",
-  status: "open",
+  title: 'Livro Demo',
+  clientId: 'CLIENT_ID',
+  status: 'open',
 };
 ```
 

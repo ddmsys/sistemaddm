@@ -1,26 +1,14 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Modal } from "@/components/ui/Modal";
-import { Quote, QuoteStatus } from "@/lib/types";
-import {
-  cn,
-  formatCurrency,
-  formatDate,
-  formatRelativeTime,
-} from "@/lib/utils";
-import {
-  Calendar,
-  Download,
-  Eye,
-  FileText,
-  MoreHorizontal,
-  Send,
-  User,
-} from "lucide-react";
-import { useState } from "react";
+import { Calendar, Download, Eye, FileText, MoreHorizontal, Send, User } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Modal } from '@/components/ui/Modal';
+import { Quote, QuoteStatus } from '@/lib/types';
+import { cn, formatCurrency, formatDate, formatRelativeTime } from '@/lib/utils';
 
 interface QuoteCardProps {
   quote: Quote;
@@ -34,39 +22,39 @@ interface QuoteCardProps {
 
 const statusConfig = {
   draft: {
-    label: "Rascunho",
-    color: "secondary",
-    class: "bg-gray-50 text-gray-700 border-gray-200",
+    label: 'Rascunho',
+    color: 'secondary',
+    class: 'bg-gray-50 text-gray-700 border-gray-200',
     icon: FileText,
   },
   sent: {
-    label: "Enviado",
-    color: "info",
-    class: "bg-blue-50 text-blue-700 border-blue-200",
+    label: 'Enviado',
+    color: 'info',
+    class: 'bg-blue-50 text-blue-700 border-blue-200',
     icon: Send,
   },
   viewed: {
-    label: "Visualizado",
-    color: "warning",
-    class: "bg-amber-50 text-amber-700 border-amber-200",
+    label: 'Visualizado',
+    color: 'warning',
+    class: 'bg-amber-50 text-amber-700 border-amber-200',
     icon: Eye,
   },
   signed: {
-    label: "Assinado",
-    color: "success",
-    class: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    label: 'Assinado',
+    color: 'success',
+    class: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     icon: FileText,
   },
   rejected: {
-    label: "Rejeitado",
-    color: "destructive",
-    class: "bg-red-50 text-red-700 border-red-200",
+    label: 'Rejeitado',
+    color: 'destructive',
+    class: 'bg-red-50 text-red-700 border-red-200',
     icon: FileText,
   },
   expired: {
-    label: "Expirado",
-    color: "secondary",
-    class: "bg-gray-50 text-gray-700 border-gray-200",
+    label: 'Expirado',
+    color: 'secondary',
+    class: 'bg-gray-50 text-gray-700 border-gray-200',
     icon: Calendar,
   },
 };
@@ -86,8 +74,7 @@ export function QuoteCard({
 
   const isExpired = quote.valid_until.toDate() < new Date();
   const daysUntilExpiry = Math.ceil(
-    (quote.valid_until.toDate().getTime() - new Date().getTime()) /
-      (1000 * 3600 * 24)
+    (quote.valid_until.toDate().getTime() - new Date().getTime()) / (1000 * 3600 * 24),
   );
 
   return (
@@ -95,54 +82,50 @@ export function QuoteCard({
       <Card
         variant="interactive"
         className={cn(
-          "relative group hover:shadow-lg transition-all duration-200",
+          'group relative transition-all duration-200 hover:shadow-lg',
           status.class,
-          isExpired && "opacity-75"
+          isExpired && 'opacity-75',
         )}
       >
         {/* Header */}
         <div className="p-4 pb-2">
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <StatusIcon className="w-5 h-5 text-blue-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                <StatusIcon className="h-5 w-5 text-blue-600" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-primary-900 truncate">
-                  {quote.title}
-                </h3>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold text-primary-900">{quote.title}</h3>
                 <p className="text-xs text-primary-500">{quote.quote_number}</p>
-                <div className="flex items-center text-xs text-primary-600 mt-1">
-                  <User className="w-3 h-3 mr-1" />
+                <div className="mt-1 flex items-center text-xs text-primary-600">
+                  <User className="mr-1 h-3 w-3" />
                   <span className="truncate">{quote.client_name}</span>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <Badge variant={status.color as any} size="sm">
+              <Badge variant={status.color as "default" | "secondary" | "success" | "warning" | "destructive" | "info" | "outline"} size="sm">
                 {status.label}
               </Badge>
 
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
                 onClick={() => setShowActions(true)}
               >
-                <MoreHorizontal className="w-4 h-4" />
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="px-4 pb-4 space-y-3">
+        <div className="space-y-3 px-4 pb-4">
           {/* Value */}
-          <div className="text-center py-2 bg-primary-50 rounded-md">
-            <div className="text-lg font-bold text-primary-900">
-              {formatCurrency(quote.total)}
-            </div>
+          <div className="rounded-md bg-primary-50 py-2 text-center">
+            <div className="text-lg font-bold text-primary-900">{formatCurrency(quote.total)}</div>
             {quote.discount_amount > 0 && (
               <div className="text-xs text-emerald-600">
                 Desconto: {formatCurrency(quote.discount_amount)}
@@ -153,7 +136,7 @@ export function QuoteCard({
           {/* Items Summary */}
           <div className="text-xs text-primary-600">
             <span className="font-medium">{quote.items.length}</span>
-            {quote.items.length === 1 ? " item" : " itens"}
+            {quote.items.length === 1 ? ' item' : ' itens'}
           </div>
 
           {/* Dates */}
@@ -167,10 +150,8 @@ export function QuoteCard({
               <span>Válido até:</span>
               <span
                 className={cn(
-                  isExpired && "text-red-600 font-medium",
-                  daysUntilExpiry <= 3 &&
-                    daysUntilExpiry > 0 &&
-                    "text-amber-600 font-medium"
+                  isExpired && 'font-medium text-red-600',
+                  daysUntilExpiry <= 3 && daysUntilExpiry > 0 && 'font-medium text-amber-600',
                 )}
               >
                 {formatDate(quote.valid_until.toDate())}
@@ -198,33 +179,31 @@ export function QuoteCard({
 
           {/* Progress Indicator */}
           <div className="flex items-center space-x-1">
-            {(["draft", "sent", "viewed", "signed"] as QuoteStatus[]).map(
-              (step, index) => (
-                <div
-                  key={step}
-                  className={cn(
-                    "h-1 flex-1 rounded",
-                    index <= Object.keys(statusConfig).indexOf(quote.status)
-                      ? "bg-blue-500"
-                      : "bg-primary-200"
-                  )}
-                />
-              )
-            )}
+            {(['draft', 'sent', 'viewed', 'signed'] as QuoteStatus[]).map((step, index) => (
+              <div
+                key={step}
+                className={cn(
+                  'h-1 flex-1 rounded',
+                  index <= Object.keys(statusConfig).indexOf(quote.status)
+                    ? 'bg-blue-500'
+                    : 'bg-primary-200',
+                )}
+              />
+            ))}
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="px-4 pb-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center justify-between px-4 pb-3 opacity-0 transition-opacity group-hover:opacity-100">
           <div className="flex items-center space-x-2">
-            {quote.status === "draft" && (
+            {quote.status === 'draft' && (
               <Button
                 size="sm"
                 variant="outline"
                 className="text-xs"
                 onClick={() => onSend?.(quote.id)}
               >
-                <Send className="w-3 h-3 mr-1" />
+                <Send className="mr-1 h-3 w-3" />
                 Enviar
               </Button>
             )}
@@ -236,23 +215,18 @@ export function QuoteCard({
                 className="text-xs"
                 onClick={() => onDownload?.(quote.id)}
               >
-                <Download className="w-3 h-3 mr-1" />
+                <Download className="mr-1 h-3 w-3" />
                 PDF
               </Button>
             )}
           </div>
 
           <div className="flex items-center space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-xs"
-              onClick={() => onEdit?.(quote)}
-            >
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => onEdit?.(quote)}>
               Editar
             </Button>
 
-            {quote.status === "signed" && !quote.converted_to_project_id && (
+            {quote.status === 'signed' && !quote.converted_to_project_id && (
               <Button
                 size="sm"
                 variant="default"
@@ -267,7 +241,7 @@ export function QuoteCard({
 
         {/* Converted Badge */}
         {quote.converted_to_project_id && (
-          <div className="absolute -top-2 -right-2">
+          <div className="absolute -right-2 -top-2">
             <Badge variant="success" className="text-xs">
               Convertido
             </Badge>
@@ -283,7 +257,7 @@ export function QuoteCard({
         size="sm"
       >
         <div className="space-y-2">
-          {quote.status === "draft" && (
+          {quote.status === 'draft' && (
             <Button
               variant="default"
               className="w-full justify-start"
@@ -292,7 +266,7 @@ export function QuoteCard({
                 setShowActions(false);
               }}
             >
-              <Send className="w-4 h-4 mr-2" />
+              <Send className="mr-2 h-4 w-4" />
               Enviar Orçamento
             </Button>
           )}
@@ -305,7 +279,7 @@ export function QuoteCard({
               setShowActions(false);
             }}
           >
-            <FileText className="w-4 h-4 mr-2" />
+            <FileText className="mr-2 h-4 w-4" />
             Editar Orçamento
           </Button>
 
@@ -318,7 +292,7 @@ export function QuoteCard({
                 setShowActions(false);
               }}
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="mr-2 h-4 w-4" />
               Baixar PDF
             </Button>
           )}
@@ -328,7 +302,7 @@ export function QuoteCard({
           {Object.entries(statusConfig).map(([key, config]) => (
             <Button
               key={key}
-              variant={quote.status === key ? "default" : "ghost"}
+              variant={quote.status === key ? 'default' : 'ghost'}
               className="w-full justify-start"
               onClick={() => {
                 onStatusChange?.(quote.id, key as QuoteStatus);

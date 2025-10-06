@@ -1,7 +1,5 @@
-"use client";
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
 import {
   Area,
   AreaChart,
@@ -13,7 +11,10 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
+} from 'recharts';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency } from '@/lib/utils';
 
 interface RevenueData {
   period: string;
@@ -25,23 +26,22 @@ interface RevenueData {
 interface RevenueChartProps {
   data: RevenueData[];
   title?: string;
-  type?: "line" | "area";
+  type?: 'line' | 'area';
 }
 
 export function RevenueChart({
   data = [],
-  title = "Receita vs Despesas",
-  type = "area",
+  title = 'Receita vs Despesas',
+  type = 'area',
 }: RevenueChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border">
-          <p className="font-medium text-primary-900 mb-2">{label}</p>
+        <div className="rounded-lg border bg-white p-3 shadow-lg">
+          <p className="mb-2 font-medium text-primary-900">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
-              <span className="font-medium">{entry.name}:</span>{" "}
-              {formatCurrency(entry.value)}
+              <span className="font-medium">{entry.name}:</span> {formatCurrency(entry.value)}
             </p>
           ))}
         </div>
@@ -50,8 +50,8 @@ export function RevenueChart({
     return null;
   };
 
-  const Chart = type === "area" ? AreaChart : LineChart;
-  const ChartElement = type === "area" ? Area : Line;
+  const Chart = type === 'area' ? AreaChart : LineChart;
+  const ChartElement = type === 'area' ? Area : Line;
 
   return (
     <Card>
@@ -61,20 +61,14 @@ export function RevenueChart({
       <CardContent>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <Chart
-              data={data}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
+            <Chart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
               <XAxis dataKey="period" tick={{ fontSize: 12 }} />
-              <YAxis
-                tick={{ fontSize: 12 }}
-                tickFormatter={(value) => formatCurrency(value)}
-              />
+              <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => formatCurrency(value)} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
 
-              {type === "area" ? (
+              {type === 'area' ? (
                 <>
                   <Area
                     type="monotone"
@@ -129,32 +123,26 @@ export function RevenueChart({
 
         {/* Summary */}
         <div className="mt-4 grid grid-cols-3 gap-4">
-          <div className="text-center p-3 bg-emerald-50 rounded-lg">
+          <div className="rounded-lg bg-emerald-50 p-3 text-center">
             <div className="text-lg font-bold text-emerald-700">
               {formatCurrency(
-                Array.isArray(data)
-                  ? data.reduce((sum, item) => sum + item.revenue, 0)
-                  : 0
+                Array.isArray(data) ? data.reduce((sum, item) => sum + item.revenue, 0) : 0,
               )}
             </div>
             <div className="text-sm text-emerald-600">Receita Total</div>
           </div>
-          <div className="text-center p-3 bg-red-50 rounded-lg">
+          <div className="rounded-lg bg-red-50 p-3 text-center">
             <div className="text-lg font-bold text-red-700">
               {formatCurrency(
-                Array.isArray(data)
-                  ? data.reduce((sum, item) => sum + item.expenses, 0)
-                  : 0
+                Array.isArray(data) ? data.reduce((sum, item) => sum + item.expenses, 0) : 0,
               )}
             </div>
             <div className="text-sm text-red-600">Despesas Totais</div>
           </div>
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
+          <div className="rounded-lg bg-blue-50 p-3 text-center">
             <div className="text-lg font-bold text-blue-700">
               {formatCurrency(
-                Array.isArray(data)
-                  ? data.reduce((sum, item) => sum + item.profit, 0)
-                  : 0
+                Array.isArray(data) ? data.reduce((sum, item) => sum + item.profit, 0) : 0,
               )}
             </div>
             <div className="text-sm text-blue-600">Lucro Total</div>

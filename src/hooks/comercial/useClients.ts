@@ -1,10 +1,5 @@
-"use client";
+'use client';
 
-import { useAuth } from "@/context/AuthContext";
-import { db } from "@/lib/firebase";
-import { Client, ClientStatus } from "@/lib/types/comercial";
-import { AsyncState, SelectOption } from "@/lib/types/shared";
-import { getErrorMessage } from "@/lib/utils/errors";
 import {
   addDoc,
   collection,
@@ -17,9 +12,15 @@ import {
   Timestamp,
   updateDoc,
   where,
-} from "firebase/firestore";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+} from 'firebase/firestore';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
+
+import { useAuth } from '@/context/AuthContext';
+import { db } from '@/lib/firebase';
+import { Client, ClientStatus } from '@/lib/types/comercial';
+import { AsyncState, SelectOption } from '@/lib/types/shared';
+import { getErrorMessage } from '@/lib/utils/errors';
 
 export interface ClientFilters {
   status?: ClientStatus[];
@@ -31,7 +32,7 @@ export interface ClientFilters {
 }
 
 export interface ClientFormData {
-  type: "individual" | "company";
+  type: 'individual' | 'company';
   name: string;
   email: string;
   phone: string;
@@ -59,16 +60,10 @@ export function useClients() {
       setClients((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        let clientsQuery = query(
-          collection(db, "clients"),
-          orderBy("name", "asc")
-        );
+        let clientsQuery = query(collection(db, 'clients'), orderBy('name', 'asc'));
 
         if (filters?.status && filters.status.length > 0) {
-          clientsQuery = query(
-            clientsQuery,
-            where("status", "in", filters.status)
-          );
+          clientsQuery = query(clientsQuery, where('status', 'in', filters.status));
         }
 
         const snapshot = await getDocs(clientsQuery);
@@ -88,19 +83,15 @@ export function useClients() {
               client.email.toLowerCase().includes(searchLower) ||
               client.company?.toLowerCase().includes(searchLower) ||
               (client.cpf && client.cpf.includes(filters.search!)) ||
-              (client.cnpj && client.cnpj.includes(filters.search!))
+              (client.cnpj && client.cnpj.includes(filters.search!)),
           );
         }
 
         if (filters?.dateRange?.start || filters?.dateRange?.end) {
           filteredClients = filteredClients.filter((client) => {
             const createdAt = client.createdAt.toDate();
-            const start = filters.dateRange?.start
-              ? new Date(filters.dateRange.start)
-              : null;
-            const end = filters.dateRange?.end
-              ? new Date(filters.dateRange.end)
-              : null;
+            const start = filters.dateRange?.start ? new Date(filters.dateRange.start) : null;
+            const end = filters.dateRange?.end ? new Date(filters.dateRange.end) : null;
 
             if (start && createdAt < start) return false;
             if (end && createdAt > end) return false;
@@ -115,22 +106,22 @@ export function useClients() {
         });
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao buscar clientes:", error);
+        console.error('Erro ao buscar clientes:', error);
         setClients({
           data: null,
           loading: false,
           error: errorMessage,
         });
-        toast.error("Erro ao carregar clientes");
+        toast.error('Erro ao carregar clientes');
       }
     },
-    [user]
+    [user],
   );
 
   // ================ GET SINGLE CLIENT ================
   const getClient = useCallback(async (id: string): Promise<Client | null> => {
     try {
-      const docRef = doc(db, "clients", id);
+      const docRef = doc(db, 'clients', id);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -139,8 +130,8 @@ export function useClients() {
 
       return null;
     } catch (error) {
-      console.error("Erro ao buscar cliente:", error);
-      toast.error("Erro ao carregar cliente");
+      console.error('Erro ao buscar cliente:', error);
+      toast.error('Erro ao carregar cliente');
       return null;
     }
   }, []);
@@ -149,81 +140,81 @@ export function useClients() {
   const createClient = useCallback(
     async (data: ClientFormData): Promise<string | null> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return null;
       }
 
       try {
-        const clientData: Omit<Client, "id" | "clientNumber"> = {
+        const clientData: Omit<Client, 'id' | 'clientNumber'> = {
           ...data,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         };
 
-        const docRef = await addDoc(collection(db, "clients"), clientData);
-        toast.success("Cliente criado com sucesso!");
+        const docRef = await addDoc(collection(db, 'clients'), clientData);
+        toast.success('Cliente criado com sucesso!');
         await fetchClients();
         return docRef.id;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao criar cliente:", error);
+        console.error('Erro ao criar cliente:', error);
         toast.error(`Erro ao criar cliente: ${errorMessage}`);
         return null;
       }
     },
-    [user, fetchClients]
+    [user, fetchClients],
   );
 
   // ================ UPDATE CLIENT ================
   const updateClient = useCallback(
     async (id: string, data: Partial<ClientFormData>): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        const docRef = doc(db, "clients", id);
+        const docRef = doc(db, 'clients', id);
         const updateData: Partial<Client> = {
           ...data,
           updatedAt: Timestamp.now(),
         };
 
         await updateDoc(docRef, updateData);
-        toast.success("Cliente atualizado com sucesso!");
+        toast.success('Cliente atualizado com sucesso!');
         await fetchClients();
         return true;
       } catch (error) {
         const _errorMessage = getErrorMessage(error);
-        console.error("Erro ao atualizar cliente:", error);
-        toast.error("Erro ao atualizar cliente");
+        console.error('Erro ao atualizar cliente:', error);
+        toast.error('Erro ao atualizar cliente');
         return false;
       }
     },
-    [user, fetchClients]
+    [user, fetchClients],
   );
 
   // ================ DELETE CLIENT ================
   const deleteClient = useCallback(
     async (id: string): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        await deleteDoc(doc(db, "clients", id));
-        toast.success("Cliente excluído com sucesso!");
+        await deleteDoc(doc(db, 'clients', id));
+        toast.success('Cliente excluído com sucesso!');
         await fetchClients();
         return true;
       } catch (error) {
         const _errorMessage = getErrorMessage(error);
-        console.error("Erro ao excluir cliente:", error);
-        toast.error("Erro ao excluir cliente");
+        console.error('Erro ao excluir cliente:', error);
+        toast.error('Erro ao excluir cliente');
         return false;
       }
     },
-    [user, fetchClients]
+    [user, fetchClients],
   );
 
   // ================ GET CLIENTS OPTIONS FOR SELECT ================
@@ -231,37 +222,31 @@ export function useClients() {
     if (!clients.data) return [];
 
     return clients.data
-      .filter((client) => client.status === "ativo" && client.id)
+      .filter((client) => client.status === 'ativo' && client.id)
       .map((client) => ({
         value: client.id!,
-        label: `${client.name}${client.company ? ` (${client.company})` : ""}`,
+        label: `${client.name}${client.company ? ` (${client.company})` : ''}`,
       }));
   }, [clients.data]);
 
   // ================ GET CLIENT BY EMAIL ================
-  const getClientByEmail = useCallback(
-    async (email: string): Promise<Client | null> => {
-      try {
-        const clientsQuery = query(
-          collection(db, "clients"),
-          where("email", "==", email)
-        );
+  const getClientByEmail = useCallback(async (email: string): Promise<Client | null> => {
+    try {
+      const clientsQuery = query(collection(db, 'clients'), where('email', '==', email));
 
-        const snapshot = await getDocs(clientsQuery);
+      const snapshot = await getDocs(clientsQuery);
 
-        if (!snapshot.empty) {
-          const docData = snapshot.docs[0];
-          return { id: docData.id, ...docData.data() } as Client;
-        }
-
-        return null;
-      } catch (error) {
-        console.error("Erro ao buscar cliente por email:", error);
-        return null;
+      if (!snapshot.empty) {
+        const docData = snapshot.docs[0];
+        return { id: docData.id, ...docData.data() } as Client;
       }
-    },
-    []
-  );
+
+      return null;
+    } catch (error) {
+      console.error('Erro ao buscar cliente por email:', error);
+      return null;
+    }
+  }, []);
 
   // ================ LOAD DATA ON MOUNT ================
   useEffect(() => {

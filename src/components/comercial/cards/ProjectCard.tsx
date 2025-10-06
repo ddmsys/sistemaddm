@@ -1,344 +1,354 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Calendar } from 'lucide-react';
-import { Project, ProjectFormData, Client, ProjectType, ProjectStatus, ProjectPriority } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import {
+  AlertCircle,
+  Briefcase,
+  CheckCircle2,
+  MoreHorizontal,
+  Pause,
+  Play,
+  User,
+  Users,
+} from 'lucide-react';
+import { useState } from 'react';
 
-interface ProjectModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: ProjectFormData) => Promise<void>;
-  project?: Project | null;
-  clients: Client[];
-  users?: { id: string; name: string; }[];
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Modal } from '@/components/ui/Modal';
+import { Project, ProjectStatus } from '@/lib/types';
+import { calculateProgress, cn, formatCurrency, formatDate } from '@/lib/utils';
+
+interface ProjectCardProps {
+  project: Project;
+  onStatusChange?: (projectId: string, status: ProjectStatus) => void;
+  onEdit?: (project: Project) => void;
+  onDelete?: (projectId: string) => void;
+  onViewDetails?: (projectId: string) => void;
 }
 
-const projectTypes = [
-  { value: 'livro_fisico', label: 'Livro Físico' },
-  { value: 'ebook', label: 'E-book' },
-  { value: 'audiobook', label: 'Audiobook' },
-  { value: 'revista', label: 'Revista' },
-  { value: 'catalogo', label: 'Catálogo' },
-  { value: 'material_promocional', label: 'Material Promocional' },
-  { value: 'outros', label: 'Outros' },
-];
+const statusConfig = {
+  approved: {
+    label: 'Aprovado',
+    color: 'info',
+    class: 'bg-blue-50 text-blue-700 border-blue-200',
+    icon: CheckCircle2,
+  },
+  in_production: {
+    label: 'Em Produção',
+    color: 'warning',
+    class: 'bg-amber-50 text-amber-700 border-amber-200',
+    icon: Play,
+  },
+  review: {
+    label: 'Revisão',
+    color: 'secondary',
+    class: 'bg-purple-50 text-purple-700 border-purple-200',
+    icon: AlertCircle,
+  },
+  client_approval: {
+    label: 'Aprovação Cliente',
+    color: 'warning',
+    class: 'bg-orange-50 text-orange-700 border-orange-200',
+    icon: User,
+  },
+  completed: {
+    label: 'Concluído',
+    color: 'success',
+    class: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    icon: CheckCircle2,
+  },
+  on_hold: {
+    label: 'Pausado',
+    color: 'secondary',
+    class: 'bg-gray-50 text-gray-700 border-gray-200',
+    icon: Pause,
+  },
+  cancelled: {
+    label: 'Cancelado',
+    color: 'destructive',
+    class: 'bg-red-50 text-red-700 border-red-200',
+    icon: AlertCircle,
+  },
+};
 
-const priorities = [
-  { value: 'low', label: 'Baixa' },
-  { value: 'medium', label: 'Média' },
-  { value: 'high', label: 'Alta' },
-  { value: 'urgent', label: 'Urgente' },
-];
+const typeConfig = {
+  livro_fisico: { label: 'Livro Físico', icon: '📖' },
+  ebook: { label: 'E-book', icon: '📱' },
+  audiobook: { label: 'Audiobook', icon: '🎧' },
+  revista: { label: 'Revista', icon: '📰' },
+  catalogo: { label: 'Catálogo', icon: '📋' },
+  material_promocional: { label: 'Material Promocional', icon: '📢' },
+  outros: { label: 'Outros', icon: '📄' },
+};
 
-export function ProjectModal({ isOpen, onClose, onSubmit, project, clients, users = [] }: ProjectModalProps) {
-  const [formData, setFormData] = useState<ProjectFormData>({
-    title: project?.title || '',
-    description: project?.description || '',
-    client_id: project?.client_id || '',
-    type: project?.type || 'livro_fisico',
-    priority: project?.priority || 'medium',
-    start_date: project?.start_date 
-      ? (project.start_date as any).seconds 
-        ? new Date(project.start_date.seconds * 1000).toISOString().split('T')[0]
-        : new Date(project.start_date).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0],
-    due_date: project?.due_date 
-      ? (project.due_date as any).seconds 
-        ? new Date(project.due_date.seconds * 1000).toISOString().split('T')[0]
-        : new Date(project.due_date).toISOString().split('T')[0]
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    budget: project?.budget || 0,
-    team_members: project?.team_members || [],
-    project_manager: project?.project_manager || '',
-    specifications: {
-      format: project?.specifications?.format || '',
-      pages: project?.specifications?.pages || undefined,
-      copies: project?.specifications?.copies || undefined,
-      paper_type: project?.specifications?.paper_type || '',
-      binding: project?.specifications?.binding || '',
-      colors: project?.specifications?.colors || '',
-      finishing: project?.specifications?.finishing || [],
-      special_requirements: project?.specifications?.special_requirements || '',
-    },
-  });
-  
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showSpecs, setShowSpecs] = useState(false);
+const priorityConfig = {
+  low: { label: 'Baixa', color: 'text-green-600', bg: 'bg-green-100' },
+  medium: { label: 'Média', color: 'text-yellow-600', bg: 'bg-yellow-100' },
+  high: { label: 'Alta', color: 'text-orange-600', bg: 'bg-orange-100' },
+  urgent: { label: 'Urgente', color: 'text-red-600', bg: 'bg-red-100' },
+};
 
-  if (!isOpen) return null;
+export function ProjectCard({
+  project,
+  onStatusChange,
+  onEdit,
+  onDelete,
+  onViewDetails,
+}: ProjectCardProps) {
+  const [showActions, setShowActions] = useState(false);
+  const status = statusConfig[project.status];
+  const type = typeConfig[project.type];
+  const priority = priorityConfig[project.priority];
+  const StatusIcon = status.icon;
 
-  const validateForm = (): Record<string, string> => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.title.trim()) newErrors.title = 'Título é obrigatório';
-    if (!formData.client_id) newErrors.client_id = 'Cliente é obrigatório';
-    if (!formData.project_manager && users.length > 0) newErrors.project_manager = 'Gerente é obrigatório';
-    if (formData.budget <= 0) newErrors.budget = 'Orçamento deve ser maior que zero';
-    
-    const startDate = new Date(formData.start_date);
-    const dueDate = new Date(formData.due_date);
-    if (dueDate <= startDate) {
-      newErrors.due_date = 'Data de entrega deve ser posterior à data de início';
-    }
+  const isOverdue = project.due_date.toDate() < new Date() && project.status !== 'completed';
+  const daysUntilDue = Math.ceil(
+    (project.due_date.toDate().getTime() - new Date().getTime()) / (1000 * 3600 * 24),
+  );
 
-    return newErrors;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      const validationErrors = validateForm();
-      
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
-      
-      await onSubmit(formData);
-      onClose();
-      
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        client_id: '',
-        type: 'livro_fisico',
-        priority: 'medium',
-        start_date: new Date().toISOString().split('T')[0],
-        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        budget: 0,
-        team_members: [],
-        project_manager: '',
-        specifications: {
-          format: '',
-          pages: undefined,
-          copies: undefined,
-          paper_type: '',
-          binding: '',
-          colors: '',
-          finishing: [],
-          special_requirements: '',
-        },
-      });
-      setErrors({});
-    } catch (error) {
-      console.error('Erro ao salvar projeto:', error);
-      setErrors({ general: 'Erro ao salvar projeto. Tente novamente.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    setErrors({});
-    onClose();
-  };
+  const completedTasks = project.tasks.filter((task) => task.status === 'done').length;
+  const totalTasks = project.tasks.length;
+  const taskProgress =
+    totalTasks > 0 ? calculateProgress(completedTasks, totalTasks) : project.progress;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <>
+      <Card
+        variant="interactive"
+        className={cn(
+          'group relative transition-all duration-200 hover:shadow-lg',
+          status.class,
+          isOverdue && 'ring-2 ring-red-200',
+        )}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-primary-900">
-            {project ? 'Editar Projeto' : 'Novo Projeto'}
-          </h2>
-          <button
-            onClick={handleClose}
-            className="text-primary-400 hover:text-primary-600 p-1"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        <div className="p-4 pb-2">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                <StatusIcon className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold text-primary-900">{project.title}</h3>
+                <p className="text-xs text-primary-500">{project.project_code}</p>
+                <div className="mt-1 flex items-center text-xs text-primary-600">
+                  <User className="mr-1 h-3 w-3" />
+                  <span className="truncate">{project.client_name}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Badge variant={status.color as "default" | "secondary" | "success" | "warning" | "destructive" | "info" | "outline"} size="sm">
+                {status.label}
+              </Badge>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={() => setShowActions(true)}
+              >
+                <MoreHorizontal className="w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {errors.general && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {errors.general}
-              </div>
-            )}
-
-            {/* Dados Básicos */}
-            <div>
-              <h3 className="text-lg font-medium text-primary-900 mb-4">Informações Básicas</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    Título do Projeto *
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                    value={formData.title}
-                    onChange={(e) => {
-                      setFormData({...formData, title: e.target.value});
-                      if (errors.title) setErrors({...errors, title: ''});
-                    }}
-                    placeholder="Nome do projeto"
-                  />
-                  {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    Cliente *
-                  </label>
-                  <select
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                    value={formData.client_id}
-                    onChange={(e) => {
-                      setFormData({...formData, client_id: e.target.value});
-                      if (errors.client_id) setErrors({...errors, client_id: ''});
-                    }}
-                  >
-                    <option value="">Selecione o cliente</option>
-                    {clients.map((client) => (
-                      <option key={client.id} value={client.id}>
-                        {client.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.client_id && <p className="text-sm text-red-600 mt-1">{errors.client_id}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-primary-700 mb-1">
-                  Descrição
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full px-3 py-2 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Descrição detalhada do projeto..."
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    Tipo de Projeto
-                  </label>
-                  <select
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                    value={formData.type}
-                    onChange={(e) => setFormData({...formData, type: e.target.value as ProjectType})}
-                  >
-                    {projectTypes.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    Prioridade
-                  </label>
-                  <select
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                    value={formData.priority}
-                    onChange={(e) => setFormData({...formData, priority: e.target.value as ProjectPriority})}
-                  >
-                    {priorities.map((priority) => (
-                      <option key={priority.value} value={priority.value}>
-                        {priority.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    Orçamento *
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                    value={formData.budget}
-                    onChange={(e) => {
-                      setFormData({...formData, budget: parseFloat(e.target.value) || 0});
-                      if (errors.budget) setErrors({...errors, budget: ''});
-                    }}
-                    placeholder="0.00"
-                  />
-                  {errors.budget && <p className="text-sm text-red-600 mt-1">{errors.budget}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    <Calendar className="inline w-4 h-4 mr-1" />
-                    Data de Início
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({...formData, start_date: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    <Calendar className="inline w-4 h-4 mr-1" />
-                    Data de Entrega
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                    value={formData.due_date}
-                    onChange={(e) => {
-                      setFormData({...formData, due_date: e.target.value});
-                      if (errors.due_date) setErrors({...errors, due_date: ''});
-                    }}
-                  />
-                  {errors.due_date && <p className="text-sm text-red-600 mt-1">{errors.due_date}</p>}
-                </div>
-              </div>
-
-              {users.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-primary-700 mb-1">
-                    Gerente do Projeto *
-                  </label>
-                  <select
-                    className="w-full h-12 px-3 border border-primary-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                    value={formData.project_manager}
-                    onChange={(e) => {
-                      setFormData({...formData, project_manager: e.target.value});
-                      if (errors.project_manager) setErrors({...errors, project_manager: ''});
-                    }}
-                  >
-                    <option value="">Selecione o gerente</option>
-                    {users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.project_manager && <p className="text-sm text-red-600 mt-1">{errors.project_manager}</p>}
-                </div>
-              )}
+        <div className="space-y-3 px-4 pb-4">
+          {/* Type & Priority */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-xs text-primary-600">
+              <span className="mr-1">{type.icon}</span>
+              {type.label}
             </div>
 
-            {/* Especificações Técnicas */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-primary-900">Especificações Técnicas</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowSpecs(!showSpecs)}
-                  className="text-blue-600 hover:text-blue-700 text-sm transition-colors"
+            <div
+              className={cn(
+                'rounded-full px-2 py-0.5 text-xs font-medium',
+                priority.color,
+                priority.bg,
+              )}
+            >
+              {priority.label}
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-primary-600">Progresso</span>
+              <span className="font-medium text-primary-900">{taskProgress}%</span>
+            </div>
+
+            <div className="h-2 w-full rounded-full bg-primary-200">
+              <div
+                className={cn(
+                  'h-2 rounded-full transition-all duration-300',
+                  taskProgress >= 100
+                    ? 'bg-emerald-500'
+                    : taskProgress >= 75
+                      ? 'bg-blue-500'
+                      : taskProgress >= 50
+                        ? 'bg-amber-500'
+                        : 'bg-red-500',
+                )}
+                style={{ width: `${taskProgress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Tasks Summary */}
+          {totalTasks > 0 && (
+            <div className="flex items-center justify-between text-xs text-primary-600">
+              <span>Tarefas</span>
+              <span>
+                {completedTasks}/{totalTasks} concluídas
+              </span>
+            </div>
+          )}
+
+          {/* Budget vs Cost */}
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center justify-between text-primary-600">
+              <span>Orçamento:</span>
+              <span className="font-medium text-primary-900">{formatCurrency(project.budget)}</span>
+            </div>
+            {project.actual_cost > 0 && (
+              <div className="flex items-center justify-between text-primary-600">
+                <span>Custo Real:</span>
+                <span
+                  className={cn(
+                    'font-medium',
+                    project.actual_cost > project.budget ? 'text-red-600' : 'text-emerald-600',
+                  )}
                 >
+                  {formatCurrency(project.actual_cost)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Dates */}
+          <div className="space-y-1 text-xs text-primary-600">
+            <div className="flex items-center justify-between">
+              <span>Início:</span>
+              <span>{formatDate(project.start_date.toDate())}</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span>Prazo:</span>
+              <span className={cn(isOverdue && 'font-medium text-red-600')}>
+                {formatDate(project.due_date.toDate())}
+                {daysUntilDue > 0 && daysUntilDue <= 7 && (
+                  <span className="ml-1">({daysUntilDue}d)</span>
+                )}
+                {isOverdue && <span className="ml-1">(Atrasado)</span>}
+              </span>
+            </div>
+          </div>
+
+          {/* Team */}
+          {project.team_members.length > 0 && (
+            <div className="flex items-center justify-between text-xs text-primary-600">
+              <span>Equipe</span>
+              <div className="flex items-center">
+                <Users className="mr-1 h-3 w-3" />
+                <span>{project.team_members.length} membros</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex items-center space-x-2 px-4 pb-3 opacity-0 transition-opacity group-hover:opacity-100">
+          <Button
+            size="sm"
+            variant="default"
+            className="text-xs"
+            onClick={() => onViewDetails?.(project.id)}
+          >
+            Ver Detalhes
+          </Button>
+
+          <Button size="sm" variant="outline" className="text-xs" onClick={() => onEdit?.(project)}>
+            Editar
+          </Button>
+        </div>
+
+        {/* Overdue Indicator */}
+        {isOverdue && (
+          <div className="absolute -right-2 -top-2">
+            <Badge variant="destructive" className="animate-pulse text-xs">
+              Atrasado
+            </Badge>
+          </div>
+        )}
+      </Card>
+
+      {/* Actions Modal */}
+      <Modal
+        isOpen={showActions}
+        onClose={() => setShowActions(false)}
+        title="Ações do Projeto"
+        size="sm"
+      >
+        <div className="space-y-2">
+          <Button
+            variant="default"
+            className="w-full justify-start"
+            onClick={() => {
+              onViewDetails?.(project.id);
+              setShowActions(false);
+            }}
+          >
+            <Briefcase className="mr-2 h-4 w-4" />
+            Ver Detalhes
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={() => {
+              onEdit?.(project);
+              setShowActions(false);
+            }}
+          >
+            Editar Projeto
+          </Button>
+
+          <hr className="my-2" />
+
+          {Object.entries(statusConfig).map(([key, config]) => (
+            <Button
+              key={key}
+              variant={project.status === key ? 'default' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => {
+                onStatusChange?.(project.id, key as ProjectStatus);
+                setShowActions(false);
+              }}
+            >
+              Alterar para {config.label}
+            </Button>
+          ))}
+
+          <hr className="my-2" />
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-600 hover:text-red-700"
+            onClick={() => {
+              onDelete?.(project.id);
+              setShowActions(false);
+            }}
+          >
+            Excluir Projeto
+          </Button>
+        </div>
+      </Modal>
+    </>
+  );
+}

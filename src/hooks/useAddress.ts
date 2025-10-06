@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
-import { fetchAddressByCep } from "@/lib/services/cep";
-import { useCallback, useState } from "react";
+import { useCallback, useState } from 'react';
+
+import { fetchAddressByCep } from '@/lib/services/cep';
 
 interface Address {
   street: string;
@@ -23,13 +24,13 @@ interface UseAddressReturn {
 }
 
 const initialAddress: Address = {
-  street: "",
-  number: "",
-  complement: "",
-  neighborhood: "",
-  city: "",
-  state: "",
-  zipCode: "",
+  street: '',
+  number: '',
+  complement: '',
+  neighborhood: '',
+  city: '',
+  state: '',
+  zipCode: '',
 };
 
 export function useAddress(initialData?: Partial<Address>): UseAddressReturn {
@@ -51,7 +52,7 @@ export function useAddress(initialData?: Partial<Address>): UseAddressReturn {
 
   // ✅ BUSCAR CEP E PREENCHER AUTOMATICAMENTE
   const searchCep = useCallback(async (cep: string) => {
-    if (cep.replace(/\D/g, "").length !== 8) return;
+    if (cep.replace(/\D/g, '').length !== 8) return;
 
     setLoading(true);
     setError(null);
@@ -74,7 +75,7 @@ export function useAddress(initialData?: Partial<Address>): UseAddressReturn {
         }));
       }
     } catch (err) {
-      setError("Erro ao buscar CEP");
+      setError('Erro ao buscar CEP');
     } finally {
       setLoading(false);
     }

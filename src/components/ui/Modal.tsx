@@ -1,17 +1,19 @@
-"use client";
+'use client';
 
-import { cn } from "@/lib/utils";
-import { Dialog, Transition } from "@headlessui/react";
-import { X } from "lucide-react";
-import { Fragment, ReactNode } from "react";
-import { Button } from "./button";
+import { Dialog, Transition } from '@headlessui/react';
+import { X } from 'lucide-react';
+import { Fragment, ReactNode } from 'react';
+
+import { cn } from '@/lib/utils';
+
+import { Button } from './button';
 
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
   description?: string;
-  size?: "sm" | "md" | "lg" | "xl" | "full";
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   children: ReactNode;
   footer?: ReactNode;
   closeOnBackdrop?: boolean;
@@ -19,11 +21,11 @@ export interface ModalProps {
 }
 
 const sizeClasses = {
-  sm: "max-w-md",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
-  full: "max-w-7xl",
+  sm: 'max-w-md',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+  full: 'max-w-7xl',
 };
 
 export function Modal({
@@ -31,7 +33,7 @@ export function Modal({
   onClose,
   title,
   description,
-  size = "md",
+  size = 'md',
   children,
   footer,
   closeOnBackdrop = true,
@@ -39,11 +41,7 @@ export function Modal({
 }: ModalProps) {
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog
-        as="div"
-        className="relative z-50"
-        onClose={closeOnBackdrop ? onClose : () => {}}
-      >
+      <Dialog as="div" className="relative z-50" onClose={closeOnBackdrop ? onClose : () => {}}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -69,8 +67,8 @@ export function Modal({
             >
               <Dialog.Panel
                 className={cn(
-                  "w-full transform overflow-hidden rounded-lg bg-white p-0 text-left align-middle shadow-xl transition-all",
-                  sizeClasses[size]
+                  'w-full transform overflow-hidden rounded-lg bg-white p-0 text-left align-middle shadow-xl transition-all',
+                  sizeClasses[size],
                 )}
               >
                 {/* Header */}
@@ -78,26 +76,16 @@ export function Modal({
                   <div className="flex items-center justify-between p-6 pb-4">
                     <div>
                       {title && (
-                        <Dialog.Title
-                          as="h3"
-                          className="text-lg font-semibold text-primary-900"
-                        >
+                        <Dialog.Title as="h3" className="text-lg font-semibold text-primary-900">
                           {title}
                         </Dialog.Title>
                       )}
                       {description && (
-                        <p className="mt-1 text-sm text-primary-500">
-                          {description}
-                        </p>
+                        <p className="mt-1 text-sm text-primary-500">{description}</p>
                       )}
                     </div>
                     {showCloseButton && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onClose}
-                        className="h-8 w-8"
-                      >
+                      <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
                         <X className="h-4 w-4" />
                       </Button>
                     )}
@@ -107,9 +95,9 @@ export function Modal({
                 {/* Content */}
                 <div
                   className={cn(
-                    "px-6",
-                    title || showCloseButton ? "" : "pt-6",
-                    footer ? "pb-4" : "pb-6"
+                    'px-6',
+                    title || showCloseButton ? '' : 'pt-6',
+                    footer ? 'pb-4' : 'pb-6',
                   )}
                 >
                   {children}
@@ -117,7 +105,7 @@ export function Modal({
 
                 {/* Footer */}
                 {footer && (
-                  <div className="flex items-center justify-end gap-3 px-6 py-4 bg-primary-50 rounded-b-lg">
+                  <div className="flex items-center justify-end gap-3 rounded-b-lg bg-primary-50 px-6 py-4">
                     {footer}
                   </div>
                 )}
@@ -135,11 +123,11 @@ export function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,
-  title = "Confirmar ação",
+  title = 'Confirmar ação',
   message,
-  confirmText = "Confirmar",
-  cancelText = "Cancelar",
-  variant = "default",
+  confirmText = 'Confirmar',
+  cancelText = 'Cancelar',
+  variant = 'default',
   loading = false,
 }: {
   isOpen: boolean;
@@ -149,7 +137,7 @@ export function ConfirmModal({
   message: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: "default" | "destructive";
+  variant?: 'default' | 'destructive';
   loading?: boolean;
 }) {
   return (
@@ -164,7 +152,7 @@ export function ConfirmModal({
             {cancelText}
           </Button>
           <Button
-            variant={variant === "destructive" ? "destructive" : "default"}
+            variant={variant === 'destructive' ? 'destructive' : 'default'}
             onClick={onConfirm}
             loading={loading}
           >

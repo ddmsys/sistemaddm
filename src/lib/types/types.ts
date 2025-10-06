@@ -1,62 +1,56 @@
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
 // ========== ENUMS ==========
 export type LeadStatus =
-  | "new"
-  | "contacted"
-  | "qualified"
-  | "proposal"
-  | "negotiation"
-  | "closed_won"
-  | "closed_lost";
+  | 'new'
+  | 'contacted'
+  | 'qualified'
+  | 'proposal'
+  | 'negotiation'
+  | 'closed_won'
+  | 'closed_lost';
 
 export type LeadSource =
-  | "website"
-  | "social_media"
-  | "referral"
-  | "advertising"
-  | "email_marketing"
-  | "event"
-  | "cold_call"
-  | "other";
+  | 'website'
+  | 'social_media'
+  | 'referral'
+  | 'advertising'
+  | 'email_marketing'
+  | 'event'
+  | 'cold_call'
+  | 'other';
 
-export type QuoteStatus =
-  | "draft"
-  | "sent"
-  | "viewed"
-  | "signed"
-  | "rejected"
-  | "expired";
+export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'rejected' | 'expired';
 
 export type ProjectStatus =
-  | "approved"
-  | "in_production"
-  | "review"
-  | "client_approval"
-  | "completed"
-  | "on_hold"
-  | "cancelled";
+  | 'approved'
+  | 'in_production'
+  | 'review'
+  | 'client_approval'
+  | 'completed'
+  | 'on_hold'
+  | 'cancelled';
 
-export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue" | "cancelled";
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 
 export type UserRole =
-  | "admin"
-  | "comercial"
-  | "producao"
-  | "financeiro"
-  | "compras"
-  | "logistica"
-  | "marketing"
-  | "cliente";
+  | 'admin'
+  | 'comercial'
+  | 'producao'
+  | 'financeiro'
+  | 'compras'
+  | 'logistica'
+  | 'marketing'
+  | 'cliente';
 
 export type ProjectType =
-  | "livro_fisico"
-  | "ebook"
-  | "audiobook"
-  | "revista"
-  | "catalogo"
-  | "material_promocional"
-  | "outros";
+  | 'livro_fisico'
+  | 'ebook'
+  | 'audiobook'
+  | 'revista'
+  | 'catalogo'
+  | 'material_promocional'
+  | 'outros';
 
 // ========== BASE INTERFACES ==========
 export interface BaseEntity {
@@ -138,7 +132,7 @@ export interface Lead extends BaseEntity {
 
 export interface Activity {
   id: string;
-  type: "call" | "email" | "meeting" | "note" | "task";
+  type: 'call' | 'email' | 'meeting' | 'note' | 'task';
   title: string;
   description?: string;
   date: Timestamp;
@@ -192,7 +186,7 @@ export interface Project extends BaseEntity {
   quote_id?: string;
   type: ProjectType;
   status: ProjectStatus;
-  priority: "low" | "medium" | "high" | "urgent";
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   start_date: Timestamp;
   due_date: Timestamp;
   completion_date?: Timestamp;
@@ -217,7 +211,7 @@ export interface ProjectFile {
   size: number;
   uploaded_by: string;
   uploaded_at: Timestamp;
-  category: "brief" | "proof" | "final" | "reference" | "other";
+  category: 'brief' | 'proof' | 'final' | 'reference' | 'other';
 }
 
 export interface ProjectTask {
@@ -225,7 +219,7 @@ export interface ProjectTask {
   title: string;
   description?: string;
   assigned_to: string;
-  status: "todo" | "in_progress" | "review" | "done";
+  status: 'todo' | 'in_progress' | 'review' | 'done';
   due_date?: Timestamp;
   completed_date?: Timestamp;
   dependencies: string[]; // Task IDs
@@ -240,7 +234,7 @@ export interface ProjectTimeline {
   date: Timestamp;
   user_id: string;
   user_name: string;
-  type: "milestone" | "update" | "issue" | "approval";
+  type: 'milestone' | 'update' | 'issue' | 'approval';
 }
 
 export interface ProjectSpecifications {
@@ -302,7 +296,7 @@ export interface QualityCheck extends BaseEntity {
   project_id: string;
   checked_by: string;
   checklist: QualityCheckItem[];
-  overall_status: "passed" | "failed" | "pending";
+  overall_status: 'passed' | 'failed' | 'pending';
   notes?: string;
   approved_date?: Timestamp;
 }
@@ -310,7 +304,7 @@ export interface QualityCheck extends BaseEntity {
 export interface QualityCheckItem {
   id: string;
   item: string;
-  status: "passed" | "failed" | "n/a";
+  status: 'passed' | 'failed' | 'n/a';
   notes?: string;
 }
 
@@ -337,7 +331,7 @@ export interface PurchaseOrder extends BaseEntity {
   subtotal: number;
   tax_amount: number;
   total: number;
-  status: "draft" | "sent" | "confirmed" | "received" | "cancelled";
+  status: 'draft' | 'sent' | 'confirmed' | 'received' | 'cancelled';
   order_date: Timestamp;
   expected_delivery: Timestamp;
   actual_delivery?: Timestamp;
@@ -361,7 +355,7 @@ export interface Shipment extends BaseEntity {
   client_id: string;
   client_name: string;
   delivery_address: Address;
-  status: "preparing" | "shipped" | "in_transit" | "delivered" | "failed";
+  status: 'preparing' | 'shipped' | 'in_transit' | 'delivered' | 'failed';
   carrier?: string;
   shipping_date?: Timestamp;
   delivery_date?: Timestamp;
@@ -374,8 +368,8 @@ export interface Shipment extends BaseEntity {
 export interface Campaign extends BaseEntity {
   name: string;
   description?: string;
-  type: "email" | "social_media" | "advertising" | "event" | "content";
-  status: "draft" | "active" | "paused" | "completed";
+  type: 'email' | 'social_media' | 'advertising' | 'event' | 'content';
+  status: 'draft' | 'active' | 'paused' | 'completed';
   start_date: Timestamp;
   end_date: Timestamp;
   budget: number;
@@ -397,12 +391,12 @@ export interface CampaignMetrics {
 
 export interface Creative extends BaseEntity {
   name: string;
-  type: "image" | "video" | "text" | "banner";
+  type: 'image' | 'video' | 'text' | 'banner';
   campaign_id?: string;
   file_url?: string;
   content?: string;
   dimensions?: string;
-  status: "draft" | "approved" | "in_use" | "archived";
+  status: 'draft' | 'approved' | 'in_use' | 'archived';
   created_by: string;
   approved_by?: string;
   approval_date?: Timestamp;
@@ -415,7 +409,7 @@ export interface KPIMetric {
   value: number;
   formatted_value: string;
   change_percentage: number;
-  trend: "up" | "down" | "stable";
+  trend: 'up' | 'down' | 'stable';
   period: string;
 }
 
@@ -437,8 +431,8 @@ export interface Notification extends BaseEntity {
   user_id: string;
   title: string;
   message: string;
-  type: "info" | "success" | "warning" | "error";
-  category: "system" | "project" | "financial" | "marketing";
+  type: 'info' | 'success' | 'warning' | 'error';
+  category: 'system' | 'project' | 'financial' | 'marketing';
   is_read: boolean;
   action_url?: string;
   action_label?: string;
@@ -484,7 +478,7 @@ export interface QuoteFormData {
   client_id: string;
   title: string;
   description?: string;
-  items: Omit<QuoteItem, "id" | "total">[];
+  items: Omit<QuoteItem, 'id' | 'total'>[];
   discount_percentage: number;
   valid_until: string; // YYYY-MM-DD format
   notes?: string;
@@ -496,7 +490,7 @@ export interface ProjectFormData {
   description?: string;
   client_id: string;
   type: ProjectType;
-  priority: "low" | "medium" | "high" | "urgent";
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   start_date: string; // YYYY-MM-DD format
   due_date: string; // YYYY-MM-DD format
   budget: number;

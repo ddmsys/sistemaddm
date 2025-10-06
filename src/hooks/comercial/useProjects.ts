@@ -1,6 +1,4 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
+'use client';
 
 import {
   addDoc,
@@ -14,28 +12,21 @@ import {
   Timestamp,
   updateDoc,
   where,
-} from "firebase/firestore";
+} from 'firebase/firestore';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 
-import { db } from "@/lib/firebase";
-
-import {
-  ComercialFilters,
-  Project,
-  ProjectFormData,
-} from "@/lib/types/comercial";
-
-import { AsyncState } from "@/lib/types/shared";
-
-import { useAuth } from "@/context/AuthContext";
-
-import { toast } from "react-hot-toast";
+import { useAuth } from '@/context/AuthContext';
+import { db } from '@/lib/firebase';
+import { ComercialFilters, Project, ProjectFormData } from '@/lib/types/comercial';
+import { AsyncState } from '@/lib/types/shared';
 
 function isError(error: unknown): error is { message: string } {
   return (
-    typeof error === "object" &&
+    typeof error === 'object' &&
     error !== null &&
-    "message" in error &&
-    typeof (error as { message?: unknown }).message === "string"
+    'message' in error &&
+    typeof (error as { message?: unknown }).message === 'string'
   );
 }
 
@@ -55,30 +46,18 @@ export function useProjects() {
       setProjects((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        let projectsQuery = query(
-          collection(db, "projects"),
-          orderBy("createdAt", "desc")
-        );
+        let projectsQuery = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
 
         if (filters?.status?.length) {
-          projectsQuery = query(
-            projectsQuery,
-            where("status", "in", filters.status)
-          );
+          projectsQuery = query(projectsQuery, where('status', 'in', filters.status));
         }
 
         if (filters?.priority?.length) {
-          projectsQuery = query(
-            projectsQuery,
-            where("priority", "in", filters.priority)
-          );
+          projectsQuery = query(projectsQuery, where('priority', 'in', filters.priority));
         }
 
         if (filters?.assignedTo?.length) {
-          projectsQuery = query(
-            projectsQuery,
-            where("assignedTo", "in", filters.assignedTo)
-          );
+          projectsQuery = query(projectsQuery, where('assignedTo', 'in', filters.assignedTo));
         }
 
         const snapshot = await getDocs(projectsQuery);
@@ -91,12 +70,8 @@ export function useProjects() {
         if (filters?.dateRange?.start || filters?.dateRange?.end) {
           projectsData = projectsData.filter((project) => {
             const createdAt = project.createdAt.toDate();
-            const start = filters.dateRange?.start
-              ? new Date(filters.dateRange.start)
-              : null;
-            const end = filters.dateRange?.end
-              ? new Date(filters.dateRange.end)
-              : null;
+            const start = filters.dateRange?.start ? new Date(filters.dateRange.start) : null;
+            const end = filters.dateRange?.end ? new Date(filters.dateRange.end) : null;
 
             if (start && createdAt < start) return false;
             if (end && createdAt > end) return false;
@@ -110,7 +85,7 @@ export function useProjects() {
             (project) =>
               project.title?.toLowerCase().includes(searchLower) ||
               project.catalogCode?.toLowerCase().includes(searchLower) ||
-              project.clientName?.toLowerCase().includes(searchLower)
+              project.clientName?.toLowerCase().includes(searchLower),
           );
         }
 
@@ -120,11 +95,9 @@ export function useProjects() {
           error: null,
         });
       } catch (error: unknown) {
-        const errorMessage = isError(error)
-          ? error.message
-          : "Erro ao carregar projetos";
+        const errorMessage = isError(error) ? error.message : 'Erro ao carregar projetos';
 
-        console.error("Erro ao buscar projetos:", errorMessage);
+        console.error('Erro ao buscar projetos:', errorMessage);
 
         setProjects({
           data: null,
@@ -135,71 +108,68 @@ export function useProjects() {
         toast.error(errorMessage);
       }
     },
-    [user]
+    [user],
   );
   const createProject = useCallback(
     async (data: ProjectFormData): Promise<string | null> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return null;
       }
 
       // Validação crítica
       if (!data.category) {
-        toast.error("Tipo do produto é obrigatório");
+        toast.error('Tipo do produto é obrigatório');
         return null;
       }
 
       try {
-        const projectData: Omit<Project, "id" | "catalogCode" | "clientName"> =
-          {
-            clientId: data.clientId,
-            quoteId: data.quoteId || undefined,
-            title: data.title,
-            description: data.description || "",
-            category: data.category,
-            status: "open",
-            priority: data.priority,
-            dueDate: Timestamp.fromDate(new Date(data.dueDate)),
-            budget: data.budget,
-            assignedTo: data.assignedTo || "",
-            proofsCount: 0,
-            clientApprovalTasks: [],
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-            createdBy: user.uid,
-            notes: data.notes || "",
-          };
+        const projectData: Omit<Project, 'id' | 'catalogCode' | 'clientName'> = {
+          clientId: data.clientId,
+          quoteId: data.quoteId || undefined,
+          title: data.title,
+          description: data.description || '',
+          category: data.category,
+          status: 'open',
+          priority: data.priority,
+          dueDate: Timestamp.fromDate(new Date(data.dueDate)),
+          budget: data.budget,
+          assignedTo: data.assignedTo || '',
+          proofsCount: 0,
+          clientApprovalTasks: [],
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+          createdBy: user.uid,
+          notes: data.notes || '',
+        };
 
-        console.log("💾 Salvando projeto:", projectData);
+        console.log('💾 Salvando projeto:', projectData);
 
-        const docRef = await addDoc(collection(db, "projects"), projectData);
+        const docRef = await addDoc(collection(db, 'projects'), projectData);
 
-        toast.success("Projeto criado com sucesso!");
+        toast.success('Projeto criado com sucesso!');
         await fetchProjects();
 
         return docRef.id;
       } catch (error: unknown) {
-        console.error("❌ ERRO AO CRIAR PROJETO:", error);
-        const errorMessage = isError(error)
-          ? error.message
-          : "Erro ao criar projeto";
+        console.error('❌ ERRO AO CRIAR PROJETO:', error);
+        const errorMessage = isError(error) ? error.message : 'Erro ao criar projeto';
         toast.error(errorMessage);
         return null;
       }
     },
-    [user, fetchProjects]
+    [user, fetchProjects],
   );
 
   const updateProject = useCallback(
     async (id: string, data: Partial<Project>): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        const docRef = doc(db, "projects", id);
+        const docRef = doc(db, 'projects', id);
 
         const updateData: Partial<Project> & { updatedAt: Timestamp } = {
           ...data,
@@ -208,15 +178,13 @@ export function useProjects() {
 
         await updateDoc(docRef, updateData);
 
-        toast.success("Projeto atualizado com sucesso!");
+        toast.success('Projeto atualizado com sucesso!');
 
         await fetchProjects();
 
         return true;
       } catch (error: unknown) {
-        const errorMessage = isError(error)
-          ? error.message
-          : "Erro ao atualizar projeto";
+        const errorMessage = isError(error) ? error.message : 'Erro ao atualizar projeto';
         console.error(errorMessage);
 
         toast.error(errorMessage);
@@ -224,33 +192,31 @@ export function useProjects() {
         return false;
       }
     },
-    [user, fetchProjects]
+    [user, fetchProjects],
   );
 
   const updateProjectStatus = useCallback(
-    async (id: string, status: Project["status"]): Promise<boolean> => {
+    async (id: string, status: Project['status']): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        const docRef = doc(db, "projects", id);
+        const docRef = doc(db, 'projects', id);
 
         await updateDoc(docRef, {
           status,
           updatedAt: Timestamp.now(),
         });
 
-        toast.success("Status do projeto atualizado!");
+        toast.success('Status do projeto atualizado!');
 
         await fetchProjects();
 
         return true;
       } catch (error: unknown) {
-        const errorMessage = isError(error)
-          ? error.message
-          : "Erro ao atualizar status";
+        const errorMessage = isError(error) ? error.message : 'Erro ao atualizar status';
         console.error(errorMessage);
 
         toast.error(errorMessage);
@@ -258,28 +224,26 @@ export function useProjects() {
         return false;
       }
     },
-    [user, fetchProjects]
+    [user, fetchProjects],
   );
 
   const deleteProject = useCallback(
     async (id: string): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        await deleteDoc(doc(db, "projects", id));
+        await deleteDoc(doc(db, 'projects', id));
 
-        toast.success("Projeto excluído com sucesso!");
+        toast.success('Projeto excluído com sucesso!');
 
         await fetchProjects();
 
         return true;
       } catch (error: unknown) {
-        const errorMessage = isError(error)
-          ? error.message
-          : "Erro ao excluir projeto";
+        const errorMessage = isError(error) ? error.message : 'Erro ao excluir projeto';
         console.error(errorMessage);
 
         toast.error(errorMessage);
@@ -287,7 +251,7 @@ export function useProjects() {
         return false;
       }
     },
-    [user, fetchProjects]
+    [user, fetchProjects],
   );
 
   // ================ GET SINGLE PROJECT ================
@@ -296,7 +260,7 @@ export function useProjects() {
       if (!user || !projectId) return null;
 
       try {
-        const projectDoc = await getDoc(doc(db, "projects", projectId));
+        const projectDoc = await getDoc(doc(db, 'projects', projectId));
         if (projectDoc.exists()) {
           return {
             id: projectDoc.id,
@@ -305,66 +269,56 @@ export function useProjects() {
         }
         return null;
       } catch (error) {
-        console.error("Erro ao buscar projeto:", error);
+        console.error('Erro ao buscar projeto:', error);
         return null;
       }
     },
-    [user]
+    [user],
   );
 
-  const getProjectsByQuote = useCallback(
-    async (quoteId: string): Promise<Project[]> => {
-      try {
-        const projectsQuery = query(
-          collection(db, "projects"),
-          where("quoteId", "==", quoteId),
-          orderBy("createdAt", "desc")
-        );
+  const getProjectsByQuote = useCallback(async (quoteId: string): Promise<Project[]> => {
+    try {
+      const projectsQuery = query(
+        collection(db, 'projects'),
+        where('quoteId', '==', quoteId),
+        orderBy('createdAt', 'desc'),
+      );
 
-        const snapshot = await getDocs(projectsQuery);
+      const snapshot = await getDocs(projectsQuery);
 
-        return snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Project[];
-      } catch (error: unknown) {
-        const errorMessage = isError(error)
-          ? error.message
-          : "Erro ao buscar projetos do orçamento";
-        console.error(errorMessage);
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Project[];
+    } catch (error: unknown) {
+      const errorMessage = isError(error) ? error.message : 'Erro ao buscar projetos do orçamento';
+      console.error(errorMessage);
 
-        return [];
-      }
-    },
-    []
-  );
+      return [];
+    }
+  }, []);
 
-  const getProjectsByClient = useCallback(
-    async (clientId: string): Promise<Project[]> => {
-      try {
-        const projectsQuery = query(
-          collection(db, "projects"),
-          where("clientId", "==", clientId),
-          orderBy("createdAt", "desc")
-        );
+  const getProjectsByClient = useCallback(async (clientId: string): Promise<Project[]> => {
+    try {
+      const projectsQuery = query(
+        collection(db, 'projects'),
+        where('clientId', '==', clientId),
+        orderBy('createdAt', 'desc'),
+      );
 
-        const snapshot = await getDocs(projectsQuery);
+      const snapshot = await getDocs(projectsQuery);
 
-        return snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Project[];
-      } catch (error: unknown) {
-        const errorMessage = isError(error)
-          ? error.message
-          : "Erro ao buscar projetos do cliente";
-        console.error(errorMessage);
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Project[];
+    } catch (error: unknown) {
+      const errorMessage = isError(error) ? error.message : 'Erro ao buscar projetos do cliente';
+      console.error(errorMessage);
 
-        return [];
-      }
-    },
-    []
-  );
+      return [];
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {

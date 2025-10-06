@@ -1,7 +1,7 @@
-"use client";
-import { createContext, useContext, useState, ReactNode } from "react";
+'use client';
+import { createContext, useContext, useState, ReactNode } from 'react';
 
-type Theme = "light" | "dark";
+type Theme = 'light' | 'dark';
 
 interface ThemeCtx {
   theme: Theme;
@@ -11,8 +11,8 @@ interface ThemeCtx {
 const ThemeContext = createContext<ThemeCtx | null>(null);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useState<Theme>("light");
-  const toggle = () => setTheme((t) => (t === "light" ? "dark" : "light"));
+  const [theme, setTheme] = useState<Theme>('light');
+  const toggle = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>
       <html data-theme={theme}>{children}</html>
@@ -22,6 +22,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
 export const useTheme = () => {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme deve estar dentro de ThemeProvider");
+  if (!ctx) throw new Error('useTheme deve estar dentro de ThemeProvider');
   return ctx;
 };

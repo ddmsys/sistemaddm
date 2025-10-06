@@ -1,8 +1,8 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
-import { getStorage } from "firebase/storage";
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -20,16 +20,16 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const functions = getFunctions(app, "southamerica-east1");
+export const functions = getFunctions(app, 'southamerica-east1');
 
 // Connect to emulator in development
-if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
+if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   const hostname = window.location.hostname;
-  if (hostname === "localhost") {
+  if (hostname === 'localhost') {
     try {
-      connectFunctionsEmulator(functions, "localhost", 5001);
+      connectFunctionsEmulator(functions, 'localhost', 5001);
     } catch (error) {
-      console.log("Functions emulator already connected");
+      console.log('Functions emulator already connected');
     }
   }
 }

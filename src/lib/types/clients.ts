@@ -1,6 +1,6 @@
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
-export type ClientStatus = "active" | "inactive" | "blocked";
+export type ClientStatus = 'active' | 'inactive' | 'blocked';
 
 export interface Address {
   street?: string;

@@ -1,61 +1,58 @@
-import { type ClassValue, clsx } from "clsx";
-import { format, isValid, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { twMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from 'clsx';
+import { format, isValid, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
   }).format(value);
 }
 
 export function formatDate(date: Date | string): string {
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  if (!isValid(dateObj)) return "";
-  return format(dateObj, "dd/MM/yyyy", { locale: ptBR });
+  const dateObj = typeof date === 'string' ? parseISO(date) : date;
+  if (!isValid(dateObj)) return '';
+  return format(dateObj, 'dd/MM/yyyy', { locale: ptBR });
 }
 
 export function formatDateTime(date: Date | string): string {
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  if (!isValid(dateObj)) return "";
-  return format(dateObj, "dd/MM/yyyy HH:mm", { locale: ptBR });
+  const dateObj = typeof date === 'string' ? parseISO(date) : date;
+  if (!isValid(dateObj)) return '';
+  return format(dateObj, 'dd/MM/yyyy HH:mm', { locale: ptBR });
 }
 
 // Máscaras
 export function maskPhone(value: string): string {
-  const cleaned = value.replace(/\D/g, "");
+  const cleaned = value.replace(/\D/g, '');
   if (cleaned.length <= 10) {
-    return cleaned.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+    return cleaned.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
   } else {
-    return cleaned.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+    return cleaned.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
   }
 }
 
 export function maskCPF(value: string): string {
-  const cleaned = value.replace(/\D/g, "");
-  return cleaned.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+  const cleaned = value.replace(/\D/g, '');
+  return cleaned.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
 }
 
 export function maskCNPJ(value: string): string {
-  const cleaned = value.replace(/\D/g, "");
-  return cleaned.replace(
-    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-    "$1.$2.$3/$4-$5"
-  );
+  const cleaned = value.replace(/\D/g, '');
+  return cleaned.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
 }
 
 export function maskCEP(value: string): string {
-  const cleaned = value.replace(/\D/g, "");
-  return cleaned.replace(/^(\d{5})(\d{3})$/, "$1-$2");
+  const cleaned = value.replace(/\D/g, '');
+  return cleaned.replace(/^(\d{5})(\d{3})$/, '$1-$2');
 }
 
 export function maskDocument(value: string): string {
-  const cleaned = value.replace(/\D/g, "");
+  const cleaned = value.replace(/\D/g, '');
   if (cleaned.length <= 11) {
     return maskCPF(value);
   } else {
@@ -65,7 +62,7 @@ export function maskDocument(value: string): string {
 
 // Validações
 export function isValidCPF(cpf: string): boolean {
-  const cleaned = cpf.replace(/\D/g, "");
+  const cleaned = cpf.replace(/\D/g, '');
   if (cleaned.length !== 11) return false;
   if (/^(\d)\1{10}$/.test(cleaned)) return false;
 
@@ -89,7 +86,7 @@ export function isValidCPF(cpf: string): boolean {
 }
 
 export function isValidCNPJ(cnpj: string): boolean {
-  const cleaned = cnpj.replace(/\D/g, "");
+  const cleaned = cnpj.replace(/\D/g, '');
   if (cleaned.length !== 14) return false;
   if (/^(\d)\1{13}$/.test(cleaned)) return false;
 
@@ -125,7 +122,7 @@ export function isValidEmail(email: string): boolean {
 
 // API do CEP
 export async function fetchAddressByCEP(cep: string) {
-  const cleanCEP = cep.replace(/\D/g, "");
+  const cleanCEP = cep.replace(/\D/g, '');
   if (cleanCEP.length !== 8) return null;
 
   try {
@@ -135,35 +132,32 @@ export async function fetchAddressByCEP(cep: string) {
     if (data.erro) return null;
 
     return {
-      street: data.logradouro || "",
-      neighborhood: data.bairro || "",
-      city: data.localidade || "",
-      state: data.uf || "",
+      street: data.logradouro || '',
+      neighborhood: data.bairro || '',
+      city: data.localidade || '',
+      state: data.uf || '',
       zip_code: maskCEP(cleanCEP),
     };
   } catch (error) {
-    console.error("Erro ao buscar CEP:", error);
+    console.error('Erro ao buscar CEP:', error);
     return null;
   }
 }
 
 export function generateId(): string {
-  return (
-    Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15)
-  );
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
 export function truncateText(text: string, length: number): string {
   if (text.length <= length) return text;
-  return text.slice(0, length) + "...";
+  return text.slice(0, length) + '...';
 }
 
 export function getInitials(name: string): string {
   return name
-    .split(" ")
+    .split(' ')
     .map((word) => word.charAt(0))
-    .join("")
+    .join('')
     .toUpperCase()
     .slice(0, 2);
 }

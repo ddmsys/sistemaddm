@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 
 interface DateRange {
   start: Date;
@@ -18,20 +18,16 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
       <input
         type="date"
         value={value.start.toISOString().slice(0, 10)}
-        onChange={(e) =>
-          onChange({ start: new Date(e.target.value), end: value.end })
-        }
-        className="border rounded px-2 py-1 text-sm"
+        onChange={(e) => onChange({ start: new Date(e.target.value), end: value.end })}
+        className="rounded border px-2 py-1 text-sm"
         aria-label="De"
       />
       <span>-</span>
       <input
         type="date"
         value={value.end.toISOString().slice(0, 10)}
-        onChange={(e) =>
-          onChange({ start: value.start, end: new Date(e.target.value) })
-        }
-        className="border rounded px-2 py-1 text-sm"
+        onChange={(e) => onChange({ start: value.start, end: new Date(e.target.value) })}
+        className="rounded border px-2 py-1 text-sm"
         aria-label="Até"
       />
     </div>

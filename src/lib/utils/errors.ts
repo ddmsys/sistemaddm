@@ -6,15 +6,15 @@ export const getErrorMessage = (error: unknown): string => {
     return error.message;
   }
 
-  if (typeof error === "string") {
+  if (typeof error === 'string') {
     return error;
   }
 
-  if (error && typeof error === "object" && "message" in error) {
+  if (error && typeof error === 'object' && 'message' in error) {
     return String(error.message);
   }
 
-  return "Erro desconhecido";
+  return 'Erro desconhecido';
 };
 
 /**
@@ -29,11 +29,7 @@ export interface AppError {
 /**
  * Cria erro customizado
  */
-export const createError = (
-  code: string,
-  message: string,
-  details?: unknown
-): AppError => ({
+export const createError = (code: string, message: string, details?: unknown): AppError => ({
   code,
   message,
   details,

@@ -32,8 +32,7 @@ import type {
   QuoteModalProps,
   QuoteStatus,
   SocialMedia,
-} from "./comercial";
-
+} from './comercial';
 import type {
   ApiResponse,
   AsyncState,
@@ -49,7 +48,7 @@ import type {
   TableColumn,
   TableConfig,
   UserProfile,
-} from "./shared";
+} from './shared';
 
 // ================ RE-EXPORTS ================
 

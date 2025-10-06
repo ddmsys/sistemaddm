@@ -1,14 +1,11 @@
 // src/context/AuthContext.tsx
-"use client";
+'use client';
 
-import { auth } from "@/lib/firebase";
-import { AuthUser } from "@/lib/types";
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+
+import { auth } from '@/lib/firebase';
+import { AuthUser } from '@/lib/types';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -33,24 +30,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!user) {
         // Simular usuário logado para desenvolvimento
         const mockUser: AuthUser = {
-          uid: "dev-user-123",
-          email: "dev@sistemaddm.com",
-          displayName: "Usuário Dev",
+          uid: 'dev-user-123',
+          email: 'dev@sistemaddm.com',
+          displayName: 'Usuário Dev',
           photoURL: null,
-          role: "admin",
+          role: 'admin',
         };
         setUser(mockUser);
-        setRole("admin");
+        setRole('admin');
       } else {
         const authUser: AuthUser = {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
           photoURL: user.photoURL,
-          role: "admin", // TODO: Buscar role real do Firestore
+          role: 'admin', // TODO: Buscar role real do Firestore
         };
         setUser(authUser);
-        setRole("admin");
+        setRole('admin');
       }
 
       setLoading(false);
@@ -76,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };

@@ -1,14 +1,13 @@
 // src/components/ui/input.tsx
-import { FormFieldProps } from "@/lib/types/shared";
-import { cn } from "@/lib/utils";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
-import * as React from "react";
-import { forwardRef, InputHTMLAttributes } from "react";
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import * as React from 'react';
+import { forwardRef, InputHTMLAttributes } from 'react';
+
+import { FormFieldProps } from '@/lib/types/shared';
+import { cn } from '@/lib/utils';
 
 // ================ INTERFACE ÚNICA ================
-interface InputProps
-  extends InputHTMLAttributes<HTMLInputElement>,
-    FormFieldProps {
+interface InputProps extends InputHTMLAttributes<HTMLInputElement>, FormFieldProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   loading?: boolean;
@@ -29,12 +28,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       loading,
       clearable,
       onClear,
-      className = "",
+      className = '',
       type,
       disabled,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [showPassword, setShowPassword] = React.useState(false);
 
@@ -44,29 +43,29 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       focus:border-blue-500 focus:ring-blue-500 sm:text-sm
       disabled:bg-gray-50 disabled:text-gray-500
       transition-colors duration-200
-      ${error ? "border-red-300 focus:border-red-500 focus:ring-red-500" : ""}
-      ${leftIcon ? "pl-10" : ""}
-      ${rightIcon || loading || clearable || type === "password" ? "pr-10" : ""}
+      ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
+      ${leftIcon ? 'pl-10' : ''}
+      ${rightIcon || loading || clearable || type === 'password' ? 'pr-10' : ''}
     `.trim();
 
     // Lógica do password toggle
-    const isPassword = type === "password";
-    const inputType = isPassword && showPassword ? "text" : type;
+    const isPassword = type === 'password';
+    const inputType = isPassword && showPassword ? 'text' : type;
 
     const passwordIcon = isPassword ? (
       <button
         type="button"
         onClick={() => setShowPassword(!showPassword)}
-        className="text-gray-500 hover:text-gray-700 transition-colors focus:outline-none"
+        className="text-gray-500 transition-colors hover:text-gray-700 focus:outline-none"
         tabIndex={-1}
-        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+        aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
       >
         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>
     ) : null;
 
     const loadingIcon = loading ? (
-      <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-500" />
+      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
     ) : null;
 
     const clearButton =
@@ -74,16 +73,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <button
           type="button"
           onClick={onClear}
-          className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+          className="text-gray-400 transition-colors hover:text-gray-600 focus:outline-none"
           tabIndex={-1}
           aria-label="Limpar campo"
         >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -94,24 +88,20 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         </button>
       ) : null;
 
-    const finalRightIcon =
-      loadingIcon || passwordIcon || clearButton || rightIcon;
+    const finalRightIcon = loadingIcon || passwordIcon || clearButton || rightIcon;
 
     return (
       <div className="space-y-1">
         {label && (
-          <label
-            className="block text-sm font-medium text-gray-700"
-            htmlFor={props.id}
-          >
+          <label className="block text-sm font-medium text-gray-700" htmlFor={props.id}>
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="ml-1 text-red-500">*</span>}
           </label>
         )}
 
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400">
               {leftIcon}
             </div>
           )}
@@ -125,7 +115,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           />
 
           {finalRightIcon && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 transform">
               {finalRightIcon}
             </div>
           )}
@@ -138,12 +128,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           </div>
         )}
 
-        {helpText && !error && (
-          <p className="text-sm text-gray-500">{helpText}</p>
-        )}
+        {helpText && !error && <p className="text-sm text-gray-500">{helpText}</p>}
       </div>
     );
-  }
+  },
 );
 
-Input.displayName = "Input";
+Input.displayName = 'Input';

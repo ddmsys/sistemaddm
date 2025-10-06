@@ -489,65 +489,59 @@ ProductType =
 ### comercial types
 
 ```typescript
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
 // ================ ENUMS E TYPES BÁSICOS ================
 
 export type ProductType =
-  | "L" // Livro
-  | "E" // E-book
-  | "K" // Kit
-  | "C" // Catálogo
-  | "D" // Design
-  | "G" // Gráfica
-  | "P" // Publicidade
-  | "S" // Serviço
-  | "X" // Xilogravura
-  | "A" // Arte
-  | "M"; // Mídia
+  | 'L' // Livro
+  | 'E' // E-book
+  | 'K' // Kit
+  | 'C' // Catálogo
+  | 'D' // Design
+  | 'G' // Gráfica
+  | 'P' // Publicidade
+  | 'S' // Serviço
+  | 'X' // Xilogravura
+  | 'A' // Arte
+  | 'M'; // Mídia
 
 export type LeadSource =
-  | "website"
-  | "socialmedia" // alterado de "social-media" para "socialmedia"
-  | "referral"
-  | "advertising"
-  | "email"
-  | "phone"
-  | "coldcall"
-  | "event"
-  | "other";
+  | 'website'
+  | 'socialmedia' // alterado de "social-media" para "socialmedia"
+  | 'referral'
+  | 'advertising'
+  | 'email'
+  | 'phone'
+  | 'coldcall'
+  | 'event'
+  | 'other';
 
 export type LeadStatus =
-  | "primeiro_contato"
-  | "qualificado"
-  | "proposta_enviada"
-  | "negociacao"
-  | "fechado_ganho"
-  | "fechado_perdido";
+  | 'primeiro_contato'
+  | 'qualificado'
+  | 'proposta_enviada'
+  | 'negociacao'
+  | 'fechado_ganho'
+  | 'fechado_perdido';
 
-export type QuoteStatus =
-  | "draft"
-  | "sent"
-  | "viewed"
-  | "signed"
-  | "rejected"
-  | "expired";
+export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'rejected' | 'expired';
 
 export type ProjectStatus =
-  | "open"
-  | "design"
-  | "review"
-  | "production"
-  | "shipped"
-  | "done"
-  | "cancelled";
+  | 'open'
+  | 'design'
+  | 'review'
+  | 'production'
+  | 'shipped'
+  | 'done'
+  | 'cancelled';
 
-export type Priority = "low" | "medium" | "high" | "urgent";
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
-export type ClientType = "individual" | "company";
+export type ClientType = 'individual' | 'company';
 
 // ✅ Corrigido - usar valores em português para compatibilidade
-export type ClientStatus = "ativo" | "inativo" | "bloqueado";
+export type ClientStatus = 'ativo' | 'inativo' | 'bloqueado';
 
 // ================ INTERFACES AUXILIARES ================
 
@@ -571,7 +565,7 @@ export interface SocialMedia {
 export interface ApprovalTask {
   id: string;
   description: string;
-  status: "pending" | "approved" | "rejected";
+  status: 'pending' | 'approved' | 'rejected';
   dueDate: Timestamp;
   assignedTo?: string;
   completedAt?: Timestamp;
@@ -581,7 +575,7 @@ export interface ApprovalTask {
 export interface QuoteItem {
   id?: string; // Opcional para compatibilidade
   description: string;
-  kind: "etapa" | "impressao";
+  kind: 'etapa' | 'impressao';
   specifications?: string;
   quantity: number;
   unitPrice?: number; // Opcional para compatibilidade
@@ -662,7 +656,7 @@ export interface Quote {
   // ✅ Campos do projeto
   title?: string; // Para compatibilidade
   projectTitle: string;
-  quoteType: "producao" | "impressao" | "misto";
+  quoteType: 'producao' | 'impressao' | 'misto';
 
   // ✅ Datas e validade
   issueDate: string; // Alterado para string para compatibilidade
@@ -684,7 +678,7 @@ export interface Quote {
   totals: {
     subtotal: number;
     discount: number;
-    discountType: "percentage" | "fixed";
+    discountType: 'percentage' | 'fixed';
     freight: number;
     taxes: number;
     total: number;
@@ -771,11 +765,11 @@ export interface QuoteFormData {
   leadId: string;
   clientId?: string;
   projectTitle: string;
-  quoteType: "producao" | "impressao" | "misto";
+  quoteType: 'producao' | 'impressao' | 'misto';
   validityDays: number;
-  items: Omit<QuoteItem, "id" | "totalPrice">[];
+  items: Omit<QuoteItem, 'id' | 'totalPrice'>[];
   discount: number;
-  discountType: "percentage" | "fixed";
+  discountType: 'percentage' | 'fixed';
   productionTime?: string;
   notes?: string;
 }
@@ -877,9 +871,9 @@ export interface LeadStats {
 ### clients types
 
 ```typescript
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
-export type ClientStatus = "active" | "inactive" | "blocked";
+export type ClientStatus = 'active' | 'inactive' | 'blocked';
 
 export interface Address {
   street?: string;
@@ -929,26 +923,26 @@ export interface ClientFilters {
 ### leads types
 
 ```typescript
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
 export type LeadSource =
-  | "website"
-  | "email"
-  | "phone"
-  | "referral"
-  | "socialmedia"
-  | "coldcall"
-  | "event"
-  | "advertising"
-  | "other";
+  | 'website'
+  | 'email'
+  | 'phone'
+  | 'referral'
+  | 'socialmedia'
+  | 'coldcall'
+  | 'event'
+  | 'advertising'
+  | 'other';
 
 export type LeadStage =
-  | "primeiro_contato"
-  | "qualificado"
-  | "proposta_enviada"
-  | "negociacao"
-  | "fechado_ganho"
-  | "fechado_perdido";
+  | 'primeiro_contato'
+  | 'qualificado'
+  | 'proposta_enviada'
+  | 'negociacao'
+  | 'fechado_ganho'
+  | 'fechado_perdido';
 
 export interface Lead {
   id?: string;
@@ -985,7 +979,7 @@ export interface LeadFilters {
 ### projects types
 
 ```typescript
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
 export interface Project {
   id?: string;
@@ -1011,26 +1005,21 @@ export interface Project {
 }
 
 export type ProjectStatus =
-  | "open"
-  | "design"
-  | "review"
-  | "production"
-  | "shipped"
-  | "done"
-  | "cancelled";
+  | 'open'
+  | 'design'
+  | 'review'
+  | 'production'
+  | 'shipped'
+  | 'done'
+  | 'cancelled';
 
-export type ProjectPriority = "low" | "medium" | "high" | "urgent";
-export type ProjectCategory =
-  | "book"
-  | "magazine"
-  | "catalog"
-  | "brochure"
-  | "other";
+export type ProjectPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type ProjectCategory = 'book' | 'magazine' | 'catalog' | 'brochure' | 'other';
 
 export interface ApprovalTask {
   id: string;
   description: string;
-  status: "pending" | "approved" | "rejected";
+  status: 'pending' | 'approved' | 'rejected';
   dueDate?: Timestamp;
   createdAt: Timestamp;
   resolvedAt?: Timestamp;
@@ -1088,15 +1077,9 @@ export interface DateRange {
 ### quotes types
 
 ```typescript
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
-export type QuoteStatus =
-  | "draft"
-  | "sent"
-  | "viewed"
-  | "signed"
-  | "rejected"
-  | "expired";
+export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'rejected' | 'expired';
 
 // Filtro de Quotes
 export interface QuoteFilters {
@@ -1132,7 +1115,7 @@ export interface Quote {
   leadId?: string;
   projectTitle: string;
   description?: string; // Para compatibilidade
-  quoteType: "producao" | "impressao" | "misto";
+  quoteType: 'producao' | 'impressao' | 'misto';
   issueDate: string;
   validityDays: number;
   expiryDate?: string;
@@ -1141,7 +1124,7 @@ export interface Quote {
   totals: {
     subtotal: number;
     discount: number;
-    discountType: "percentage" | "fixed";
+    discountType: 'percentage' | 'fixed';
     freight: number;
     taxes: number;
     total: number;
@@ -1171,7 +1154,7 @@ export interface Quote {
 export interface QuoteItem {
   id?: string;
   description: string;
-  kind: "etapa" | "impressao";
+  kind: 'etapa' | 'impressao';
   specifications?: string;
   qty?: number;
   unitPrice?: number;
@@ -1195,18 +1178,18 @@ export interface QuoteFormData {
   title: string;
   description?: string;
   projectTitle: string;
-  quoteType: "producao" | "impressao" | "misto";
+  quoteType: 'producao' | 'impressao' | 'misto';
   issueDate: string;
   validUntil?: string | Date;
   expiryDate?: string;
   status?: QuoteStatus;
   items: QuoteItem[];
   discount?: number;
-  discountType?: "percentage" | "fixed";
+  discountType?: 'percentage' | 'fixed';
   totals?: {
     subtotal: number;
     discount: number;
-    discountType: "percentage" | "fixed";
+    discountType: 'percentage' | 'fixed';
     freight: number;
     taxes: number;
     total: number;
@@ -1539,7 +1522,7 @@ import type {
   QuoteModalProps,
   QuoteStatus,
   SocialMedia,
-} from "./comercial";
+} from './comercial';
 
 import type {
   ApiResponse,
@@ -1556,7 +1539,7 @@ import type {
   TableColumn,
   TableConfig,
   UserProfile,
-} from "./shared";
+} from './shared';
 
 // ================ RE-EXPORTS ================
 
@@ -1727,7 +1710,7 @@ export interface LeadsTableProps {
   loading?: boolean;
   onEdit?: (lead: Lead) => void;
   onDelete?: (leadId: string) => void;
-  onStageChange?: (leadId: string, stage: Lead["stage"]) => void;
+  onStageChange?: (leadId: string, stage: Lead['stage']) => void;
   pagination?: PaginationProps;
   filters?: LeadFilters;
   onFiltersChange?: (filters: LeadFilters) => void;
@@ -1735,8 +1718,8 @@ export interface LeadsTableProps {
 
 // Filtros
 export interface LeadFilters {
-  stage?: Lead["stage"][];
-  source?: Lead["source"][];
+  stage?: Lead['stage'][];
+  source?: Lead['source'][];
   ownerId?: string[];
   dateRange?: {
     start: Date;
@@ -1746,7 +1729,7 @@ export interface LeadFilters {
 }
 
 export interface QuoteFilters {
-  status?: Quote["status"][];
+  status?: Quote['status'][];
   clientId?: string[];
   createdBy?: string[];
   dateRange?: {
@@ -1766,13 +1749,13 @@ export interface QuoteFilters {
 ### Hook useLeads
 
 ```typescript
-"use client";
+'use client';
 
-import { useAuth } from "@/context/AuthContext";
-import { db } from "@/lib/firebase";
-import { Lead, LeadFilters, LeadStage } from "@/lib/types/leads";
-import { AsyncState, SelectOption } from "@/lib/types/shared";
-import { getErrorMessage } from "@/lib/utils/errors";
+import { useAuth } from '@/context/AuthContext';
+import { db } from '@/lib/firebase';
+import { Lead, LeadFilters, LeadStage } from '@/lib/types/leads';
+import { AsyncState, SelectOption } from '@/lib/types/shared';
+import { getErrorMessage } from '@/lib/utils/errors';
 import {
   addDoc,
   collection,
@@ -1785,16 +1768,16 @@ import {
   Timestamp,
   updateDoc,
   where,
-} from "firebase/firestore";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+} from 'firebase/firestore';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 
 export interface LeadFormData {
   name: string;
   email?: string;
   phone?: string;
   company?: string;
-  source: Lead["source"];
+  source: Lead['source'];
   value?: number;
   probability?: number;
   notes?: string;
@@ -1817,25 +1800,19 @@ export function useLeads() {
       setLeads((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        let leadsQuery = query(
-          collection(db, "leads"),
-          orderBy("createdAt", "desc")
-        );
+        let leadsQuery = query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
 
         // Aplicar filtros se fornecidos
         if (filters?.stage && filters.stage.length > 0) {
-          leadsQuery = query(leadsQuery, where("stage", "in", filters.stage));
+          leadsQuery = query(leadsQuery, where('stage', 'in', filters.stage));
         }
 
         if (filters?.source && filters.source.length > 0) {
-          leadsQuery = query(leadsQuery, where("source", "in", filters.source));
+          leadsQuery = query(leadsQuery, where('source', 'in', filters.source));
         }
 
         if (filters?.ownerId && filters.ownerId.length > 0) {
-          leadsQuery = query(
-            leadsQuery,
-            where("ownerId", "in", filters.ownerId)
-          );
+          leadsQuery = query(leadsQuery, where('ownerId', 'in', filters.ownerId));
         }
 
         const snapshot = await getDocs(leadsQuery);
@@ -1850,15 +1827,9 @@ export function useLeads() {
         if (filters?.dateRange?.start || filters?.dateRange?.end) {
           filteredLeads = filteredLeads.filter((lead) => {
             const createdAt =
-              lead.createdAt instanceof Date
-                ? lead.createdAt
-                : lead.createdAt.toDate();
-            const start = filters.dateRange?.start
-              ? new Date(filters.dateRange.start)
-              : null;
-            const end = filters.dateRange?.end
-              ? new Date(filters.dateRange.end)
-              : null;
+              lead.createdAt instanceof Date ? lead.createdAt : lead.createdAt.toDate();
+            const start = filters.dateRange?.start ? new Date(filters.dateRange.start) : null;
+            const end = filters.dateRange?.end ? new Date(filters.dateRange.end) : null;
 
             if (start && createdAt < start) return false;
             if (end && createdAt > end) return false;
@@ -1872,7 +1843,7 @@ export function useLeads() {
             (lead) =>
               lead.name.toLowerCase().includes(searchLower) ||
               lead.email?.toLowerCase().includes(searchLower) ||
-              lead.company?.toLowerCase().includes(searchLower)
+              lead.company?.toLowerCase().includes(searchLower),
           );
         }
 
@@ -1883,22 +1854,22 @@ export function useLeads() {
         });
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao buscar leads:", error);
+        console.error('Erro ao buscar leads:', error);
         setLeads({
           data: null,
           loading: false,
           error: errorMessage,
         });
-        toast.error("Erro ao carregar leads");
+        toast.error('Erro ao carregar leads');
       }
     },
-    [user]
+    [user],
   );
 
   // ================ GET SINGLE LEAD ================
   const getLead = useCallback(async (id: string): Promise<Lead | null> => {
     try {
-      const docRef = doc(db, "leads", id);
+      const docRef = doc(db, 'leads', id);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -1907,8 +1878,8 @@ export function useLeads() {
 
       return null;
     } catch (error) {
-      console.error("Erro ao buscar lead:", error);
-      toast.error("Erro ao carregar lead");
+      console.error('Erro ao buscar lead:', error);
+      toast.error('Erro ao carregar lead');
       return null;
     }
   }, []);
@@ -1917,23 +1888,23 @@ export function useLeads() {
   const createLead = useCallback(
     async (data: LeadFormData): Promise<string | null> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return null;
       }
 
       try {
-        const leadData: Omit<Lead, "id"> = {
+        const leadData: Omit<Lead, 'id'> = {
           name: data.name,
           email: data.email,
           phone: data.phone,
           company: data.company,
           source: data.source,
-          stage: "primeiro_contato",
-          status: "primeiro_contato", // Adicionando status obrigatório
+          stage: 'primeiro_contato',
+          status: 'primeiro_contato', // Adicionando status obrigatório
           value: data.value || 0,
           probability: data.probability || 0,
           ownerId: user.uid,
-          ownerName: user.displayName || "Usuário",
+          ownerName: user.displayName || 'Usuário',
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
           lastActivityAt: Timestamp.now(),
@@ -1941,30 +1912,30 @@ export function useLeads() {
           tags: data.tags || [],
         };
 
-        const docRef = await addDoc(collection(db, "leads"), leadData);
-        toast.success("Lead criado com sucesso!");
+        const docRef = await addDoc(collection(db, 'leads'), leadData);
+        toast.success('Lead criado com sucesso!');
         await fetchLeads();
         return docRef.id;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao criar lead:", error);
+        console.error('Erro ao criar lead:', error);
         toast.error(`Erro ao criar lead: ${errorMessage}`);
         return null;
       }
     },
-    [user, fetchLeads]
+    [user, fetchLeads],
   );
 
   // ================ UPDATE LEAD ================
   const updateLead = useCallback(
     async (id: string, data: Partial<LeadFormData>): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        const docRef = doc(db, "leads", id);
+        const docRef = doc(db, 'leads', id);
         const updateData: Partial<Lead> = {
           ...data,
           updatedAt: Timestamp.now(),
@@ -1972,69 +1943,69 @@ export function useLeads() {
         };
 
         await updateDoc(docRef, updateData);
-        toast.success("Lead atualizado com sucesso!");
+        toast.success('Lead atualizado com sucesso!');
         await fetchLeads();
         return true;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao atualizar lead:", error);
+        console.error('Erro ao atualizar lead:', error);
         toast.error(`Erro ao atualizar lead: ${errorMessage}`);
         return false;
       }
     },
-    [user, fetchLeads]
+    [user, fetchLeads],
   );
 
   // ================ UPDATE LEAD STAGE ================
   const updateLeadStage = useCallback(
     async (id: string, stage: LeadStage): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        const docRef = doc(db, "leads", id);
+        const docRef = doc(db, 'leads', id);
         await updateDoc(docRef, {
           stage,
           updatedAt: Timestamp.now(),
           lastActivityAt: Timestamp.now(),
         });
 
-        toast.success("Stage do lead atualizado!");
+        toast.success('Stage do lead atualizado!');
         await fetchLeads();
         return true;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao atualizar stage:", error);
-        toast.error("Erro ao atualizar stage do lead");
+        console.error('Erro ao atualizar stage:', error);
+        toast.error('Erro ao atualizar stage do lead');
         return false;
       }
     },
-    [user, fetchLeads]
+    [user, fetchLeads],
   );
 
   // ================ DELETE LEAD ================
   const deleteLead = useCallback(
     async (id: string): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        await deleteDoc(doc(db, "leads", id));
-        toast.success("Lead excluído com sucesso!");
+        await deleteDoc(doc(db, 'leads', id));
+        toast.success('Lead excluído com sucesso!');
         await fetchLeads();
         return true;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao excluir lead:", error);
-        toast.error("Erro ao excluir lead");
+        console.error('Erro ao excluir lead:', error);
+        toast.error('Erro ao excluir lead');
         return false;
       }
     },
-    [user, fetchLeads]
+    [user, fetchLeads],
   );
 
   // ================ GET LEADS OPTIONS FOR SELECT ================
@@ -2042,13 +2013,10 @@ export function useLeads() {
     if (!leads.data) return [];
 
     return leads.data
-      .filter(
-        (lead) =>
-          ["primeirocontato", "qualificado"].includes(lead.stage) && lead.id
-      )
+      .filter((lead) => ['primeirocontato', 'qualificado'].includes(lead.stage) && lead.id)
       .map((lead) => ({
         value: lead.id!,
-        label: `${lead.name}${lead.email ? ` (${lead.email})` : ""}`,
+        label: `${lead.name}${lead.email ? ` (${lead.email})` : ''}`,
       }));
   }, [leads.data]);
 
@@ -2074,20 +2042,20 @@ export function useLeads() {
   };
 }
 function fetchProjects() {
-  throw new Error("Function not implemented.");
+  throw new Error('Function not implemented.');
 }
 ```
 
 ### Hook useClients
 
 ```typescript
-"use client";
+'use client';
 
-import { useAuth } from "@/context/AuthContext";
-import { db } from "@/lib/firebase";
-import { Client, ClientStatus } from "@/lib/types/comercial";
-import { AsyncState, SelectOption } from "@/lib/types/shared";
-import { getErrorMessage } from "@/lib/utils/errors";
+import { useAuth } from '@/context/AuthContext';
+import { db } from '@/lib/firebase';
+import { Client, ClientStatus } from '@/lib/types/comercial';
+import { AsyncState, SelectOption } from '@/lib/types/shared';
+import { getErrorMessage } from '@/lib/utils/errors';
 import {
   addDoc,
   collection,
@@ -2100,9 +2068,9 @@ import {
   Timestamp,
   updateDoc,
   where,
-} from "firebase/firestore";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+} from 'firebase/firestore';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 
 export interface ClientFilters {
   status?: ClientStatus[];
@@ -2114,7 +2082,7 @@ export interface ClientFilters {
 }
 
 export interface ClientFormData {
-  type: "individual" | "company";
+  type: 'individual' | 'company';
   name: string;
   email: string;
   phone: string;
@@ -2142,16 +2110,10 @@ export function useClients() {
       setClients((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        let clientsQuery = query(
-          collection(db, "clients"),
-          orderBy("name", "asc")
-        );
+        let clientsQuery = query(collection(db, 'clients'), orderBy('name', 'asc'));
 
         if (filters?.status && filters.status.length > 0) {
-          clientsQuery = query(
-            clientsQuery,
-            where("status", "in", filters.status)
-          );
+          clientsQuery = query(clientsQuery, where('status', 'in', filters.status));
         }
 
         const snapshot = await getDocs(clientsQuery);
@@ -2171,19 +2133,15 @@ export function useClients() {
               client.email.toLowerCase().includes(searchLower) ||
               client.company?.toLowerCase().includes(searchLower) ||
               (client.cpf && client.cpf.includes(filters.search!)) ||
-              (client.cnpj && client.cnpj.includes(filters.search!))
+              (client.cnpj && client.cnpj.includes(filters.search!)),
           );
         }
 
         if (filters?.dateRange?.start || filters?.dateRange?.end) {
           filteredClients = filteredClients.filter((client) => {
             const createdAt = client.createdAt.toDate();
-            const start = filters.dateRange?.start
-              ? new Date(filters.dateRange.start)
-              : null;
-            const end = filters.dateRange?.end
-              ? new Date(filters.dateRange.end)
-              : null;
+            const start = filters.dateRange?.start ? new Date(filters.dateRange.start) : null;
+            const end = filters.dateRange?.end ? new Date(filters.dateRange.end) : null;
 
             if (start && createdAt < start) return false;
             if (end && createdAt > end) return false;
@@ -2198,22 +2156,22 @@ export function useClients() {
         });
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao buscar clientes:", error);
+        console.error('Erro ao buscar clientes:', error);
         setClients({
           data: null,
           loading: false,
           error: errorMessage,
         });
-        toast.error("Erro ao carregar clientes");
+        toast.error('Erro ao carregar clientes');
       }
     },
-    [user]
+    [user],
   );
 
   // ================ GET SINGLE CLIENT ================
   const getClient = useCallback(async (id: string): Promise<Client | null> => {
     try {
-      const docRef = doc(db, "clients", id);
+      const docRef = doc(db, 'clients', id);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -2222,8 +2180,8 @@ export function useClients() {
 
       return null;
     } catch (error) {
-      console.error("Erro ao buscar cliente:", error);
-      toast.error("Erro ao carregar cliente");
+      console.error('Erro ao buscar cliente:', error);
+      toast.error('Erro ao carregar cliente');
       return null;
     }
   }, []);
@@ -2232,81 +2190,81 @@ export function useClients() {
   const createClient = useCallback(
     async (data: ClientFormData): Promise<string | null> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return null;
       }
 
       try {
-        const clientData: Omit<Client, "id" | "clientNumber"> = {
+        const clientData: Omit<Client, 'id' | 'clientNumber'> = {
           ...data,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         };
 
-        const docRef = await addDoc(collection(db, "clients"), clientData);
-        toast.success("Cliente criado com sucesso!");
+        const docRef = await addDoc(collection(db, 'clients'), clientData);
+        toast.success('Cliente criado com sucesso!');
         await fetchClients();
         return docRef.id;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao criar cliente:", error);
+        console.error('Erro ao criar cliente:', error);
         toast.error(`Erro ao criar cliente: ${errorMessage}`);
         return null;
       }
     },
-    [user, fetchClients]
+    [user, fetchClients],
   );
 
   // ================ UPDATE CLIENT ================
   const updateClient = useCallback(
     async (id: string, data: Partial<ClientFormData>): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        const docRef = doc(db, "clients", id);
+        const docRef = doc(db, 'clients', id);
         const updateData: Partial<Client> = {
           ...data,
           updatedAt: Timestamp.now(),
         };
 
         await updateDoc(docRef, updateData);
-        toast.success("Cliente atualizado com sucesso!");
+        toast.success('Cliente atualizado com sucesso!');
         await fetchClients();
         return true;
       } catch (error) {
         const _errorMessage = getErrorMessage(error);
-        console.error("Erro ao atualizar cliente:", error);
-        toast.error("Erro ao atualizar cliente");
+        console.error('Erro ao atualizar cliente:', error);
+        toast.error('Erro ao atualizar cliente');
         return false;
       }
     },
-    [user, fetchClients]
+    [user, fetchClients],
   );
 
   // ================ DELETE CLIENT ================
   const deleteClient = useCallback(
     async (id: string): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
 
       try {
-        await deleteDoc(doc(db, "clients", id));
-        toast.success("Cliente excluído com sucesso!");
+        await deleteDoc(doc(db, 'clients', id));
+        toast.success('Cliente excluído com sucesso!');
         await fetchClients();
         return true;
       } catch (error) {
         const _errorMessage = getErrorMessage(error);
-        console.error("Erro ao excluir cliente:", error);
-        toast.error("Erro ao excluir cliente");
+        console.error('Erro ao excluir cliente:', error);
+        toast.error('Erro ao excluir cliente');
         return false;
       }
     },
-    [user, fetchClients]
+    [user, fetchClients],
   );
 
   // ================ GET CLIENTS OPTIONS FOR SELECT ================
@@ -2314,37 +2272,31 @@ export function useClients() {
     if (!clients.data) return [];
 
     return clients.data
-      .filter((client) => client.status === "ativo" && client.id)
+      .filter((client) => client.status === 'ativo' && client.id)
       .map((client) => ({
         value: client.id!,
-        label: `${client.name}${client.company ? ` (${client.company})` : ""}`,
+        label: `${client.name}${client.company ? ` (${client.company})` : ''}`,
       }));
   }, [clients.data]);
 
   // ================ GET CLIENT BY EMAIL ================
-  const getClientByEmail = useCallback(
-    async (email: string): Promise<Client | null> => {
-      try {
-        const clientsQuery = query(
-          collection(db, "clients"),
-          where("email", "==", email)
-        );
+  const getClientByEmail = useCallback(async (email: string): Promise<Client | null> => {
+    try {
+      const clientsQuery = query(collection(db, 'clients'), where('email', '==', email));
 
-        const snapshot = await getDocs(clientsQuery);
+      const snapshot = await getDocs(clientsQuery);
 
-        if (!snapshot.empty) {
-          const docData = snapshot.docs[0];
-          return { id: docData.id, ...docData.data() } as Client;
-        }
-
-        return null;
-      } catch (error) {
-        console.error("Erro ao buscar cliente por email:", error);
-        return null;
+      if (!snapshot.empty) {
+        const docData = snapshot.docs[0];
+        return { id: docData.id, ...docData.data() } as Client;
       }
-    },
-    []
-  );
+
+      return null;
+    } catch (error) {
+      console.error('Erro ao buscar cliente por email:', error);
+      return null;
+    }
+  }, []);
 
   // ================ LOAD DATA ON MOUNT ================
   useEffect(() => {
@@ -2372,18 +2324,13 @@ export function useClients() {
 ### Hook useQuotes
 
 ```typescript
-"use client";
+'use client';
 
-import { useAuth } from "@/context/AuthContext";
-import { db } from "@/lib/firebase";
-import {
-  ComercialFilters,
-  Quote,
-  QuoteFormData,
-  QuoteItem,
-} from "@/lib/types/quotes";
-import { AsyncState } from "@/lib/types/shared";
-import { getErrorMessage } from "@/lib/utils/errors";
+import { useAuth } from '@/context/AuthContext';
+import { db } from '@/lib/firebase';
+import { ComercialFilters, Quote, QuoteFormData, QuoteItem } from '@/lib/types/quotes';
+import { AsyncState } from '@/lib/types/shared';
+import { getErrorMessage } from '@/lib/utils/errors';
 import {
   addDoc,
   collection,
@@ -2396,9 +2343,9 @@ import {
   Timestamp,
   updateDoc,
   where,
-} from "firebase/firestore";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+} from 'firebase/firestore';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 
 export function useQuotes() {
   const { user } = useAuth();
@@ -2417,22 +2364,14 @@ export function useQuotes() {
       setQuotes((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        let quotesQuery = query(
-          collection(db, "quotes"),
-          orderBy("createdAt", "desc")
-        );
+        let quotesQuery = query(collection(db, 'quotes'), orderBy('createdAt', 'desc'));
 
         if (filters?.status?.length) {
-          quotesQuery = query(
-            quotesQuery,
-            where("status", "in", filters.status)
-          );
+          quotesQuery = query(quotesQuery, where('status', 'in', filters.status));
         }
 
         const snapshot = await getDocs(quotesQuery);
-        const quotesData = snapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as Quote)
-        );
+        const quotesData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Quote);
 
         let filteredQuotes = quotesData;
 
@@ -2444,12 +2383,8 @@ export function useQuotes() {
                 ? quote.createdAt.toDate()
                 : new Date(quote.createdAt)
               : null;
-            const start = filters.dateRange?.start
-              ? new Date(filters.dateRange.start)
-              : null;
-            const end = filters.dateRange?.end
-              ? new Date(filters.dateRange.end)
-              : null;
+            const start = filters.dateRange?.start ? new Date(filters.dateRange.start) : null;
+            const end = filters.dateRange?.end ? new Date(filters.dateRange.end) : null;
             if (!createdAt) return false;
             if (start && createdAt < start) return false;
             if (end && createdAt > end) return false;
@@ -2464,7 +2399,7 @@ export function useQuotes() {
             (quote) =>
               quote.projectTitle?.toLowerCase().includes(searchLower) ||
               quote.number?.toLowerCase().includes(searchLower) ||
-              quote.client?.name?.toLowerCase().includes(searchLower)
+              quote.client?.name?.toLowerCase().includes(searchLower),
           );
         }
 
@@ -2475,18 +2410,18 @@ export function useQuotes() {
         });
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao buscar orçamentos:", error);
+        console.error('Erro ao buscar orçamentos:', error);
         setQuotes({ data: null, loading: false, error: errorMessage });
-        toast.error("Erro ao carregar orçamentos");
+        toast.error('Erro ao carregar orçamentos');
       }
     },
-    [user]
+    [user],
   );
 
   // =================== GET SINGLE QUOTE ===================
   const getQuote = useCallback(async (id: string): Promise<Quote | null> => {
     try {
-      const docRef = doc(db, "quotes", id);
+      const docRef = doc(db, 'quotes', id);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -2495,8 +2430,8 @@ export function useQuotes() {
 
       return null;
     } catch (error) {
-      console.error("Erro ao buscar orçamento:", error);
-      toast.error("Erro ao carregar orçamento");
+      console.error('Erro ao buscar orçamento:', error);
+      toast.error('Erro ao carregar orçamento');
       return null;
     }
   }, []);
@@ -2505,7 +2440,7 @@ export function useQuotes() {
   const createQuote = useCallback(
     async (data: QuoteFormData): Promise<string | null> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return null;
       }
 
@@ -2516,30 +2451,25 @@ export function useQuotes() {
           totalPrice: item.quantity * (item.unitPrice || 0),
         }));
 
-        const subtotal = processedItems.reduce(
-          (sum, item) => sum + item.totalPrice,
-          0
-        );
+        const subtotal = processedItems.reduce((sum, item) => sum + item.totalPrice, 0);
         const taxes = subtotal * 0.1; // 10% impostos
         const grandTotal = subtotal + taxes - (data.discount ?? 0);
 
-        const quoteData: Omit<Quote, "id" | "number"> = {
+        const quoteData: Omit<Quote, 'id' | 'number'> = {
           leadId: data.leadId,
           clientId: data.clientId,
-          clientName: data.client?.name || "Cliente", // Adicionando clientName obrigatório
+          clientName: data.client?.name || 'Cliente', // Adicionando clientName obrigatório
           client: data.client, // agora é um objeto, se quiser só o nome: client: { name: data.clientName ?? "" }
           projectTitle: data.title,
-          quoteType: "producao",
+          quoteType: 'producao',
           issueDate: new Date().toISOString(),
           validityDays: 30,
-          expiryDate: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          ).toISOString(),
+          expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           items: processedItems,
           totals: {
             subtotal,
             discount: data.discount || 0,
-            discountType: "fixed",
+            discountType: 'fixed',
             freight: 0,
             taxes,
             total: grandTotal,
@@ -2548,41 +2478,41 @@ export function useQuotes() {
           terms: undefined,
           notes: data.notes,
           pdfUrl: undefined,
-          status: "draft",
+          status: 'draft',
           ownerId: user.uid,
-          ownerName: user.displayName ?? "",
+          ownerName: user.displayName ?? '',
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         };
 
-        const docRef = await addDoc(collection(db, "quotes"), quoteData);
+        const docRef = await addDoc(collection(db, 'quotes'), quoteData);
 
         // Aguardar um pouco para a Cloud Function processar a numeração
         setTimeout(async () => {
           await fetchQuotes();
         }, 2000);
 
-        toast.success("Orçamento criado com sucesso!");
+        toast.success('Orçamento criado com sucesso!');
         return docRef.id;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao criar orçamento:", error);
+        console.error('Erro ao criar orçamento:', error);
         toast.error(`Erro ao criar orçamento: ${errorMessage}`);
         return null;
       }
     },
-    [user, fetchQuotes]
+    [user, fetchQuotes],
   );
 
   // =================== UPDATE QUOTE ===================
   const updateQuote = useCallback(
     async (id: string, data: Partial<QuoteFormData>): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
       try {
-        const docRef = doc(db, "quotes", id);
+        const docRef = doc(db, 'quotes', id);
 
         // Prepare update fields somente com os que vieram alterados
         const updateData: Partial<Quote> = {
@@ -2594,95 +2524,87 @@ export function useQuotes() {
         if (data.notes) updateData.notes = data.notes;
         if (data.discount !== undefined)
           if (data.items) {
-            const processedItems: QuoteItem[] = data.items.map(
-              (item, index) => ({
-                ...item,
-                id: item.id || `item_${index + 1}`,
-                totalPrice: item.quantity * (item.unitPrice || 0),
-              })
-            );
+            const processedItems: QuoteItem[] = data.items.map((item, index) => ({
+              ...item,
+              id: item.id || `item_${index + 1}`,
+              totalPrice: item.quantity * (item.unitPrice || 0),
+            }));
             updateData.items = processedItems;
 
             updateData.totals = {
-              subtotal: processedItems.reduce(
-                (sum, item) => sum + item.totalPrice,
-                0
-              ),
+              subtotal: processedItems.reduce((sum, item) => sum + item.totalPrice, 0),
               discount: data.discount ?? 0,
-              discountType: "fixed",
+              discountType: 'fixed',
               freight: 0,
-              taxes:
-                processedItems.reduce((sum, item) => sum + item.totalPrice, 0) *
-                0.1,
+              taxes: processedItems.reduce((sum, item) => sum + item.totalPrice, 0) * 0.1,
               total:
-                processedItems.reduce((sum, item) => sum + item.totalPrice, 0) *
-                  1.1 -
+                processedItems.reduce((sum, item) => sum + item.totalPrice, 0) * 1.1 -
                 (data.discount ?? 0),
             };
           }
 
         await updateDoc(docRef, updateData);
-        toast.success("Orçamento atualizado com sucesso!");
+        toast.success('Orçamento atualizado com sucesso!');
         await fetchQuotes();
         return true;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao atualizar orçamento:", error);
+        console.error('Erro ao atualizar orçamento:', error);
         toast.error(`Erro ao atualizar orçamento: ${errorMessage}`);
         return false;
       }
     },
-    [user, fetchQuotes]
+    [user, fetchQuotes],
   );
 
   // =================== SIGN QUOTE ===================
   const signQuote = useCallback(
     async (id: string): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
       try {
-        const docRef = doc(db, "quotes", id);
+        const docRef = doc(db, 'quotes', id);
         await updateDoc(docRef, {
-          status: "signed",
+          status: 'signed',
           signedAt: Timestamp.now(),
-          signedBy: user?.uid || "dev-user-123",
+          signedBy: user?.uid || 'dev-user-123',
           updatedAt: Timestamp.now(),
         });
-        toast.success("Orçamento assinado com sucesso!");
+        toast.success('Orçamento assinado com sucesso!');
         await fetchQuotes();
         return true;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao assinar orçamento:", error);
+        console.error('Erro ao assinar orçamento:', error);
         toast.error(`Erro ao assinar orçamento: ${errorMessage}`);
         return false;
       }
     },
-    [user, fetchQuotes]
+    [user, fetchQuotes],
   );
 
   // =================== DELETE QUOTE ===================
   const deleteQuote = useCallback(
     async (id: string): Promise<boolean> => {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error('Usuário não autenticado');
         return false;
       }
       try {
-        await deleteDoc(doc(db, "quotes", id));
-        toast.success("Orçamento excluído com sucesso!");
+        await deleteDoc(doc(db, 'quotes', id));
+        toast.success('Orçamento excluído com sucesso!');
         await fetchQuotes();
         return true;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao excluir orçamento:", error);
+        console.error('Erro ao excluir orçamento:', error);
         toast.error(`Erro ao excluir orçamento: ${errorMessage}`);
         return false;
       }
     },
-    [user, fetchQuotes]
+    [user, fetchQuotes],
   );
 
   // =================== EFEITO - INICIAL ===================
@@ -2712,12 +2634,12 @@ export function useQuotes() {
 ```typescript
 // src/hooks/comercial/useFunnelData.ts
 
-import { useState, useEffect } from "react";
-import { useLeads } from "./useLeads";
-import { Lead } from "@/lib/types/comercial";
+import { useState, useEffect } from 'react';
+import { useLeads } from './useLeads';
+import { Lead } from '@/lib/types/comercial';
 
 interface FunnelStage {
-  stage: Lead["stage"];
+  stage: Lead['stage'];
   label: string;
   count: number;
   value: number;
@@ -2732,35 +2654,37 @@ export function useFunnelData(period?: { start: Date; end: Date }) {
   const [funnelData, setFunnelData] = useState<FunnelStage[]>([]);
 
   const stageConfig = {
-    primeiro_contato: { label: "Primeiro Contato", color: "#81f0ffff " },
-    qualificado: { label: "Qualificado", color: "#23b8cd" },
-    proposta_enviada: { label: "Proposta Enviada", color: "#fabf86 " },
-    negociacao: { label: "Negociação", color: "#b5413d" },
-    fechado_ganho: { label: "Fechado Ganho", color: "#edebd6" },
-    fechado_perdido: { label: "Fechado Perdido", color: "#5c8890" },
+    primeiro_contato: { label: 'Primeiro Contato', color: '#81f0ffff ' },
+    qualificado: { label: 'Qualificado', color: '#23b8cd' },
+    proposta_enviada: { label: 'Proposta Enviada', color: '#fabf86 ' },
+    negociacao: { label: 'Negociação', color: '#b5413d' },
+    fechado_ganho: { label: 'Fechado Ganho', color: '#edebd6' },
+    fechado_perdido: { label: 'Fechado Perdido', color: '#5c8890' },
   };
 
   useEffect(() => {
     if (leads.length === 0) return;
 
     // Agrupar leads por estágio
-    const stageStats = leads.reduce((acc, lead) => {
-      if (!acc[lead.stage]) {
-        acc[lead.stage] = { count: 0, value: 0 };
-      }
-      acc[lead.stage].count++;
-      acc[lead.stage].value += lead.value || 0;
-      return acc;
-    }, {} as Record<Lead["stage"], { count: number; value: number }>);
+    const stageStats = leads.reduce(
+      (acc, lead) => {
+        if (!acc[lead.stage]) {
+          acc[lead.stage] = { count: 0, value: 0 };
+        }
+        acc[lead.stage].count++;
+        acc[lead.stage].value += lead.value || 0;
+        return acc;
+      },
+      {} as Record<Lead['stage'], { count: number; value: number }>,
+    );
 
     // Criar dados do funil com taxa de conversão
-    const stages = Object.keys(stageConfig) as Lead["stage"][];
+    const stages = Object.keys(stageConfig) as Lead['stage'][];
     const totalLeads = leads.length;
 
     const funnelStages: FunnelStage[] = stages.map((stage, index) => {
       const stats = stageStats[stage] || { count: 0, value: 0 };
-      const prevCount =
-        index > 0 ? stageStats[stages[index - 1]]?.count || 0 : totalLeads;
+      const prevCount = index > 0 ? stageStats[stages[index - 1]]?.count || 0 : totalLeads;
 
       return {
         stage,
@@ -3413,13 +3337,11 @@ export function LeadModal({
 ### **Fase 1: Setup e Estrutura Base**
 
 1. **🔧 Reorganização de Arquivos**
-
    - Criar pasta `config/` e mover `firestore.rules`, `storage.rules`
    - Atualizar `firebase.json` com novos caminhos
    - Implementar route group `(authenticated)/`
 
 2. **🛡️ Sistema de Proteção**
-
    - Implementar `middleware.ts` completo
    - Criar `AuthContext` com verificação de permissões
    - Configurar redirecionamentos automáticos
@@ -3432,13 +3354,11 @@ export function LeadModal({
 ### **Fase 2: Componentes Base**
 
 1. **🎨 Design System**
-
    - Implementar todos os componentes UI básicos
    - Configurar paleta de cores no Tailwind
    - Criar componentes de layout (Header, Sidebar, etc.)
 
 2. **🧩 Componentes Comerciais**
-
    - Implementar todos os componentes em `/components/comercial/`
    - Criar modais, cards, tables, charts específicos
    - Implementar formulários com validação
@@ -3451,13 +3371,11 @@ export function LeadModal({
 ### **Fase 3: Dashboards e Funcionalidades**
 
 1. **📊 Dashboards Especializados**
-
    - Implementar CommercialDashboard com todas as métricas
    - Criar gráficos e visualizações específicas
    - Implementar filtros e controles avançados
 
 2. **📈 Sistema de Métricas**
-
    - Implementar cálculo de métricas em tempo real
    - Criar sistema de cache para performance
    - Adicionar exportação de relatórios
@@ -3470,13 +3388,11 @@ export function LeadModal({
 ### **Fase 4: Refinamentos e Deploy**
 
 1. **✅ Testes e Qualidade**
-
    - Testes unitários dos componentes principais
    - Testes de integração do fluxo comercial
    - Testes de performance e otimização
 
 2. **📱 Responsividade e UX**
-
    - Ajustes de layout para mobile
    - Melhorias de UX baseadas em feedback
    - Animações e transições suaves

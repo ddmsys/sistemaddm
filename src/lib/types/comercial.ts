@@ -1,61 +1,55 @@
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
 // ================ ENUMS E TYPES BÁSICOS ================
 
 export type ProductType =
-  | "L" // Livro
-  | "E" // E-book
-  | "K" // kindle
-  | "C" // CD
-  | "D" // DVD
-  | "G" // Gráfica
-  | "P" // PlatafDigital
-  | "S" // Single
-  | "X" // LivroTerc
-  | "A"; // Arte
+  | 'L' // Livro
+  | 'E' // E-book
+  | 'K' // kindle
+  | 'C' // CD
+  | 'D' // DVD
+  | 'G' // Gráfica
+  | 'P' // PlatafDigital
+  | 'S' // Single
+  | 'X' // LivroTerc
+  | 'A'; // Arte
 
 export type LeadSource =
-  | "website"
-  | "socialmedia" // alterado de "social-media" para "socialmedia"
-  | "referral"
-  | "advertising"
-  | "email"
-  | "phone"
-  | "coldcall"
-  | "event"
-  | "other";
+  | 'website'
+  | 'socialmedia' // alterado de "social-media" para "socialmedia"
+  | 'referral'
+  | 'advertising'
+  | 'email'
+  | 'phone'
+  | 'coldcall'
+  | 'event'
+  | 'other';
 
 export type LeadStatus =
-  | "primeiro_contato"
-  | "qualificado"
-  | "proposta_enviada"
-  | "negociacao"
-  | "fechado_ganho"
-  | "fechado_perdido";
+  | 'primeiro_contato'
+  | 'qualificado'
+  | 'proposta_enviada'
+  | 'negociacao'
+  | 'fechado_ganho'
+  | 'fechado_perdido';
 
-export type QuoteStatus =
-  | "draft"
-  | "sent"
-  | "viewed"
-  | "signed"
-  | "rejected"
-  | "expired";
+export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'rejected' | 'expired';
 
 export type ProjectStatus =
-  | "open"
-  | "design"
-  | "review"
-  | "production"
-  | "shipped"
-  | "done"
-  | "cancelled";
+  | 'open'
+  | 'design'
+  | 'review'
+  | 'production'
+  | 'shipped'
+  | 'done'
+  | 'cancelled';
 
-export type Priority = "low" | "medium" | "high" | "urgent";
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
-export type ClientType = "individual" | "company";
+export type ClientType = 'individual' | 'company';
 
 // ✅ Corrigido - usar valores em português para compatibilidade
-export type ClientStatus = "ativo" | "inativo" | "bloqueado";
+export type ClientStatus = 'ativo' | 'inativo' | 'bloqueado';
 
 // ================ INTERFACES AUXILIARES ================
 
@@ -79,7 +73,7 @@ export interface SocialMedia {
 export interface ApprovalTask {
   id: string;
   description: string;
-  status: "pending" | "approved" | "rejected";
+  status: 'pending' | 'approved' | 'rejected';
   dueDate: Timestamp;
   assignedTo?: string;
   completedAt?: Timestamp;
@@ -89,7 +83,7 @@ export interface ApprovalTask {
 export interface QuoteItem {
   id?: string; // Opcional para compatibilidade
   description: string;
-  kind: "etapa" | "impressao";
+  kind: 'etapa' | 'impressao';
   specifications?: string;
   quantity: number;
   unitPrice?: number; // Opcional para compatibilidade
@@ -170,7 +164,7 @@ export interface Quote {
   // ✅ Campos do projeto
   title?: string; // Para compatibilidade
   projectTitle: string;
-  quoteType: "producao" | "impressao" | "misto";
+  quoteType: 'producao' | 'impressao' | 'misto';
 
   // ✅ Datas e validade
   issueDate: string; // Alterado para string para compatibilidade
@@ -192,7 +186,7 @@ export interface Quote {
   totals: {
     subtotal: number;
     discount: number;
-    discountType: "percentage" | "fixed";
+    discountType: 'percentage' | 'fixed';
     freight: number;
     taxes: number;
     total: number;
@@ -279,11 +273,11 @@ export interface QuoteFormData {
   leadId: string;
   clientId?: string;
   projectTitle: string;
-  quoteType: "producao" | "impressao" | "misto";
+  quoteType: 'producao' | 'impressao' | 'misto';
   validityDays: number;
-  items: Omit<QuoteItem, "id" | "totalPrice">[];
+  items: Omit<QuoteItem, 'id' | 'totalPrice'>[];
   discount: number;
-  discountType: "percentage" | "fixed";
+  discountType: 'percentage' | 'fixed';
   productionTime?: string;
   notes?: string;
 }

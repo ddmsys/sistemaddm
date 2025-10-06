@@ -1,22 +1,23 @@
-//src/app/(authenticated/crm/quotes/[id]/page.tsx//
-"use client";
+// src/app/(authenticated)/crm/quotes/[id]/page.tsx
+'use client';
 
-import { QuoteModal } from "@/components/comercial/modals/QuoteModal";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useQuotes } from "@/hooks/comercial/useQuotes";
-import { Quote } from "@/lib/types/comercial";
-import { formatDate } from "@/lib/utils/formatters";
 import {
   ArrowLeftIcon,
   CheckCircleIcon,
   DocumentTextIcon,
   PencilIcon,
-} from "@heroicons/react/24/outline";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+} from '@heroicons/react/24/outline';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
+
+import { QuoteModal } from '@/components/comercial/modals/QuoteModal';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useQuotes } from '@/hooks/comercial/useQuotes';
+import { Quote } from '@/lib/types/comercial';
+import { formatDate } from '@/lib/utils/formatters';
 
 export default function QuoteDetailPage() {
   const params = useParams();
@@ -29,10 +30,6 @@ export default function QuoteDetailPage() {
   const [isSigningLoading, setIsSigningLoading] = useState(false);
 
   const quoteId = params?.id as string | undefined;
-
-  if (!quoteId) {
-    return <div>Erro: ID do orçamento não encontrado</div>;
-  }
 
   // ================ LOAD QUOTE ================
   useEffect(() => {
@@ -59,6 +56,10 @@ export default function QuoteDetailPage() {
     loadQuote();
   }, [quoteId, getQuote, router]);
 
+  if (!quoteId) {
+    return <div>Erro: ID do orçamento não encontrado</div>;
+  }
+
   // ================ HANDLERS ================
   const handleEdit = () => {
     setIsModalOpen(true);
@@ -69,10 +70,10 @@ export default function QuoteDetailPage() {
 
     setIsSigningLoading(true);
     try {
-      const success = await signQuote(quote.id ?? "");
+      const success = await signQuote(quote.id ?? '');
       if (success) {
         // Recarregar dados
-        const updatedQuote = await getQuote(quote.id ?? "");
+        const updatedQuote = await getQuote(quote.id ?? '');
         if (updatedQuote) {
           setQuote(updatedQuote);
         }
@@ -88,44 +89,42 @@ export default function QuoteDetailPage() {
 
   const handleShare = () => {
     if (quote?.pdfUrl) {
-      window.open(quote.pdfUrl, "_blank");
+      window.open(quote.pdfUrl, '_blank');
     } else {
-      toast.error("PDF não disponível");
+      toast.error('PDF não disponível');
     }
   };
 
   // ================ UTILS ================
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
     }).format(value);
   };
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="bg-gray-200 h-8 w-64 rounded animate-pulse" />
-        <div className="bg-gray-200 h-64 rounded-lg animate-pulse" />
-        <div className="bg-gray-200 h-96 rounded-lg animate-pulse" />
+        <div className="h-8 w-64 animate-pulse rounded bg-gray-200" />
+        <div className="h-64 animate-pulse rounded-lg bg-gray-200" />
+        <div className="h-96 animate-pulse rounded-lg bg-gray-200" />
       </div>
     );
   }
 
   if (!quote) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-gray-500">Orçamento não encontrado</p>
-        <Button onClick={() => router.push("/crm/quotes")} className="mt-4">
+        <Button onClick={() => router.push('/crm/quotes')} className="mt-4">
           Voltar para orçamentos
         </Button>
       </div>
     );
   }
 
-  const isExpired = quote.validUntil
-    ? quote.validUntil.toDate() < new Date()
-    : false;
+  const isExpired = quote.validUntil ? quote.validUntil.toDate() < new Date() : false;
 
   return (
     <div className="space-y-6">
@@ -135,22 +134,18 @@ export default function QuoteDetailPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/crm/quotes")}
-            leftIcon={<ArrowLeftIcon className="w-4 h-4" />}
+            onClick={() => router.push('/crm/quotes')}
+            leftIcon={<ArrowLeftIcon className="h-4 w-4" />}
           >
             Voltar
           </Button>
 
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{quote.title}</h1>
-            <div className="flex items-center space-x-3 mt-1">
-              <p className="text-sm text-gray-600 font-mono">{quote.number}</p>
+            <div className="mt-1 flex items-center space-x-3">
+              <p className="font-mono text-sm text-gray-600">{quote.number}</p>
               <Badge variant="info">{quote.status}</Badge>
-              {isExpired && (
-                <span className="text-sm text-red-600 font-medium">
-                  (Expirado)
-                </span>
-              )}
+              {isExpired && <span className="text-sm font-medium text-red-600">(Expirado)</span>}
             </div>
           </div>
         </div>
@@ -160,7 +155,7 @@ export default function QuoteDetailPage() {
             <Button
               variant="outline"
               onClick={handleShare}
-              leftIcon={<DocumentTextIcon className="w-4 h-4" />}
+              leftIcon={<DocumentTextIcon className="h-4 w-4" />}
             >
               Ver PDF
             </Button>
@@ -169,17 +164,17 @@ export default function QuoteDetailPage() {
           <Button
             variant="outline"
             onClick={handleEdit}
-            disabled={quote.status === "signed"}
-            leftIcon={<PencilIcon className="w-4 h-4" />}
+            disabled={quote.status === 'signed'}
+            leftIcon={<PencilIcon className="h-4 w-4" />}
           >
             Editar
           </Button>
 
-          {quote.status === "sent" && (
+          {quote.status === 'sent' && (
             <Button
               onClick={handleSign}
               loading={isSigningLoading}
-              leftIcon={<CheckCircleIcon className="w-4 h-4" />}
+              leftIcon={<CheckCircleIcon className="h-4 w-4" />}
             >
               Assinar Orçamento
             </Button>
@@ -188,8 +183,8 @@ export default function QuoteDetailPage() {
       </div>
 
       {/* ================ INFORMAÇÕES BÁSICAS ================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 border shadow-sm">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="border shadow-sm lg:col-span-2">
           <CardHeader>
             <h3 className="text-lg font-semibold">Informações do Orçamento</h3>
           </CardHeader>
@@ -197,9 +192,7 @@ export default function QuoteDetailPage() {
             <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Cliente</dt>
-                <dd className="text-sm text-gray-900 mt-1">
-                  {quote.clientName}
-                </dd>
+                <dd className="mt-1 text-sm text-gray-900">{quote.clientName}</dd>
               </div>
 
               <div>
@@ -210,12 +203,10 @@ export default function QuoteDetailPage() {
               </div>
 
               <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  Válido até
-                </dt>
+                <dt className="text-sm font-medium text-gray-500">Válido até</dt>
                 <dd
-                  className={`text-sm mt-1 ${
-                    isExpired ? "text-red-600 font-medium" : "text-gray-900"
+                  className={`mt-1 text-sm ${
+                    isExpired ? 'font-medium text-red-600' : 'text-gray-900'
                   }`}
                 >
                   {formatDate(quote.validUntil)}
@@ -224,20 +215,14 @@ export default function QuoteDetailPage() {
 
               <div>
                 <dt className="text-sm font-medium text-gray-500">Criado em</dt>
-                <dd className="text-sm text-gray-900 mt-1">
-                  {formatDate(quote.createdAt)}
-                </dd>
+                <dd className="mt-1 text-sm text-gray-900">{formatDate(quote.createdAt)}</dd>
               </div>
 
               {quote.signedAt && (
                 <>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">
-                      Assinado em
-                    </dt>
-                    <dd className="text-sm text-gray-900 mt-1">
-                      {formatDate(quote.signedAt)}
-                    </dd>
+                    <dt className="text-sm font-medium text-gray-500">Assinado em</dt>
+                    <dd className="mt-1 text-sm text-gray-900">{formatDate(quote.signedAt)}</dd>
                   </div>
                 </>
               )}
@@ -265,31 +250,23 @@ export default function QuoteDetailPage() {
             <dl className="space-y-4">
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Subtotal</dt>
-                <dd className="text-sm text-gray-900">
-                  {formatCurrency(quote.subtotal ?? 0)}
-                </dd>
+                <dd className="text-sm text-gray-900">{formatCurrency(quote.subtotal ?? 0)}</dd>
               </div>
 
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Impostos</dt>
-                <dd className="text-sm text-gray-900">
-                  {formatCurrency(quote.taxes ?? 0)}
-                </dd>
+                <dd className="text-sm text-gray-900">{formatCurrency(quote.taxes ?? 0)}</dd>
               </div>
 
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Desconto</dt>
-                <dd className="text-sm text-red-600">
-                  - {formatCurrency(quote.discount ?? 0)}
-                </dd>
+                <dd className="text-sm text-red-600">- {formatCurrency(quote.discount ?? 0)}</dd>
               </div>
 
               <hr />
 
               <div className="flex justify-between">
-                <dt className="text-base font-medium text-gray-900">
-                  Total Geral
-                </dt>
+                <dt className="text-base font-medium text-gray-900">Total Geral</dt>
                 <dd className="text-base font-bold text-blue-600">
                   {formatCurrency(quote.grandTotal ?? 0)}
                 </dd>
@@ -309,29 +286,25 @@ export default function QuoteDetailPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Descrição
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Qtd
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Valor Unit.
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Total
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 bg-white">
                 {quote.items.map((item, index) => (
                   <tr key={item.id || index}>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {item.description}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {item.quantity}
-                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.description}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{item.quantity}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {formatCurrency(item.unitPrice ?? 0)}
                     </td>
@@ -353,19 +326,13 @@ export default function QuoteDetailPage() {
             <h3 className="text-lg font-semibold">Observações</h3>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-900 whitespace-pre-wrap">
-              {quote.notes}
-            </p>
+            <p className="whitespace-pre-wrap text-sm text-gray-900">{quote.notes}</p>
           </CardContent>
         </Card>
       )}
 
       {/* ================ MODAL ================ */}
-      <QuoteModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        quote={quote}
-      />
+      <QuoteModal isOpen={isModalOpen} onClose={handleCloseModal} quote={quote} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { CommercialDashboard } from "@/components/dashboard/CommercialDashboard";
+import { CommercialDashboard } from '@/components/dashboard/CommercialDashboard';
 
 export default function Home() {
   return (

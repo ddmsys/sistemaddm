@@ -1,12 +1,13 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { Menu, Transition } from "@headlessui/react";
-import { Bell, Menu as MenuIcon, Search, User } from "lucide-react";
-import { Fragment } from "react";
+import { Menu, Transition } from '@headlessui/react';
+import { Bell, Menu as MenuIcon, Search, User } from 'lucide-react';
+import { Fragment } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -22,27 +23,20 @@ export function Header({ onMenuClick, user }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-white px-4 shadow-sm sm:px-6 lg:px-8">
       {/* Mobile menu button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden"
-        onClick={onMenuClick}
-      >
+      <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
         <MenuIcon className="h-6 w-6" />
       </Button>
 
       {/* Logo */}
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">DDM</span>
+        <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600">
+          <span className="text-sm font-bold text-white">DDM</span>
         </div>
-        <span className="hidden sm:block text-lg font-semibold text-primary-900">
-          Sistema DDM
-        </span>
+        <span className="hidden text-lg font-semibold text-primary-900 sm:block">Sistema DDM</span>
       </div>
 
       {/* Search */}
-      <div className="flex-1 max-w-md">
+      <div className="max-w-md flex-1">
         <Input
           placeholder="Buscar projetos, clientes..."
           leftIcon={<Search className="h-4 w-4" />}
@@ -58,7 +52,7 @@ export function Header({ onMenuClick, user }: HeaderProps) {
           </Button>
           <Badge
             variant="destructive"
-            className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center"
+            className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-0"
           >
             3
           </Badge>
@@ -69,21 +63,15 @@ export function Header({ onMenuClick, user }: HeaderProps) {
           <Menu as="div" className="relative">
             <div>
               <Menu.Button className="flex items-center gap-2 rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100">
                   {user.avatar ? (
-                    <img
-                      className="h-8 w-8 rounded-full"
-                      src={user.avatar}
-                      alt={user.name}
-                    />
+                    <img className="h-8 w-8 rounded-full" src={user.avatar} alt={user.name} />
                   ) : (
                     <User className="h-4 w-4 text-primary-600" />
                   )}
                 </div>
-                <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium text-primary-900">
-                    {user.name}
-                  </p>
+                <div className="hidden text-left sm:block">
+                  <p className="text-sm font-medium text-primary-900">{user.name}</p>
                   <p className="text-xs text-primary-500">{user.role}</p>
                 </div>
               </Menu.Button>
@@ -104,9 +92,9 @@ export function Header({ onMenuClick, user }: HeaderProps) {
                     <a
                       href="/profile"
                       className={cn(
-                        "block px-4 py-2 text-sm",
-                        active ? "bg-gray-100" : "",
-                        "text-gray-700"
+                        'block px-4 py-2 text-sm',
+                        active ? 'bg-gray-100' : '',
+                        'text-gray-700',
                       )}
                     >
                       Meu Perfil
@@ -118,9 +106,9 @@ export function Header({ onMenuClick, user }: HeaderProps) {
                     <a
                       href="/settings"
                       className={cn(
-                        "block px-4 py-2 text-sm",
-                        active ? "bg-gray-100" : "",
-                        "text-gray-700"
+                        'block px-4 py-2 text-sm',
+                        active ? 'bg-gray-100' : '',
+                        'text-gray-700',
                       )}
                     >
                       Configurações
@@ -131,9 +119,9 @@ export function Header({ onMenuClick, user }: HeaderProps) {
                   {({ active }) => (
                     <button
                       className={cn(
-                        "block w-full text-left px-4 py-2 text-sm",
-                        active ? "bg-gray-100" : "",
-                        "text-gray-700"
+                        'block w-full px-4 py-2 text-left text-sm',
+                        active ? 'bg-gray-100' : '',
+                        'text-gray-700',
                       )}
                       onClick={() => {
                         // Handle logout

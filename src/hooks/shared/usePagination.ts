@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { PAGINATION } from "@/lib/constants";
+import { useState } from 'react';
+
+import { PAGINATION } from '@/lib/constants';
 
 export function usePagination() {
   const [page, setPage] = useState(1);

@@ -1,9 +1,6 @@
-"use client";
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LeadStatus } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
-import { useMemo } from "react";
+import { useMemo } from 'react';
 import {
   Bar,
   BarChart,
@@ -13,7 +10,11 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
+} from 'recharts';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LeadStatus } from '@/lib/types';
+import { formatCurrency } from '@/lib/utils';
 
 interface FunnelData {
   stage: string;
@@ -34,22 +35,22 @@ interface FunnelChartProps {
 }
 
 const stageConfig = {
-  new: { label: "Novos Leads", color: "#3b82f6" },
-  contacted: { label: "Contatados", color: "#8b5cf6" },
-  qualified: { label: "Qualificados", color: "#f59e0b" },
-  proposal: { label: "Propostas", color: "#06b6d4" },
-  negotiation: { label: "Negociação", color: "#f97316" },
-  closed_won: { label: "Fechados", color: "#10b981" },
-  closed_lost: { label: "Perdidos", color: "#ef4444" },
+  new: { label: 'Novos Leads', color: '#3b82f6' },
+  contacted: { label: 'Contatados', color: '#8b5cf6' },
+  qualified: { label: 'Qualificados', color: '#f59e0b' },
+  proposal: { label: 'Propostas', color: '#06b6d4' },
+  negotiation: { label: 'Negociação', color: '#f97316' },
+  closed_won: { label: 'Fechados', color: '#10b981' },
+  closed_lost: { label: 'Perdidos', color: '#ef4444' },
 };
 
 export function FunnelChart({
   data,
-  title = "Funil de Vendas",
+  title = 'Funil de Vendas',
   showValues = true,
 }: FunnelChartProps) {
   const chartData = useMemo(() => {
-    const totalLeads = data.find((item) => item.status === "new")?.count || 0;
+    const totalLeads = data.find((item) => item.status === 'new')?.count || 0;
 
     return Object.entries(stageConfig)
       .map(([status, config]) => {
@@ -73,20 +74,18 @@ export function FunnelChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border">
+        <div className="rounded-lg border bg-white p-3 shadow-lg">
           <p className="font-medium text-primary-900">{label}</p>
           <p className="text-sm text-primary-600">
             <span className="font-medium">{data.count}</span> leads
           </p>
           {showValues && data.value > 0 && (
             <p className="text-sm text-primary-600">
-              Valor:{" "}
-              <span className="font-medium">{formatCurrency(data.value)}</span>
+              Valor: <span className="font-medium">{formatCurrency(data.value)}</span>
             </p>
           )}
           <p className="text-sm text-primary-600">
-            Taxa:{" "}
-            <span className="font-medium">{data.conversion.toFixed(1)}%</span>
+            Taxa: <span className="font-medium">{data.conversion.toFixed(1)}%</span>
           </p>
         </div>
       );
@@ -99,18 +98,13 @@ export function FunnelChart({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           {title}
-          <div className="text-sm font-normal text-primary-500">
-            Taxa de Conversão
-          </div>
+          <div className="text-sm font-normal text-primary-500">Taxa de Conversão</div>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
               <XAxis
                 dataKey="stage"
@@ -132,18 +126,15 @@ export function FunnelChart({
 
         {/* Conversion Summary */}
         <div className="mt-4 grid grid-cols-2 gap-4">
-          <div className="text-center p-3 bg-primary-50 rounded-lg">
+          <div className="rounded-lg bg-primary-50 p-3 text-center">
             <div className="text-2xl font-bold text-primary-900">
               {chartData.length > 0 ? chartData[0].count : 0}
             </div>
             <div className="text-sm text-primary-600">Total de Leads</div>
           </div>
-          <div className="text-center p-3 bg-emerald-50 rounded-lg">
+          <div className="rounded-lg bg-emerald-50 p-3 text-center">
             <div className="text-2xl font-bold text-emerald-700">
-              {chartData
-                .find((d) => d.stage.includes("Fechados"))
-                ?.conversion.toFixed(1) || 0}
-              %
+              {chartData.find((d) => d.stage.includes('Fechados'))?.conversion.toFixed(1) || 0}%
             </div>
             <div className="text-sm text-emerald-600">Taxa de Conversão</div>
           </div>

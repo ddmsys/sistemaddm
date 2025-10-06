@@ -1,6 +1,5 @@
-"use client";
+'use client';
 
-import { db } from "@/lib/firebase";
 import {
   addDoc,
   collection,
@@ -15,23 +14,18 @@ import {
   Timestamp,
   updateDoc,
   where,
-} from "firebase/firestore";
-import { useEffect, useState } from "react";
+} from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 
-export function useFirestore<T>(
-  collectionName: string,
-  constraints: QueryConstraint[] = []
-) {
+import { db } from '@/lib/firebase';
+
+export function useFirestore<T>(collectionName: string, constraints: QueryConstraint[] = []) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const q = query(
-      collection(db, collectionName),
-      ...constraints,
-      orderBy("created_at", "desc")
-    );
+    const q = query(collection(db, collectionName), ...constraints, orderBy('created_at', 'desc'));
 
     const unsubscribe = onSnapshot(
       q,
@@ -41,7 +35,7 @@ export function useFirestore<T>(
             ({
               id: doc.id,
               ...doc.data(),
-            } as T)
+            }) as T,
         );
         setData(items);
         setLoading(false);
@@ -50,15 +44,13 @@ export function useFirestore<T>(
         console.error(`Error fetching ${collectionName}:`, error);
         setError(`Erro ao carregar ${collectionName}`);
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();
   }, [collectionName]);
 
-  const create = async (
-    item: Omit<T, "id" | "created_at" | "updated_at">
-  ): Promise<string> => {
+  const create = async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<string> => {
     try {
       const now = Timestamp.now();
       const docRef = await addDoc(collection(db, collectionName), {
@@ -112,13 +104,10 @@ export function useFirestore<T>(
   const checkDuplicate = async (
     field: string,
     value: string,
-    excludeId?: string
+    excludeId?: string,
   ): Promise<boolean> => {
     try {
-      const q = query(
-        collection(db, collectionName),
-        where(field, "==", value)
-      );
+      const q = query(collection(db, collectionName), where(field, '==', value));
       const snapshot = await getDocs(q);
 
       if (excludeId) {

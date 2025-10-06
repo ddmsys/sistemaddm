@@ -7,13 +7,13 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
-    domains: ["firebasestorage.googleapis.com"],
+    domains: ['firebasestorage.googleapis.com'],
   },
   async redirects() {
     return [
       {
-        source: "/auth",
-        destination: "/login",
+        source: '/auth',
+        destination: '/login',
         permanent: true,
       },
     ];

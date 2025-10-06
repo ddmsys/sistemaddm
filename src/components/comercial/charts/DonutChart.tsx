@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from 'react';
 
 interface DonutData {
   stage: string;
@@ -21,8 +21,8 @@ interface DonutChartProps {
 export function DonutChart({
   data,
   height = 500, // ✅ ALTURA MAIOR
-  showValues = true,
-  showPercentages = true,
+  _showValues = true,
+  _showPercentages = false,
   loading,
 }: DonutChartProps) {
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
@@ -54,8 +54,8 @@ export function DonutChart({
     return (
       <div className="flex items-center justify-center" style={{ height }}>
         <div className="relative">
-          <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-200"></div>
-          <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-500 border-t-transparent absolute top-0 left-0"></div>
+          <div className="h-20 w-20 animate-spin rounded-full border-4 border-blue-200"></div>
+          <div className="absolute left-0 top-0 h-20 w-20 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
         </div>
       </div>
     );
@@ -63,12 +63,9 @@ export function DonutChart({
 
   if (processedData.length === 0) {
     return (
-      <div
-        className="flex items-center justify-center text-slate-500"
-        style={{ height }}
-      >
+      <div className="flex items-center justify-center text-slate-500" style={{ height }}>
         <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
             <span className="text-3xl">📊</span>
           </div>
           <p className="text-sm">Nenhum dado disponível</p>
@@ -88,30 +85,20 @@ export function DonutChart({
     startAngle: number,
     endAngle: number,
     outerRadius: number,
-    innerRadius: number
+    innerRadius: number,
   ) => {
     const start = polarToCartesian(centerX, centerY, outerRadius, endAngle);
     const end = polarToCartesian(centerX, centerY, outerRadius, startAngle);
-    const innerStart = polarToCartesian(
-      centerX,
-      centerY,
-      innerRadius,
-      endAngle
-    );
-    const innerEnd = polarToCartesian(
-      centerX,
-      centerY,
-      innerRadius,
-      startAngle
-    );
+    const innerStart = polarToCartesian(centerX, centerY, innerRadius, endAngle);
+    const innerEnd = polarToCartesian(centerX, centerY, innerRadius, startAngle);
 
-    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
 
     return [
-      "M",
+      'M',
       start.x,
       start.y,
-      "A",
+      'A',
       outerRadius,
       outerRadius,
       0,
@@ -119,10 +106,10 @@ export function DonutChart({
       0,
       end.x,
       end.y,
-      "L",
+      'L',
       innerEnd.x,
       innerEnd.y,
-      "A",
+      'A',
       innerRadius,
       innerRadius,
       0,
@@ -130,15 +117,15 @@ export function DonutChart({
       1,
       innerStart.x,
       innerStart.y,
-      "z",
-    ].join(" ");
+      'z',
+    ].join(' ');
   };
 
   function polarToCartesian(
     centerX: number,
     centerY: number,
     radius: number,
-    angleInDegrees: number
+    angleInDegrees: number,
   ) {
     const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
     return {
@@ -178,12 +165,7 @@ export function DonutChart({
               <g key={item.stage}>
                 {/* Sombra */}
                 <path
-                  d={createArcPath(
-                    item.startAngle,
-                    item.endAngle,
-                    currentRadius + 3,
-                    innerRadius
-                  )}
+                  d={createArcPath(item.startAngle, item.endAngle, currentRadius + 3, innerRadius)}
                   fill="rgba(0,0,0,0.15)"
                   transform="translate(4,4)"
                   className="transition-all duration-300"
@@ -191,18 +173,11 @@ export function DonutChart({
 
                 {/* Segmento principal */}
                 <path
-                  d={createArcPath(
-                    item.startAngle,
-                    item.endAngle,
-                    currentRadius,
-                    innerRadius
-                  )}
+                  d={createArcPath(item.startAngle, item.endAngle, currentRadius, innerRadius)}
                   fill={item.color}
-                  className="transition-all duration-300 cursor-pointer"
+                  className="cursor-pointer transition-all duration-300"
                   style={{
-                    filter: isHovered
-                      ? "brightness(1.1) saturate(1.2)"
-                      : "none",
+                    filter: isHovered ? 'brightness(1.1) saturate(1.2)' : 'none',
                   }}
                   onMouseEnter={() => setHoveredSegment(item.stage)}
                   onMouseLeave={() => setHoveredSegment(null)}
@@ -224,7 +199,7 @@ export function DonutChart({
             x={centerX}
             y={centerY - 15}
             textAnchor="middle"
-            className="text-xl font-medium fill-slate-500" // Era text-lg, agora text-xl
+            className="fill-slate-500 text-xl font-medium" // Era text-lg, agora text-xl
           >
             Total
           </text>
@@ -232,7 +207,7 @@ export function DonutChart({
             x={centerX}
             y={centerY + 20}
             textAnchor="middle"
-            className="text-5xl font-bold fill-slate-900" // Era text-3xl, agora text-5xl
+            className="fill-slate-900 text-5xl font-bold" // Era text-3xl, agora text-5xl
           >
             {total}
           </text>
@@ -242,12 +217,9 @@ export function DonutChart({
               x={centerX}
               y={centerY + 55}
               textAnchor="middle"
-              className="text-base fill-slate-600" // Era text-sm, agora text-base
+              className="fill-slate-600 text-base" // Era text-sm, agora text-base
             >
-              {
-                processedData.find((item) => item.stage === hoveredSegment)
-                  ?.label
-              }
+              {processedData.find((item) => item.stage === hoveredSegment)?.label}
             </text>
           )}
         </svg>
@@ -256,7 +228,7 @@ export function DonutChart({
       {/* ✅ LEGENDA HORIZONTAL EMBAIXO - MAIOR */}
       <div className="w-full px-4">
         <div className="flex flex-wrap justify-center gap-x-12 gap-y-4">
-          {" "}
+          {' '}
           {/* Era gap-x-8, agora gap-x-12 */}
           {processedData.map((item) => {
             const isHovered = hoveredSegment === item.stage;
@@ -264,24 +236,22 @@ export function DonutChart({
             return (
               <div
                 key={item.stage}
-                className={`flex items-center gap-3 cursor-pointer transition-all duration-200 ${
+                className={`flex cursor-pointer items-center gap-3 transition-all duration-200 ${
                   // Era gap-2, agora gap-3
-                  isHovered ? "scale-110" : "hover:scale-105" // Era scale-105, agora scale-110
+                  isHovered ? 'scale-110' : 'hover:scale-105' // Era scale-105, agora scale-110
                 }`}
                 onMouseEnter={() => setHoveredSegment(item.stage)}
                 onMouseLeave={() => setHoveredSegment(null)}
               >
                 {/* Bolinha colorida - MAIOR */}
                 <div
-                  className={`w-4 h-4 rounded-full transition-all duration-200 ${
+                  className={`h-4 w-4 rounded-full transition-all duration-200 ${
                     // Era w-3 h-3, agora w-4 h-4
-                    isHovered ? "scale-125 shadow-lg" : ""
+                    isHovered ? 'scale-125 shadow-lg' : ''
                   }`}
                   style={{
                     backgroundColor: item.color,
-                    boxShadow: isHovered
-                      ? `0 4px 12px ${item.color}40`
-                      : "none",
+                    boxShadow: isHovered ? `0 4px 12px ${item.color}40` : 'none',
                   }}
                 />
 
@@ -289,9 +259,7 @@ export function DonutChart({
                 <span
                   className={`text-base transition-colors duration-200 ${
                     // Era text-sm, agora text-base
-                    isHovered
-                      ? "text-slate-900 font-semibold"
-                      : "text-slate-700" // Era font-medium, agora font-semibold
+                    isHovered ? 'font-semibold text-slate-900' : 'text-slate-700' // Era font-medium, agora font-semibold
                   }`}
                 >
                   {item.label}

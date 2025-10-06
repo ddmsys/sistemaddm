@@ -1,5 +1,5 @@
 // src/types/shared.ts
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 
 // ================ FORM FIELD PROPS ================
 export interface FormFieldProps {
@@ -15,7 +15,7 @@ export interface SelectOption {
 }
 
 // ================ TABLE TYPES ================
-export type SortDirection = "asc" | "desc";
+export type SortDirection = 'asc' | 'desc';
 
 export interface SortConfig {
   key: string;
@@ -28,8 +28,8 @@ export interface Lead {
   email: string;
   phone: string;
   company?: string;
-  source: "website" | "referral" | "social" | "advertising" | "other";
-  status: "new" | "contacted" | "qualified" | "proposal" | "won" | "lost";
+  source: 'website' | 'referral' | 'social' | 'advertising' | 'other';
+  status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'won' | 'lost';
   assignedTo?: string;
   notes?: string;
   value?: number;
@@ -46,7 +46,7 @@ export interface Client {
   company?: string;
   address?: Address;
   document?: string;
-  status: "active" | "inactive";
+  status: 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,7 +59,7 @@ export interface Quote {
   subtotal: number;
   tax: number;
   total: number;
-  status: "draft" | "sent" | "approved" | "rejected" | "signed";
+  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'signed';
   validUntil: Date;
   notes?: string;
   createdAt: Date;
@@ -73,7 +73,7 @@ export interface Project {
   quoteId?: string;
   title: string;
   description: string;
-  status: "planning" | "in-progress" | "review" | "completed" | "cancelled";
+  status: 'planning' | 'in-progress' | 'review' | 'completed' | 'cancelled';
   startDate: Date;
   expectedEndDate: Date;
   actualEndDate?: Date;
@@ -109,7 +109,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "manager" | "user";
+  role: 'admin' | 'manager' | 'user';
   avatar?: string;
   department?: string;
   createdAt: Date;
@@ -186,7 +186,7 @@ export interface AuthUser {
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
-  role?: "admin" | "comercial" | "producao" | "financeiro" | "cliente";
+  role?: 'admin' | 'comercial' | 'producao' | 'financeiro' | 'cliente';
 }
 
 /**
@@ -207,10 +207,8 @@ export interface TableConfig<T> {
   data: T[];
   loading: boolean;
   columns: TableColumn<T>[];
-  onSort?: (key: keyof T, direction: "asc" | "desc") => void;
-  onFilter?: (
-    filters: Record<string, string | number | boolean | undefined>
-  ) => void;
+  onSort?: (key: keyof T, direction: 'asc' | 'desc') => void;
+  onFilter?: (filters: Record<string, string | number | boolean | undefined>) => void;
 }
 
 // O valor basicamente pode ser o valor de qualquer propriedade do T
@@ -224,17 +222,17 @@ export interface TableColumn<T> {
 
 // ================ CONSTANTS ================
 export const PRODUCT_TYPE_LABELS = {
-  L: "Livro",
-  E: "Ebook",
-  K: "Kindle (ePub)",
-  C: "CD",
-  D: "DVD",
-  G: "Material Gráfico",
-  P: "Plataformas Digitais",
-  S: "Single Lançamento",
-  X: "Livro de 3ºs",
-  A: "Arte em Geral (3ºs)",
-  M: "Campanhas / Peças Mkt",
+  L: 'Livro',
+  E: 'Ebook',
+  K: 'Kindle (ePub)',
+  C: 'CD',
+  D: 'DVD',
+  G: 'Material Gráfico',
+  P: 'Plataformas Digitais',
+  S: 'Single Lançamento',
+  X: 'Livro de 3ºs',
+  A: 'Arte em Geral (3ºs)',
+  M: 'Campanhas / Peças Mkt',
 } as const;
 
 /**
@@ -260,21 +258,21 @@ export interface AuditMetadata {
 /**
  * Status base para entidades
  */
-export type BaseStatus = "active" | "inactive" | "archived";
+export type BaseStatus = 'active' | 'inactive' | 'archived';
 
 /**
  * Prioridade base
  */
-export type Priority = "low" | "medium" | "high" | "urgent";
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
 export type LeadSource =
-  | "website"
-  | "referral"
-  | "socialmedia"
-  | "coldcall"
-  | "event"
-  | "advertising"
-  | "other";
+  | 'website'
+  | 'referral'
+  | 'socialmedia'
+  | 'coldcall'
+  | 'event'
+  | 'advertising'
+  | 'other';
 
 export interface SelectOption {
   value: string;

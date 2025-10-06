@@ -1,5 +1,5 @@
-import * as admin from "firebase-admin";
-import * as functions from "firebase-functions/v2";
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions/v2';
 
 if (!admin.apps.length) {
   admin.initializeApp();
@@ -7,8 +7,8 @@ if (!admin.apps.length) {
 
 export const assignProjectCatalogCode = functions.firestore.onDocumentCreated(
   {
-    region: "southamerica-east1",
-    document: "projects/{projectId}",
+    region: 'southamerica-east1',
+    document: 'projects/{projectId}',
   },
   async (event) => {
     const projectDoc = event.data;
@@ -20,36 +20,30 @@ export const assignProjectCatalogCode = functions.firestore.onDocumentCreated(
       clientId?: string;
     };
 
-    if (
-      !data ||
-      (typeof data.catalogCode === "string" && data.catalogCode.length > 0)
-    ) {
+    if (!data || (typeof data.catalogCode === 'string' && data.catalogCode.length > 0)) {
       return;
     }
 
     try {
       await admin.firestore().runTransaction(async (transaction) => {
-        const clientRef = admin
-          .firestore()
-          .collection("clients")
-          .doc(data.clientId!);
+        const clientRef = admin.firestore().collection('clients').doc(data.clientId!);
         const clientDoc = await transaction.get(clientRef);
 
         if (!clientDoc.exists) {
-          throw new Error("Cliente não encontrado para gerar catalogCode");
+          throw new Error('Cliente não encontrado para gerar catalogCode');
         }
 
         const clientData = clientDoc.data() as { clientNumber: string };
-        const clientNumber = clientData.clientNumber.padStart(4, "0");
+        const clientNumber = clientData.clientNumber.padStart(4, '0');
 
-        const baseCodePrefix = `DDM${data.category || "X"}${clientNumber}`;
+        const baseCodePrefix = `DDM${data.category || 'X'}${clientNumber}`;
 
         // Buscar projetos existentes para este cliente do mesmo tipo para contar trabalhos
         const projectsQuery = admin
           .firestore()
-          .collection("projects")
-          .where("clientId", "==", data.clientId)
-          .where("category", "==", data.category);
+          .collection('projects')
+          .where('clientId', '==', data.clientId)
+          .where('category', '==', data.category);
 
         const projectsSnapshot = await projectsQuery.get();
 
@@ -64,11 +58,8 @@ export const assignProjectCatalogCode = functions.firestore.onDocumentCreated(
         });
       });
     } catch (error) {
-      console.error("Erro ao atribuir código de catálogo:", error);
-      throw new functions.https.HttpsError(
-        "internal",
-        "Erro processando código do projeto"
-      );
+      console.error('Erro ao atribuir código de catálogo:', error);
+      throw new functions.https.HttpsError('internal', 'Erro processando código do projeto');
     }
-  }
+  },
 );

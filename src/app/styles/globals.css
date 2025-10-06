@@ -3,7 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 /* Import do Design System */
 @import './design-system.css';
 
@@ -22,7 +21,11 @@ button {
 }
 
 /* Improve images */
-img, picture, video, canvas, svg {
+img,
+picture,
+video,
+canvas,
+svg {
   display: block;
   max-width: 100%;
 }

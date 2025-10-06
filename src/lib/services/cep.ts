@@ -9,17 +9,17 @@ interface AddressData {
 
 export async function fetchAddressByCep(cep: string): Promise<AddressData> {
   // ✅ LIMPAR CEP (só números)
-  const cleanCep = cep.replace(/\D/g, "");
+  const cleanCep = cep.replace(/\D/g, '');
 
   // ✅ VALIDAR FORMATO
   if (cleanCep.length !== 8) {
     return {
-      street: "",
-      neighborhood: "",
-      city: "",
-      state: "",
+      street: '',
+      neighborhood: '',
+      city: '',
+      state: '',
       zipCode: cep,
-      error: "CEP deve ter 8 dígitos",
+      error: 'CEP deve ter 8 dígitos',
     };
   }
 
@@ -31,33 +31,33 @@ export async function fetchAddressByCep(cep: string): Promise<AddressData> {
     // ✅ VERIFICAR SE CEP EXISTE
     if (data.erro) {
       return {
-        street: "",
-        neighborhood: "",
-        city: "",
-        state: "",
+        street: '',
+        neighborhood: '',
+        city: '',
+        state: '',
         zipCode: cep,
-        error: "CEP não encontrado",
+        error: 'CEP não encontrado',
       };
     }
 
     // ✅ RETORNAR DADOS FORMATADOS
     return {
-      street: data.logradouro || "",
-      neighborhood: data.bairro || "",
-      city: data.localidade || "",
-      state: data.uf || "",
+      street: data.logradouro || '',
+      neighborhood: data.bairro || '',
+      city: data.localidade || '',
+      state: data.uf || '',
       zipCode: cep,
       error: undefined,
     };
   } catch (error) {
-    console.error("Erro ao buscar CEP:", error);
+    console.error('Erro ao buscar CEP:', error);
     return {
-      street: "",
-      neighborhood: "",
-      city: "",
-      state: "",
+      street: '',
+      neighborhood: '',
+      city: '',
+      state: '',
       zipCode: cep,
-      error: "Erro ao consultar CEP. Tente novamente.",
+      error: 'Erro ao consultar CEP. Tente novamente.',
     };
   }
 }

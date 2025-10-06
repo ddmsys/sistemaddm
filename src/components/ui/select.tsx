@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
-import { cn } from "@/lib/utils";
-import { Listbox, Transition } from "@headlessui/react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { Fragment, useState } from "react";
+import { Listbox, Transition } from '@headlessui/react';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { Fragment, useState } from 'react';
+
+import { cn } from '@/lib/utils';
 
 export interface SelectOption {
   value: string;
@@ -27,44 +28,37 @@ export function Select({
   options,
   value,
   onChange,
-  placeholder = "Selecione uma opção",
+  placeholder = 'Selecione uma opção',
   label,
   error,
   disabled = false,
   searchable = false,
 }: SelectProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
 
   const selectedOption = options.find((option) => option.value === value);
 
   const filteredOptions = searchable
-    ? options.filter((option) =>
-        option.label.toLowerCase().includes(query.toLowerCase())
-      )
+    ? options.filter((option) => option.label.toLowerCase().includes(query.toLowerCase()))
     : options;
 
   return (
     <div className="space-y-1">
-      {label && (
-        <label className="text-sm font-medium text-primary-700">{label}</label>
-      )}
+      {label && <label className="text-sm font-medium text-primary-700">{label}</label>}
       <Listbox value={value} onChange={onChange} disabled={disabled}>
         <div className="relative">
           <Listbox.Button
             className={cn(
-              "relative w-full cursor-default rounded-md border border-primary-200 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm",
-              disabled && "cursor-not-allowed opacity-50",
-              error && "border-red-500 focus:border-red-500 focus:ring-red-500"
+              'relative w-full cursor-default rounded-md border border-primary-200 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm',
+              disabled && 'cursor-not-allowed opacity-50',
+              error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
             )}
           >
             <span className="block truncate">
               {selectedOption ? selectedOption.label : placeholder}
             </span>
             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronsUpDown
-                className="h-5 w-5 text-gray-400"
-                aria-hidden="true"
-              />
+              <ChevronsUpDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
             </span>
           </Listbox.Button>
 
@@ -91,9 +85,9 @@ export function Select({
                   key={option.value}
                   className={({ active }) =>
                     cn(
-                      "relative cursor-default select-none py-2 pl-10 pr-4",
-                      active ? "bg-blue-100 text-blue-900" : "text-gray-900",
-                      option.disabled && "cursor-not-allowed opacity-50"
+                      'relative cursor-default select-none py-2 pl-10 pr-4',
+                      active ? 'bg-blue-100 text-blue-900' : 'text-gray-900',
+                      option.disabled && 'cursor-not-allowed opacity-50',
                     )
                   }
                   value={option.value}
@@ -102,10 +96,7 @@ export function Select({
                   {({ selected }) => (
                     <>
                       <span
-                        className={cn(
-                          "block truncate",
-                          selected ? "font-medium" : "font-normal"
-                        )}
+                        className={cn('block truncate', selected ? 'font-medium' : 'font-normal')}
                       >
                         {option.label}
                       </span>
@@ -119,7 +110,7 @@ export function Select({
                 </Listbox.Option>
               ))}
               {filteredOptions.length === 0 && (
-                <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
                   Nenhuma opção encontrada.
                 </div>
               )}

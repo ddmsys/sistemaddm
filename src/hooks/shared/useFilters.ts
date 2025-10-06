@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 export function useFilters<T extends Record<string, any>>(initial: T) {
   const [filters, set] = useState<T>(initial);

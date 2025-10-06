@@ -1,31 +1,30 @@
 /* src/styles/tokens.css  (cores HEX em variáveis) */
 :root {
-  --bg: #FFFFFF;
+  --bg: #ffffff;
   --fg: #111827;
-  --muted: #6B7280;
-  --border: #E5E7EB;
-  --surface: #F9FAFB;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --surface: #f9fafb;
 
   --primary: #237bb0;
   --primary-700: #317cff;
   --success: #2996a1;
   --warning: #f59e0b;
-  --danger:  #f84147e1;
-  --info:    #0284C7;
+  --danger: #f84147e1;
+  --info: #0284c7;
 }
 
 /* tema escuro via classe .dark no <html> */
 .dark {
   --bg: #020617;
-  --fg: #F1F5F9;
-  --muted: #94A3B8;
+  --fg: #f1f5f9;
+  --muted: #94a3b8;
   --border: #334155;
-  --surface: #0F172A;
+  --surface: #0f172a;
 
-  --primary: #237bb0
-  --primary-700: ##317cff;
+  --primary: #237bb0 --primary-700: ##317cff;
   --success: #2996a1;
   --warning: #f59e0b;
-  --danger:  #f84147e1;
-  --info:    #0284C7;
+  --danger: #f84147e1;
+  --info: #0284c7;
 }

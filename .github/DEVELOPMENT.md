@@ -104,9 +104,7 @@ style={{
 
 ```typescript
 const createdAt =
-  project.createdAt instanceof Timestamp
-    ? project.createdAt.toDate()
-    : new Date(project.createdAt);
+  project.createdAt instanceof Timestamp ? project.createdAt.toDate() : new Date(project.createdAt);
 ```
 
 ### **4. Card/CardHeader variant errors**
@@ -175,7 +173,7 @@ interface Client {
   document?: string;
   address?: Address;
   contacts?: Contact[];
-  status: "ativo" | "inativo" | "prospect";
+  status: 'ativo' | 'inativo' | 'prospect';
   indication?: string;
   notes?: string;
   number: string;
@@ -187,7 +185,7 @@ interface Client {
 ### **ClientFormData (comercial.ts)**
 
 ```typescript
-type ClientFormData = Omit<Client, "id" | "number" | "createdAt" | "updatedAt">;
+type ClientFormData = Omit<Client, 'id' | 'number' | 'createdAt' | 'updatedAt'>;
 ```
 
 ## 🚀 **Como Testar Funcionalidades**

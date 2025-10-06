@@ -1,30 +1,31 @@
-"use client";
+'use client';
 
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, user, loading } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (user && !loading) {
-      router.push("/dashboard");
+      router.push('/dashboard');
     }
   }, [user, loading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     try {
       await login(email, password);
     } catch {
-      setError("Erro ao fazer login. Verifique suas credenciais.");
+      setError('Erro ao fazer login. Verifique suas credenciais.');
     }
   };
 
@@ -54,7 +55,7 @@ export default function LoginPage() {
         />
         <button type="submit">Entrar</button>
       </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
     </main>
   );
 }
