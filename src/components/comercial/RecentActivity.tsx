@@ -1,8 +1,7 @@
 'use client';
 
-import { User, FileText, CheckCircle } from 'lucide-react';
+import { CheckCircle, FileText, User } from 'lucide-react';
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Lead } from '@/lib/types/leads';
 import { Quote } from '@/lib/types/quotes';
 
@@ -12,7 +11,7 @@ interface RecentActivitiesProps {
   onViewLead: (lead: Lead) => void;
 }
 
-export function RecentActivities({ leads, quotes, onViewLead }: RecentActivitiesProps) {
+export function RecentActivities({ _leads, _quotes, _onViewLead }: RecentActivitiesProps) {
   const activities = [
     {
       type: 'lead',

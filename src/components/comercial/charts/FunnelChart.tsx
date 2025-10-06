@@ -16,13 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LeadStatus } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 
-interface FunnelData {
-  stage: string;
-  count: number;
-  value: number;
-  conversion: number;
-  color: string;
-}
+
 
 interface FunnelChartProps {
   data: {
@@ -70,7 +64,7 @@ export function FunnelChart({
       .filter((item) => item.count > 0);
   }, [data]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+    const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

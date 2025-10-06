@@ -135,7 +135,7 @@ export default function ClientDetailPage() {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         client={client}
-        onSave={handleSave}
+        onSubmit={handleSave}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Target, FileText, DollarSign, TrendingUp } from 'lucide-react';
+import { DollarSign, FileText, Target, TrendingUp, Users } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 

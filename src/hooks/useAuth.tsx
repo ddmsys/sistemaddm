@@ -1,9 +1,10 @@
 "use client";
 
 
-import React, { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { onAuthStateChanged, signOut as fbSignOut } from "firebase/auth";
+import React, { createContext, useContext, useEffect, useState } from "react";
+
 import { auth } from "@/lib/firebase";
 export type AuthContextValue = {
 user: User | null;

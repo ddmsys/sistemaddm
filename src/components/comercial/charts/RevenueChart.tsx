@@ -34,12 +34,16 @@ export function RevenueChart({
   title = 'Receita vs Despesas',
   type = 'area',
 }: RevenueChartProps) {
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: {
+    active?: boolean;
+    payload?: Array<{ name: string; value: number; color: string }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div className="rounded-lg border bg-white p-3 shadow-lg">
           <p className="mb-2 font-medium text-primary-900">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: { name: string; value: number; color: string }, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               <span className="font-medium">{entry.name}:</span> {formatCurrency(entry.value)}
             </p>
@@ -51,7 +55,6 @@ export function RevenueChart({
   };
 
   const Chart = type === 'area' ? AreaChart : LineChart;
-  const ChartElement = type === 'area' ? Area : Line;
 
   return (
     <Card>

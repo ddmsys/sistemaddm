@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { Project } from '@/lib/types/comercial';
 import { PRODUCT_TYPE_LABELS } from '@/lib/types/shared';
 
 // ================ INTERFACES ================
@@ -25,7 +26,7 @@ interface ProjectFormData {
 }
 
 interface ProjectFormProps {
-  project?: any;
+  project?: Project;
   quoteId?: string;
   onSubmit: (data: ProjectFormData) => Promise<void>;
   onCancel: () => void;

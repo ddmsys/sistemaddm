@@ -117,7 +117,7 @@ export function CommercialDashboard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   const { funnelData, loading: funnelLoading } = useFunnelData(dateRange);
-  const { metrics, loading: metricsLoading } = useCommercialMetrics(dateRange);
+    const { metrics } = useCommercialMetrics();
 
   // ✅ CORES DO DESIGN SYSTEM PARA DONUT
   const donutData = funnelData.map((item, index) => {

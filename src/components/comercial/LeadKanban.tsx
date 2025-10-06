@@ -16,7 +16,6 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useLeads } from '@/hooks/comercial/useLeads';
 import { Lead } from '@/lib/types/comercial';
 
 interface LeadKanbanProps {
@@ -25,7 +24,6 @@ interface LeadKanbanProps {
 }
 
 export function LeadKanban({ leads, onLeadClick }: LeadKanbanProps) {
-  const { updateLead: _updateLead } = useLeads();
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
 
   const columns = [
@@ -81,10 +79,7 @@ export function LeadKanban({ leads, onLeadClick }: LeadKanbanProps) {
 
     if (draggedLead && draggedLead.status !== newStage) {
       try {
-        const _leadData = {
-          // Usar apenas campos que existem em LeadFormData
-          notes: `Status alterado para ${newStage}`,
-        };
+        // Lead data would be updated here
         // Usar updateLeadStage se disponível, senão usar uma abordagem alternativa
         // Por enquanto, vamos comentar até termos a função correta
         // await updateLead(draggedLead.id!, leadData);
@@ -107,12 +102,6 @@ export function LeadKanban({ leads, onLeadClick }: LeadKanbanProps) {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
-  };
-
-  const _formatDate = (date?: Date | string | number) => {
-    if (!date) return '';
-    const d = date instanceof Date ? date : new Date(date);
-    return d.toLocaleDateString('pt-BR');
   };
 
   return (

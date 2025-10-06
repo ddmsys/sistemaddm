@@ -1,4 +1,4 @@
-//src/app/(authenticated/crm/clients/[id]/page.tsx//
+// src/app/(authenticated)/crm/clients/[id]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
@@ -13,15 +13,18 @@ export default function ClientPage() {
   const { clients } = useClients();
   const [client, setClient] = useState<Client | null>(null);
 
-  const loadClient = useCallback((id: string) => {
-    const foundClient = clients.find((c) => c.id === id);
-    if (foundClient) {
-      setClient(foundClient);
-    } else {
-      setClient(null);
-      router.push('/crm/clients');
-    }
-  }, [clients, router]);
+  const loadClient = useCallback(
+    (id: string) => {
+      const foundClient = clients.find((c) => c.id === id);
+      if (foundClient) {
+        setClient(foundClient);
+      } else {
+        setClient(null);
+        router.push('/crm/clients');
+      }
+    },
+    [clients, router],
+  );
 
   useEffect(() => {
     if (!params || typeof params.id !== 'string') {

@@ -185,7 +185,6 @@ export function useClients() {
         await fetchClients();
         return true;
       } catch (error) {
-        const _errorMessage = getErrorMessage(error);
         console.error('Erro ao atualizar cliente:', error);
         toast.error('Erro ao atualizar cliente');
         return false;
@@ -208,8 +207,7 @@ export function useClients() {
         await fetchClients();
         return true;
       } catch (error) {
-        const _errorMessage = getErrorMessage(error);
-        console.error('Erro ao excluir cliente:', error);
+        console.error('Erro ao deletar cliente:', error);
         toast.error('Erro ao excluir cliente');
         return false;
       }

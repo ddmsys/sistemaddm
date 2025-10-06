@@ -42,12 +42,12 @@ export default function QuoteDetailPage() {
         if (quoteData) {
           setQuote(quoteData);
         } else {
-          toast.error("Orçamento não encontrado");
-          router.push("/crm/quotes");
+          toast.error('Orçamento não encontrado');
+          router.push('/crm/quotes');
         }
       } catch (error) {
-        console.error("Erro ao carregar orçamento:", error);
-        toast.error("Erro ao carregar orçamento");
+        console.error('Erro ao carregar orçamento:', error);
+        toast.error('Erro ao carregar orçamento');
       } finally {
         setLoading(false);
       }

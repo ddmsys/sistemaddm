@@ -105,7 +105,19 @@ export function QuoteCard({
             </div>
 
             <div className="flex items-center space-x-2">
-              <Badge variant={status.color as "default" | "secondary" | "success" | "warning" | "destructive" | "info" | "outline"} size="sm">
+              <Badge
+                variant={
+                  status.color as
+                    | 'default'
+                    | 'secondary'
+                    | 'success'
+                    | 'warning'
+                    | 'destructive'
+                    | 'info'
+                    | 'outline'
+                }
+                size="sm"
+              >
                 {status.label}
               </Badge>
 
