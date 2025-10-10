@@ -48,7 +48,7 @@ export function useFirestore<T>(collectionName: string, constraints: QueryConstr
     );
 
     return () => unsubscribe();
-  }, [collectionName]);
+  }, [collectionName, constraints]);
 
   const create = async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<string> => {
     try {

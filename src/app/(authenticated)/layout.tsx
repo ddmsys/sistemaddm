@@ -2,8 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
+
+interface AuthenticatedLayoutProps {
+  children: ReactNode;
+}
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

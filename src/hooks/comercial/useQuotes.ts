@@ -1,3 +1,4 @@
+// src/hooks/useQuotes.ts
 'use client';
 
 import {
@@ -18,22 +19,36 @@ import { toast } from 'react-hot-toast';
 
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
-import { ComercialFilters, Quote, QuoteFormData, QuoteItem } from '@/lib/types/quotes';
+import { Quote, QuoteFilters, QuoteFormData, QuoteItem } from '@/lib/types/quotes'; // Importação corrigida
 import { AsyncState } from '@/lib/types/shared';
-import { getErrorMessage } from '@/lib/utils/errors';
+
+function isError(error: unknown): error is { message: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as { message?: unknown }).message === 'string'
+  );
+}
+
+function getErrorMessage(error: unknown): string {
+  if (isError(error)) {
+    return error.message;
+  }
+  return 'Erro desconhecido';
+}
 
 export function useQuotes() {
   const { user } = useAuth();
-
   const [quotes, setQuotes] = useState<AsyncState<Quote[]>>({
     data: null,
     loading: false,
     error: null,
   });
 
-  // =================== FETCH QUOTES ===================
+  // ================ FETCH QUOTES ================
   const fetchQuotes = useCallback(
-    async (filters?: ComercialFilters) => {
+    async (filters?: QuoteFilters) => {
       if (!user) return;
 
       setQuotes((prev) => ({ ...prev, loading: true, error: null }));
@@ -45,64 +60,73 @@ export function useQuotes() {
           quotesQuery = query(quotesQuery, where('status', 'in', filters.status));
         }
 
+        if (filters?.clientId?.length) {
+          quotesQuery = query(quotesQuery, where('clientId', 'in', filters.clientId));
+        }
+
+        if (filters?.createdBy?.length) {
+          quotesQuery = query(quotesQuery, where('ownerId', 'in', filters.createdBy));
+        }
+
         const snapshot = await getDocs(quotesQuery);
-        const quotesData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Quote);
+        let quotesData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Quote[];
 
-        let filteredQuotes = quotesData;
-
-        // Filtro por data
+        // Filtros client-side
         if (filters?.dateRange?.start || filters?.dateRange?.end) {
-          filteredQuotes = filteredQuotes.filter((quote) => {
-            const createdAt = quote.createdAt
-              ? quote.createdAt instanceof Timestamp
+          quotesData = quotesData.filter((quote) => {
+            const createdAt =
+              quote.createdAt instanceof Timestamp
                 ? quote.createdAt.toDate()
-                : new Date(quote.createdAt)
-              : null;
+                : new Date(quote.createdAt!);
             const start = filters.dateRange?.start ? new Date(filters.dateRange.start) : null;
             const end = filters.dateRange?.end ? new Date(filters.dateRange.end) : null;
-            if (!createdAt) return false;
+
             if (start && createdAt < start) return false;
             if (end && createdAt > end) return false;
             return true;
           });
         }
 
-        // Filtro por busca
         if (filters?.search) {
           const searchLower = filters.search.toLowerCase();
-          filteredQuotes = filteredQuotes.filter(
+          quotesData = quotesData.filter(
             (quote) =>
               quote.projectTitle?.toLowerCase().includes(searchLower) ||
               quote.number?.toLowerCase().includes(searchLower) ||
-              quote.client?.name?.toLowerCase().includes(searchLower),
+              quote.clientName?.toLowerCase().includes(searchLower),
           );
         }
 
         setQuotes({
-          data: filteredQuotes,
+          data: quotesData,
           loading: false,
           error: null,
         });
-      } catch (error) {
+      } catch (error: unknown) {
         const errorMessage = getErrorMessage(error);
-        console.error('Erro ao buscar orçamentos:', error);
-        setQuotes({ data: null, loading: false, error: errorMessage });
-        toast.error('Erro ao carregar orçamentos');
+        console.error('Erro ao buscar orçamentos:', errorMessage);
+        setQuotes({
+          data: null,
+          loading: false,
+          error: errorMessage,
+        });
+        toast.error(errorMessage);
       }
     },
     [user],
   );
 
-  // =================== GET SINGLE QUOTE ===================
+  // ================ GET SINGLE QUOTE ================
   const getQuote = useCallback(async (id: string): Promise<Quote | null> => {
     try {
       const docRef = doc(db, 'quotes', id);
       const docSnap = await getDoc(docRef);
-
       if (docSnap.exists()) {
         return { id: docSnap.id, ...docSnap.data() } as Quote;
       }
-
       return null;
     } catch (error) {
       console.error('Erro ao buscar orçamento:', error);
@@ -111,7 +135,7 @@ export function useQuotes() {
     }
   }, []);
 
-  // =================== CREATE QUOTE ===================
+  // ================ CREATE QUOTE ================
   const createQuote = useCallback(
     async (data: QuoteFormData): Promise<string | null> => {
       if (!user) {
@@ -119,59 +143,116 @@ export function useQuotes() {
         return null;
       }
 
+      // Validações críticas
+      if (!data.projectTitle) {
+        toast.error('Título do projeto é obrigatório');
+        return null;
+      }
+
+      if (!data.clientName && !data.client?.name) {
+        toast.error('Nome do cliente é obrigatório');
+        return null;
+      }
+
+      if (!data.items || data.items.length === 0) {
+        toast.error('Pelo menos um item é obrigatório');
+        return null;
+      }
+
       try {
+        // Processar itens
         const processedItems: QuoteItem[] = data.items.map((item, index) => ({
           ...item,
           id: item.id || `item_${index + 1}`,
-          totalPrice: item.quantity * (item.unitPrice || 0),
+          totalPrice: item.quantity * (item.unitPrice || item.value || 0),
+          qty: item.quantity, // Compatibilidade
         }));
 
-        const subtotal = processedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+        // Calcular totais
+        const subtotal = processedItems.reduce(
+          (sum, item) => sum + (item.totalPrice || item.value),
+          0,
+        );
         const taxes = subtotal * 0.1; // 10% impostos
-        const grandTotal = subtotal + taxes - (data.discount ?? 0);
+        const discountAmount = data.discount || 0;
+        const grandTotal = subtotal + taxes - discountAmount;
 
-        const quoteData: Omit<Quote, 'id' | 'number'> = {
+        // Calcular data de expiração
+        const issueDate = new Date();
+        const expiryDate = new Date(
+          issueDate.getTime() + (data.validityDays || 30) * 24 * 60 * 60 * 1000,
+        );
+
+        const quoteData: Omit<Quote, 'id'> = {
+          // Relacionamentos
           leadId: data.leadId,
           clientId: data.clientId,
-          clientName: data.client?.name || 'Cliente', // Adicionando clientName obrigatório
-          client: data.client, // agora é um objeto, se quiser só o nome: client: { name: data.clientName ?? "" }
-          projectTitle: data.title,
-          quoteType: 'producao',
-          issueDate: new Date().toISOString(),
+          clientName: data.client?.name || data.clientName || 'Cliente',
+
+          // Dados básicos OBRIGATÓRIOS
+          projectTitle: data.title || data.projectTitle,
+          description: data.description,
+          quoteType: data.quoteType || 'producao',
+
+          // Datas OBRIGATÓRIAS
+          issueDate: issueDate.toISOString(),
           validityDays: 30,
-          expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          expiryDate: expiryDate.toISOString(),
+
+          // Status OBRIGATÓRIO
+          status: data.status || 'draft',
+
+          // Itens OBRIGATÓRIOS
           items: processedItems,
+
+          // Totais OBRIGATÓRIOS
           totals: {
             subtotal,
-            discount: data.discount || 0,
-            discountType: 'fixed',
+            discount: discountAmount,
+            discountType: data.discountType || 'fixed',
             freight: 0,
             taxes,
             total: grandTotal,
           },
+
+          // Campos de compatibilidade
+          subtotal,
+          taxes,
+          discount: discountAmount,
+          grandTotal,
+          validUntil: Timestamp.fromDate(expiryDate),
+
+          // Campos opcionais
           productionTime: undefined,
           terms: undefined,
           notes: data.notes,
           pdfUrl: undefined,
-          status: 'draft',
+
+          // Campos de usuário
           ownerId: user.uid,
-          ownerName: user.displayName ?? '',
+          ownerName: user.displayName || 'Usuário',
+
+          // Timestamps OBRIGATÓRIOS
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
+
+          // Auto-gerado pela Cloud Function
+          number: 'Processando...',
         };
 
+        console.log('💾 Salvando orçamento:', quoteData);
         const docRef = await addDoc(collection(db, 'quotes'), quoteData);
 
-        // Aguardar um pouco para a Cloud Function processar a numeração
+        // Aguardar Cloud Function processar numeração
         setTimeout(async () => {
           await fetchQuotes();
         }, 2000);
 
         toast.success('Orçamento criado com sucesso!');
         return docRef.id;
-      } catch (error) {
+      } catch (error: unknown) {
+        console.error('❌ ERRO AO CRIAR ORÇAMENTO:', error);
         const errorMessage = getErrorMessage(error);
-        console.error('Erro ao criar orçamento:', error);
         toast.error(`Erro ao criar orçamento: ${errorMessage}`);
         return null;
       }
@@ -179,52 +260,29 @@ export function useQuotes() {
     [user, fetchQuotes],
   );
 
-  // =================== UPDATE QUOTE ===================
+  // ================ UPDATE QUOTE ================
   const updateQuote = useCallback(
-    async (id: string, data: Partial<QuoteFormData>): Promise<boolean> => {
+    async (id: string, data: Partial<Quote>): Promise<boolean> => {
       if (!user) {
         toast.error('Usuário não autenticado');
         return false;
       }
+
       try {
         const docRef = doc(db, 'quotes', id);
-
-        // Prepare update fields somente com os que vieram alterados
-        const updateData: Partial<Quote> = {
+        const updateData: Partial<Quote> & { updatedAt: Timestamp } = {
+          ...data,
           updatedAt: Timestamp.now(),
         };
-
-        if (data.title) updateData.projectTitle = data.title;
-        if (data.client) updateData.client = data.client;
-        if (data.notes) updateData.notes = data.notes;
-        if (data.discount !== undefined)
-          if (data.items) {
-            const processedItems: QuoteItem[] = data.items.map((item, index) => ({
-              ...item,
-              id: item.id || `item_${index + 1}`,
-              totalPrice: item.quantity * (item.unitPrice || 0),
-            }));
-            updateData.items = processedItems;
-
-            updateData.totals = {
-              subtotal: processedItems.reduce((sum, item) => sum + item.totalPrice, 0),
-              discount: data.discount ?? 0,
-              discountType: 'fixed',
-              freight: 0,
-              taxes: processedItems.reduce((sum, item) => sum + item.totalPrice, 0) * 0.1,
-              total:
-                processedItems.reduce((sum, item) => sum + item.totalPrice, 0) * 1.1 -
-                (data.discount ?? 0),
-            };
-          }
 
         await updateDoc(docRef, updateData);
         toast.success('Orçamento atualizado com sucesso!');
         await fetchQuotes();
+
         return true;
-      } catch (error) {
+      } catch (error: unknown) {
         const errorMessage = getErrorMessage(error);
-        console.error('Erro ao atualizar orçamento:', error);
+        console.error(errorMessage);
         toast.error(`Erro ao atualizar orçamento: ${errorMessage}`);
         return false;
       }
@@ -232,13 +290,14 @@ export function useQuotes() {
     [user, fetchQuotes],
   );
 
-  // =================== SIGN QUOTE ===================
+  // ================ SIGN QUOTE ================
   const signQuote = useCallback(
     async (id: string): Promise<boolean> => {
       if (!user) {
         toast.error('Usuário não autenticado');
         return false;
       }
+
       try {
         const docRef = doc(db, 'quotes', id);
         await updateDoc(docRef, {
@@ -247,12 +306,14 @@ export function useQuotes() {
           signedBy: user?.uid || 'dev-user-123',
           updatedAt: Timestamp.now(),
         });
+
         toast.success('Orçamento assinado com sucesso!');
         await fetchQuotes();
+
         return true;
-      } catch (error) {
+      } catch (error: unknown) {
         const errorMessage = getErrorMessage(error);
-        console.error('Erro ao assinar orçamento:', error);
+        console.error(errorMessage);
         toast.error(`Erro ao assinar orçamento: ${errorMessage}`);
         return false;
       }
@@ -260,21 +321,23 @@ export function useQuotes() {
     [user, fetchQuotes],
   );
 
-  // =================== DELETE QUOTE ===================
+  // ================ DELETE QUOTE ================
   const deleteQuote = useCallback(
     async (id: string): Promise<boolean> => {
       if (!user) {
         toast.error('Usuário não autenticado');
         return false;
       }
+
       try {
         await deleteDoc(doc(db, 'quotes', id));
         toast.success('Orçamento excluído com sucesso!');
         await fetchQuotes();
+
         return true;
-      } catch (error) {
+      } catch (error: unknown) {
         const errorMessage = getErrorMessage(error);
-        console.error('Erro ao excluir orçamento:', error);
+        console.error(errorMessage);
         toast.error(`Erro ao excluir orçamento: ${errorMessage}`);
         return false;
       }
@@ -282,7 +345,7 @@ export function useQuotes() {
     [user, fetchQuotes],
   );
 
-  // =================== EFEITO - INICIAL ===================
+  // ================ EFFECTS ================
   useEffect(() => {
     if (user) {
       void fetchQuotes();

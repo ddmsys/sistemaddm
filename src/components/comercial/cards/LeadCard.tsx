@@ -1,14 +1,14 @@
+// src/components/comercial/cards/LeadCard.tsx
 'use client';
 
-import { Building2, Calendar, Mail, MoreHorizontal, Phone, Star, User } from 'lucide-react';
+import { Building, Mail, MoreHorizontal, Phone } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Modal } from '@/components/ui/Modal';
-import { Lead, LeadStatus } from '@/lib/types';
-import { cn, formatRelativeTime } from '@/lib/utils';
+import { Lead, LeadSource, LeadStatus } from '@/lib/types/leads';
 
 interface LeadCardProps {
   lead: Lead;
@@ -19,60 +19,86 @@ interface LeadCardProps {
 }
 
 const statusConfig = {
-  new: {
-    label: 'Novo',
-    color: 'info',
+  primeiro_contato: {
+    label: 'Primeiro Contato',
+    color: 'secondary',
     class: 'bg-blue-50 text-blue-700 border-blue-200',
   },
-  contacted: {
-    label: 'Contatado',
-    color: 'warning',
-    class: 'bg-amber-50 text-amber-700 border-amber-200',
-  },
-  qualified: {
+  qualificado: {
     label: 'Qualificado',
     color: 'success',
-    class: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    class: 'bg-green-50 text-green-700 border-green-200',
   },
-  proposal: {
-    label: 'Proposta',
-    color: 'info',
+  proposta_enviada: {
+    label: 'Proposta Enviada',
+    color: 'warning',
     class: 'bg-purple-50 text-purple-700 border-purple-200',
   },
-  negotiation: {
+  negociacao: {
     label: 'Negociação',
     color: 'warning',
     class: 'bg-orange-50 text-orange-700 border-orange-200',
   },
-  closed_won: {
-    label: 'Ganho',
+  fechado_ganho: {
+    label: 'Fechado - Ganho',
     color: 'success',
-    class: 'bg-green-50 text-green-700 border-green-200',
+    class: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   },
-  closed_lost: {
-    label: 'Perdido',
+  fechado_perdido: {
+    label: 'Fechado - Perdido',
     color: 'destructive',
     class: 'bg-red-50 text-red-700 border-red-200',
   },
 };
 
-const sourceConfig = {
-  website: { label: 'Website', icon: '🌐' },
-  social_media: { label: 'Redes Sociais', icon: '📱' },
-  referral: { label: 'Indicação', icon: '👥' },
-  advertising: { label: 'Publicidade', icon: '📢' },
-  email_marketing: { label: 'Email Marketing', icon: '📧' },
-  event: { label: 'Evento', icon: '🎪' },
-  cold_call: { label: 'Cold Call', icon: '📞' },
-  other: { label: 'Outro', icon: '❓' },
+const sourceConfig: Record<LeadSource, { label: string; icon: string }> = {
+  website: {
+    label: 'Website',
+    icon: '🌐',
+  },
+  phone: {
+    label: 'Telefone',
+    icon: 'phone',
+  },
+  socialmedia: {
+    label: 'SocialMedia',
+    icon: 'share-2',
+  },
+  referral: {
+    label: 'Indicação',
+    icon: 'users',
+  },
+  advertising: {
+    label: 'Publicidade',
+    icon: 'megaphone',
+  },
+  email: {
+    label: 'Email Marketing',
+    icon: 'mail',
+  },
+  event: {
+    label: 'Eventos',
+    icon: 'calendar',
+  },
+  coldcall: {
+    label: 'Cold Call',
+    icon: 'phone',
+  },
+  other: {
+    label: 'Outros',
+    icon: 'more-horizontal',
+  },
 };
 
 export function LeadCard({ lead, onStatusChange, onEdit, onDelete, onConvert }: LeadCardProps) {
   const [showActions, setShowActions] = useState(false);
+
+  // CORRIGIDO: Usar o status do lead, não o tipo
   const status = statusConfig[lead.status];
   const source = sourceConfig[lead.source];
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score?: number) => {
+    if (!score) return 'text-gray-400';
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
     if (score >= 40) return 'text-orange-600';
@@ -81,158 +107,91 @@ export function LeadCard({ lead, onStatusChange, onEdit, onDelete, onConvert }: 
 
   return (
     <>
-      <Card
-        variant="interactive"
-        className={cn('group relative transition-all duration-200 hover:shadow-lg', status.class)}
-      >
-        {/* Header */}
-        <div className="p-4 pb-2">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                <User className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="truncate text-sm font-semibold text-primary-900">{lead.name}</h3>
-                <p className="truncate text-xs text-primary-500">{lead.lead_number}</p>
-                {lead.company && (
-                  <p className="mt-1 flex items-center truncate text-xs text-primary-600">
-                    <Building2 className="mr-1 h-3 w-3" />
-                    {lead.company}
-                  </p>
-                )}
-              </div>
-            </div>
+      <Card className="relative overflow-hidden transition-shadow hover:shadow-lg">
+        <div className="flex items-start justify-between p-6 pb-4">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-lg font-semibold text-gray-900">{lead.name}</h3>
+            {/* CORRIGIDO: Usar leadNumber se existir */}
+            {lead.name && <p className="truncate text-xs text-primary-500">{lead.ownerName}</p>}
+            {lead.company && (
+              <p className="mt-1 truncate text-sm text-gray-600">
+                <Building className="mr-1 inline h-4 w-4" />
+                {lead.company}
+              </p>
+            )}
+          </div>
 
-            <div className="flex items-center space-x-2">
-              <Badge
-                variant={
-                  status.color as
-                    | 'default'
-                    | 'secondary'
-                    | 'success'
-                    | 'warning'
-                    | 'destructive'
-                    | 'info'
-                    | 'outline'
-                }
-                size="sm"
-              >
-                {status.label}
-              </Badge>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                onClick={() => setShowActions(true)}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Badge className={status.class}>{status.label}</Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setShowActions(true)}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="space-y-3 px-4 pb-4">
-          {/* Contact Info */}
-          <div className="space-y-1">
-            {lead.email && (
-              <div className="flex items-center text-xs text-primary-600">
-                <Mail className="mr-2 h-3 w-3" />
-                <span className="truncate">{lead.email}</span>
-              </div>
-            )}
+        <div className="space-y-4 px-6 pb-6">
+          <div className="space-y-2">
+            <div className="flex items-center text-sm text-gray-600">
+              <Mail className="mr-2 h-4 w-4" />
+              {lead.email}
+            </div>
             {lead.phone && (
-              <div className="flex items-center text-xs text-primary-600">
-                <Phone className="mr-2 h-3 w-3" />
-                <span>{lead.phone}</span>
+              <div className="flex items-center text-sm text-gray-600">
+                <Phone className="mr-2 h-4 w-4" />
+                {lead.phone}
               </div>
             )}
           </div>
 
-          {/* Source & Score */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-xs text-primary-500">
-              <span className="mr-1">{source.icon}</span>
-              {source.label}
-            </div>
-
-            <div className="flex items-center space-x-1">
-              <Star className={cn('h-3 w-3', getScoreColor(lead.score))} />
-              <span className={cn('text-xs font-medium', getScoreColor(lead.score))}>
-                {lead.score}
-              </span>
-            </div>
-          </div>
-
-          {/* Interest & Budget */}
-          {(lead.interest_area || lead.budget_range) && (
-            <div className="space-y-1 text-xs">
-              {lead.interest_area && (
-                <div className="text-primary-600">
-                  <span className="font-medium">Interesse:</span> {lead.interest_area}
-                </div>
-              )}
-              {lead.budget_range && (
-                <div className="text-primary-600">
-                  <span className="font-medium">Orçamento:</span> {lead.budget_range}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Tags */}
-          {lead.tags.length > 0 && (
+          {/* CORRIGIDO: Tags com verificação */}
+          {lead.tags && lead.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {lead.tags.slice(0, 3).map((tag, index) => (
-                <Badge key={index} variant="secondary" className="px-2 py-0 text-xs">
+                <span
+                  key={index}
+                  className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800"
+                >
                   {tag}
-                </Badge>
+                </span>
               ))}
               {lead.tags.length > 3 && (
-                <Badge variant="secondary" className="px-2 py-0 text-xs">
-                  +{lead.tags.length - 3}
-                </Badge>
+                <span className="text-xs text-gray-500">+{lead.tags.length - 3}</span>
               )}
             </div>
           )}
 
-          {/* Last Activity */}
-          <div className="flex items-center justify-between border-t border-primary-100 pt-2 text-xs text-primary-500">
-            <div className="flex items-center">
-              <Calendar className="mr-1 h-3 w-3" />
-              {lead.last_contact ? formatRelativeTime(lead.last_contact.toDate()) : 'Sem contato'}
+          <div className="space-y-2 border-t pt-4">
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>Último contato:</span>
             </div>
-
-            {lead.activities.length > 0 && (
-              <div className="flex items-center">
-                <span>{lead.activities.length} atividades</span>
-              </div>
-            )}
+            {/* CORRIGIDO: Atividades removidas se não existir no tipo */}
           </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="flex items-center space-x-2 px-4 pb-3 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button size="sm" variant="outline" className="text-xs" onClick={() => onEdit?.(lead)}>
-            Editar
-          </Button>
+          <div className="flex space-x-2 pt-2">
+            {/* CORRIGIDO: fechado_ganho */}
+            {lead.status !== 'fechado_ganho' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() => onConvert?.(lead.id!)} // CORRIGIDO: ! para garantir string
+              >
+                Converter
+              </Button>
+            )}
 
-          {lead.status !== 'closed_won' && (
-            <Button
-              size="sm"
-              variant="default"
-              className="text-xs"
-              onClick={() => onConvert?.(lead.id)}
-            >
-              Converter
+            <Button variant="outline" size="sm" onClick={() => onEdit?.(lead)}>
+              Editar
             </Button>
-          )}
+          </div>
         </div>
       </Card>
 
-      {/* Actions Modal */}
       <Modal
         isOpen={showActions}
         onClose={() => setShowActions(false)}
@@ -240,22 +199,6 @@ export function LeadCard({ lead, onStatusChange, onEdit, onDelete, onConvert }: 
         size="sm"
       >
         <div className="space-y-2">
-          {Object.entries(statusConfig).map(([key, config]) => (
-            <Button
-              key={key}
-              variant={lead.status === key ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => {
-                onStatusChange?.(lead.id, key as LeadStatus);
-                setShowActions(false);
-              }}
-            >
-              Marcar como {config.label}
-            </Button>
-          ))}
-
-          <hr className="my-2" />
-
           <Button
             variant="ghost"
             className="w-full justify-start"
@@ -267,11 +210,25 @@ export function LeadCard({ lead, onStatusChange, onEdit, onDelete, onConvert }: 
             Editar Lead
           </Button>
 
+          {Object.entries(statusConfig).map(([key, config]) => (
+            <Button
+              key={key}
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => {
+                onStatusChange?.(lead.id!, key as LeadStatus); // CORRIGIDO
+                setShowActions(false);
+              }}
+            >
+              Alterar para {config.label}
+            </Button>
+          ))}
+
           <Button
             variant="ghost"
-            className="w-full justify-start text-red-600 hover:text-red-700"
+            className="w-full justify-start text-red-600"
             onClick={() => {
-              onDelete?.(lead.id);
+              onDelete?.(lead.id!); // CORRIGIDO
               setShowActions(false);
             }}
           >

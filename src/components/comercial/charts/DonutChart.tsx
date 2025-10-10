@@ -21,8 +21,8 @@ interface DonutChartProps {
 export function DonutChart({
   data,
   height = 500, // ✅ ALTURA MAIOR
-  _showValues = true,
-  _showPercentages = false,
+  showValues = true,
+  showPercentages = false,
   loading,
 }: DonutChartProps) {
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);

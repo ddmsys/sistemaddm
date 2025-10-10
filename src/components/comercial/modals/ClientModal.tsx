@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useFirestore } from '@/hooks/useFirestore';
-import { Client, ClientFormData } from '@/lib/types';
+import { Client, ClientFormData } from '@/lib/types/clients';
 import {
   fetchAddressByCEP,
   isValidCNPJ,
@@ -27,12 +27,29 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
 
   const [clientType, setClientType] = useState<'fisica' | 'juridica'>('fisica');
   const [formData, setFormData] = useState<ClientFormData>({
+    type: 'individual', // campo obrigatório!
     name: client?.name || '',
     email: client?.email || '',
     phone: client?.phone || '',
     document: client?.document || '',
-    company_name: client?.company_name || '',
-    contact_person: client?.contact_person || '',
+    cpf: client?.cpf || '',
+    cnpj: client?.cnpj || '',
+    company: client?.company || '',
+    companyName: client?.companyName || '',
+    stateRegistration: client?.stateRegistration || '',
+    contactPerson: client?.contactPerson || '',
+    businessType: client?.businessType || '',
+    status: 'active', // campo obrigatório!
+    source: client?.source || '',
+    notes: client?.notes || '',
+    tags: client?.tags || [],
+    socialMedia: client?.socialMedia || {
+      facebook: '',
+      instagram: '',
+      linkedin: '',
+      twitter: '',
+      website: '',
+    },
     address: {
       street: client?.address?.street || '',
       number: client?.address?.number || '',
@@ -40,7 +57,7 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
       neighborhood: client?.address?.neighborhood || '',
       city: client?.address?.city || '',
       state: client?.address?.state || '',
-      zip_code: client?.address?.zip_code || '',
+      zipCode: client?.address?.zipCode || '',
       country: client?.address?.country || 'Brasil',
     },
   });
@@ -50,8 +67,8 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
   const [loadingCEP, setLoadingCEP] = useState(false);
 
   useEffect(() => {
-    if (client?.document) {
-      const cleaned = client.document.replace(/\D/g, '');
+    if (client?.type) {
+      const cleaned = client.type.replace(/\D/g, '');
       setClientType(cleaned.length <= 11 ? 'fisica' : 'juridica');
     }
   }, [client]);
@@ -123,12 +140,28 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
 
       // Reset form
       setFormData({
+        type: 'individual', // ou o valor do tipo ClientType igual esperado
         name: '',
         email: '',
         phone: '',
-        document: '',
-        company_name: '',
-        contact_person: '',
+        document: '', // CPF ou CNPJ
+        cpf: '',
+        cnpj: '',
+        company: '',
+        companyName: '',
+        stateRegistration: '',
+        contactPerson: '',
+        businessType: '',
+        status: 'active', // ou outro do tipo ClientStatus
+        source: '',
+        notes: '',
+        tags: [],
+        socialMedia: {
+          instagram: '',
+          facebook: '',
+          linkedin: '',
+          // outros campos...
+        },
         address: {
           street: '',
           number: '',
@@ -136,7 +169,7 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
           neighborhood: '',
           city: '',
           state: '',
-          zip_code: '',
+          zipCode: '',
           country: 'Brasil',
         },
       });
@@ -166,7 +199,7 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
     const masked = maskCEP(value);
     setFormData({
       ...formData,
-      address: { ...formData.address, zip_code: masked },
+      address: { ...formData.address, zipCode: masked },
     });
 
     const cleaned = value.replace(/\D/g, '');
@@ -336,11 +369,11 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
                     <input
                       type="text"
                       className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                      value={formData.company_name}
+                      value={formData.companyName}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          company_name: e.target.value,
+                          companyName: e.target.value,
                         })
                       }
                       placeholder="Nome comercial da empresa"
@@ -354,11 +387,11 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
                     <input
                       type="text"
                       className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                      value={formData.contact_person}
+                      value={formData.contactPerson}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          contact_person: e.target.value,
+                          contactPerson: e.target.value,
                         })
                       }
                       placeholder="Nome do responsável"
@@ -379,7 +412,7 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
                     <input
                       type="text"
                       className="h-12 w-full rounded-md border border-primary-200 px-3 pr-10 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                      value={formData.address?.zip_code}
+                      value={formData.address?.zipCode}
                       onChange={(e) => handleCEPChange(e.target.value)}
                       placeholder="00000-000"
                       maxLength={9}

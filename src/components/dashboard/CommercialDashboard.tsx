@@ -1,331 +1,373 @@
-// src/components/dashboard/CommercialDashboard.tsx - VERSÃO OTIMIZADA
+// src/components/dashboard/CommercialDashboard.tsx
 'use client';
 
+import { DollarSign, FileText, TrendingUp, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { ActivityFeed } from '@/components/comercial/ActivityFeed';
 import { DonutChart } from '@/components/comercial/charts/DonutChart';
+import { FunnelChart } from '@/components/comercial/charts/FunnelChart';
 import { RevenueChart } from '@/components/comercial/charts/RevenueChart';
-import { DateRangePicker } from '@/components/comercial/filters/DateRangePicker';
+import { ClientModal } from '@/components/comercial/modals/ClientModal';
 import { LeadModal } from '@/components/comercial/modals/LeadModal';
+import ProjectModal from '@/components/comercial/modals/ProjectModal';
+import QuoteModal from '@/components/comercial/modals/QuoteModal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useClients } from '@/hooks/comercial/useClients';
 import { useCommercialMetrics } from '@/hooks/comercial/useCommercialMetrics';
-import { useFunnelData } from '@/hooks/comercial/useFunnelData';
-import { Lead } from '@/lib/types/comercial';
+import { useLeads } from '@/hooks/comercial/useLeads';
+import { useProjects } from '@/hooks/comercial/useProjects';
+import { useQuotes } from '@/hooks/comercial/useQuotes';
+import { Lead } from '@/lib/types/leads';
+import { formatCurrency } from '@/lib/utils';
 
-// KPI Component com Design System
-interface KPIData {
-  label: string;
-  value: string | number;
-  change?: {
-    value: number;
-    type: 'increase' | 'decrease';
-  };
-  icon?: React.ReactNode;
-  variant?: 'primary' | 'success' | 'purple' | 'orange';
-}
-
-function KPICard({ metric }: { metric: KPIData }) {
-  const formatValue = (value: string | number): string => {
-    if (typeof value === 'number') {
-      if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
-      if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}K`;
-      return `R$ ${value.toLocaleString('pt-BR')}`;
-    }
-    return value.toString();
-  };
-
-  // ✅ CORES DO DESIGN SYSTEM
-  const getVariantClasses = (variant?: string) => {
-    switch (variant) {
-      case 'success':
-        return 'bg-success-50 border-success-200';
-      case 'purple':
-        return 'bg-purple-50 border-purple-200';
-      case 'orange':
-        return 'bg-orange-50 border-orange-200';
-      default:
-        return 'bg-primary-50 border-primary-200';
-    }
-  };
-
-  const getIconColor = (variant?: string) => {
-    switch (variant) {
-      case 'success':
-        return 'var(--color-success-600)';
-      case 'purple':
-        return 'var(--color-purple-600)';
-      case 'orange':
-        return 'var(--color-orange-600)';
-      default:
-        return 'var(--color-primary-600)';
-    }
-  };
-
-  return (
-    <Card
-      className={`p-6 transition-shadow duration-200 hover:shadow-md ${getVariantClasses(
-        metric.variant,
-      )}`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          {/* ✅ CORES DO DESIGN SYSTEM */}
-          <p className="text-secondary mb-1 text-sm font-medium">{metric.label}</p>
-          <p className="text-primary text-2xl font-bold">{formatValue(metric.value)}</p>
-          {metric.change && (
-            <div
-              className={`mt-2 flex items-center text-sm ${
-                metric.change.type === 'increase' ? 'text-success' : 'text-error'
-              }`}
-            >
-              <span className="mr-1">{metric.change.type === 'increase' ? '↗' : '↘'}</span>
-              <span>{Math.abs(metric.change.value)}% vs mês anterior</span>
-            </div>
-          )}
-        </div>
-        {metric.icon && (
-          <div className="ml-4 flex-shrink-0">
-            <div
-              className="flex h-12 w-12 items-center justify-center rounded-lg"
-              style={{
-                backgroundColor: getIconColor(metric.variant) + '20',
-                border: `1px solid ${getIconColor(metric.variant)}30`,
-              }}
-            >
-              {metric.icon}
-            </div>
-          </div>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-export function CommercialDashboard() {
+export default function CommercialDashboard() {
   const router = useRouter();
 
-  const [dateRange, setDateRange] = useState({
-    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    end: new Date(),
-  });
+  // Estados para controlar modais
+  const [showLeadModal, setShowLeadModal] = useState(false);
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
 
-  const [modalOpen, setModalOpen] = useState(false);
+  // Estados para entidades selecionadas
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  const { funnelData, loading: funnelLoading } = useFunnelData(dateRange);
-    const { metrics } = useCommercialMetrics();
+  // Hooks para operações CRUD
+  const { createLead } = useLeads();
+  const { clients, createClient } = useClients();
+  const { createProject } = useProjects();
+  const { createQuote } = useQuotes();
 
-  // ✅ CORES DO DESIGN SYSTEM PARA DONUT
-  const donutData = funnelData.map((item, index) => {
-    const colors = [
-      'var(--color-gray-500)', // primeiro_contato
-      'var(--color-primary-600)', // qualificado
-      'var(--color-purple-600)', // proposta_enviada
-      'var(--color-warning-600)', // negociacao
-      'var(--color-success-600)', // fechado_ganho
-      'var(--color-error-600)', // fechado_perdido
-    ];
+  // Usar o hook de métricas ao invés de dados mock
+  const { metrics, loading } = useCommercialMetrics();
 
-    return {
-      stage: item.stage,
-      label: item.label,
-      value: item.count,
-      percentage: item.percentage,
-      color: colors[index] || 'var(--color-gray-400)',
-    };
-  });
+  // Dados mock para usuários (pode ser substituído por hook real)
+  const users = [
+    { id: '1', name: 'Admin' },
+    { id: '2', name: 'Vendedor 1' },
+    { id: '3', name: 'Vendedor 2' },
+  ]; // Funções de criação de entidades
+  const handleCreateLead = () => {
+    setSelectedLead(null);
+    setShowLeadModal(true);
+  };
 
-  // ✅ KPIs COM VARIANTS DO DESIGN SYSTEM
-  const kpiData: KPIData[] = metrics
-    ? [
-        {
-          label: 'Receita do Mês',
-          value: metrics.monthlyRevenue || 0,
-          change: {
-            value: metrics.revenueGrowth || 0,
-            type: (metrics.revenueGrowth || 0) >= 0 ? 'increase' : 'decrease',
-          },
-          icon: <span className="teicon-rotate text-3xl">💰</span>,
-          variant: 'success', // ✅ USA VARIANT
-        },
-        {
-          label: 'Taxa de Conversão',
-          value: `${(metrics.conversionRate || 0).toFixed(1)}%`,
-          change: {
-            value: metrics.conversionGrowth || 0,
-            type: (metrics.conversionGrowth || 0) >= 0 ? 'increase' : 'decrease',
-          },
-          icon: <span className="icon-rotate text-3xl">📈</span>,
-          variant: 'primary', // ✅ USA VARIANT
-        },
-        {
-          label: 'Leads Ativos',
-          value: metrics.activeLeads || 0,
-          change: {
-            value: metrics.leadsGrowth || 0,
-            type: (metrics.leadsGrowth || 0) >= 0 ? 'increase' : 'decrease',
-          },
-          icon: <span className="icon-rotate text-3xl">👥</span>,
-          variant: 'purple', // ✅ USA VARIANT
-        },
-        {
-          label: 'Ticket Médio',
-          value: metrics.averageTicket || 0,
-          change: {
-            value: metrics.ticketGrowth || 0,
-            type: (metrics.ticketGrowth || 0) >= 0 ? 'increase' : 'decrease',
-          },
-          icon: <span className="icon-rotate text-3xl">🎯</span>,
-          variant: 'orange', // ✅ USA VARIANT
-        },
-      ]
-    : [];
+  const handleCreateClient = () => {
+    setShowClientModal(true);
+  };
+
+  const handleCreateProject = () => {
+    setShowProjectModal(true);
+  };
+
+  const handleCreateQuote = () => {
+    setShowQuoteModal(true);
+  };
+
+  // Funções de navegação
+  const handleNavigateToLeads = () => {
+    router.push('/crm/leads');
+  };
+
+  const handleNavigateToClients = () => {
+    router.push('/crm/clients');
+  };
+
+  const handleNavigateToProjects = () => {
+    router.push('/crm/projects');
+  };
+
+  const handleNavigateToQuotes = () => {
+    router.push('/crm/quotes');
+  };
+
+  // Funções de fechamento de modais
+  const handleCloseLeadModal = () => {
+    setShowLeadModal(false);
+    setSelectedLead(null);
+  };
+
+  const handleCloseClientModal = () => {
+    setShowClientModal(false);
+  };
+
+  const handleCloseProjectModal = () => {
+    setShowProjectModal(false);
+  };
+
+  const handleCloseQuoteModal = () => {
+    setShowQuoteModal(false);
+  };
+
+  // Funções de salvamento
+  const handleSaveLead = async (leadData: any) => {
+    try {
+      await createLead(leadData);
+      setShowLeadModal(false);
+      setSelectedLead(null);
+    } catch (error) {
+      console.error('Erro ao salvar lead:', error);
+    }
+  };
+
+  const handleSaveClient = async (clientData: any) => {
+    try {
+      await createClient(clientData);
+      setShowClientModal(false);
+    } catch (error) {
+      console.error('Erro ao salvar cliente:', error);
+    }
+  };
+
+  const handleSaveProject = async (projectData: any) => {
+    try {
+      await createProject(projectData);
+      setShowProjectModal(false);
+    } catch (error) {
+      console.error('Erro ao salvar projeto:', error);
+    }
+  };
+
+  const handleSaveQuote = async (quoteData: any) => {
+    try {
+      await createQuote(quoteData);
+      setShowQuoteModal(false);
+    } catch (error) {
+      console.error('Erro ao salvar orçamento:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-gray-500">Carregando dashboard...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* ✅ HEADER COM THEME TOGGLE */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-primary text-2xl font-bold">Dashboard Comercial</h1>
-          <p className="text-secondary">Visão geral das vendas e pipeline</p>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard Comercial</h1>
+          <p className="text-gray-600">Acompanhe suas métricas comerciais</p>
         </div>
-
-        <div className="flex items-center gap-4">
-          {/* ✅ THEME TOGGLE */}
-          <ThemeToggle />
-
-          <DateRangePicker value={dateRange} onChange={setDateRange} />
-
-          {/* ✅ BOTÕES MANTIDOS (já estão corretos) */}
-          <Button variant="outline" onClick={() => router.push('/crm/clients')}>
-            Clientes
+        <div className="flex space-x-3">
+          <Button variant="outline" onClick={handleCreateQuote}>
+            Novo Orçamento
           </Button>
-          <Button variant="outline" onClick={() => router.push('/crm/quotes')}>
-            Orçamentos
+          <Button variant="outline" onClick={handleCreateProject}>
+            Novo Projeto
           </Button>
-          <Button variant="outline" onClick={() => router.push('/crm/projects')}>
-            Projetos
+          <Button variant="outline" onClick={handleCreateClient}>
+            Novo Cliente
           </Button>
-          <Button variant="outline" onClick={() => router.push('/crm/leads')}>
-            Leads
-          </Button>
-          <Button variant="outline">Exportar Relatório</Button>
+          <Button onClick={handleCreateLead}>Novo Lead</Button>
         </div>
       </div>
 
-      {/* ✅ KPI CARDS COM VARIANTS */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpiData.map((metric, index) => (
-          <KPICard key={index} metric={metric} />
-        ))}
-      </div>
-
-      {/* Grid principal */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        {/* ✅ FUNIL COM DONUT CHART */}
-        <Card className="p-6 lg:col-span-2 xl:col-span-2">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-primary text-lg font-semibold">Funil de Vendas</h2>
-            <Button variant="ghost" size="sm">
-              Ver Detalhes
-            </Button>
+      {/* KPIs */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Receita Total</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {formatCurrency(metrics?.monthlyRevenue || 0)}
+              </p>
+            </div>
+            <DollarSign className="h-8 w-8 text-green-600" />
           </div>
-          <DonutChart
-            data={donutData}
-            height={300}
-            showValues={true}
-            showPercentages={true}
-            loading={funnelLoading}
-          />
         </Card>
 
-        {/* ✅ AÇÕES RÁPIDAS (mantidas - já estão perfeitas) */}
         <Card className="p-6">
-          <h2 className="text-primary mb-6 text-lg font-semibold">Ações Rápidas</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total de Leads</p>
+              <p className="text-3xl font-bold text-gray-900">{metrics?.activeLeads || 0}</p>
+            </div>
+            <Users className="h-8 w-8 text-blue-600" />
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Orçamentos</p>
+              <p className="text-3xl font-bold text-gray-900">{metrics?.totalQuotes || 0}</p>
+            </div>
+            <FileText className="h-8 w-8 text-purple-600" />
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Taxa Conversão</p>
+              <p className="text-3xl font-bold text-gray-900">{metrics?.conversionRate || 0}%</p>
+            </div>
+            <TrendingUp className="h-8 w-8 text-orange-600" />
+          </div>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Receita Mensal</h3>
+          <RevenueChart data={metrics?.revenueData || []} />
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Funil de Vendas</h3>
+          <FunnelChart data={metrics?.funnelData || []} />
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Leads por Fonte</h3>
+          <DonutChart data={metrics?.leadsBySource || []} />
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Orçamentos por Status</h3>
+          <DonutChart data={metrics?.quotesbyStatus || []} />
+        </Card>
+      </div>
+
+      {/* Ações Rápidas e Atividades */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Ações Rápidas */}
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Ações Rápidas</h3>
           <div className="space-y-3">
             <Button
-              variant="outline" // 🟢 VERDE
-              className="justify-start"
-              onClick={() => setModalOpen(true)}
+              variant="outline"
+              className="w-full justify-start"
+              onClick={handleNavigateToLeads}
             >
-              <span className="icon-rotate text-3xl">👤</span>
-              Novo Lead
+              <Users className="mr-2 h-4 w-4" />
+              Gerenciar Leads
             </Button>
-
             <Button
-              variant="default" // 🔵 AZUL (corrigido de "default")
-              className="justify-start"
-              onClick={() => router.push('/crm/clients?action=new')}
+              variant="outline"
+              className="w-full justify-start"
+              onClick={handleNavigateToQuotes}
             >
-              <span className="mr-3 text-xl">🏢</span>
-              Novo Cliente
+              <FileText className="mr-2 h-4 w-4" />
+              Ver Orçamentos
             </Button>
-
             <Button
-              variant="secondary" // 🟣 ROXO
-              className="justify-start"
-              onClick={() => router.push('/crm/quotes?action=new')}
+              variant="outline"
+              className="w-full justify-start"
+              onClick={handleNavigateToProjects}
             >
-              <span className="mr-3 text-xl">📄</span>
-              Novo Orçamento
+              <TrendingUp className="mr-2 h-4 w-4" />
+              Acompanhar Projetos
             </Button>
-
             <Button
-              variant="outline" // 🟠 LARANJA
-              className="justify-start"
-              onClick={() => router.push('/crm/projects?action=new')}
+              variant="outline"
+              className="w-full justify-start"
+              onClick={handleNavigateToClients}
             >
-              <span className="mr-3 text-xl">🛠️</span>
-              Novo Projeto
-            </Button>
-
-            <Button
-              variant="outline" // ⚪ OUTLINE
-              className="justify-start"
-              onClick={() => router.push('/crm/clients')}
-            >
-              <span className="mr-3 text-xl">📋</span>
-              Ver Clientes
+              <DollarSign className="mr-2 h-4 w-4" />
+              Base de Clientes
             </Button>
           </div>
         </Card>
 
-        {/* Receita Mensal */}
-        <Card className="p-6 lg:col-span-2 xl:col-span-2">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-primary text-lg font-semibold">Receita vs Meta</h2>
-            <Button variant="ghost" size="sm">
-              Configurar Meta
-            </Button>
-          </div>
-          <RevenueChart data={metrics?.revenueData} height={300} />
-        </Card>
-
-        {/* Feed de Atividades */}
+        {/* Atividades Recentes */}
         <Card className="p-6">
-          <h2 className="text-primary mb-6 text-lg font-semibold">Atividades Recentes</h2>
-          <ActivityFeed />
+          <h3 className="mb-4 text-lg font-semibold">Atividades Recentes</h3>
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="mt-2 h-2 w-2 rounded-full bg-green-500"></div>
+              <div>
+                <p className="text-sm font-medium">Lead convertido</p>
+                <p className="text-xs text-gray-500">Ana Silva - há 2 horas</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="mt-2 h-2 w-2 rounded-full bg-blue-500"></div>
+              <div>
+                <p className="text-sm font-medium">Novo orçamento enviado</p>
+                <p className="text-xs text-gray-500">Projeto Livro XYZ - há 4 horas</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="mt-2 h-2 w-2 rounded-full bg-orange-500"></div>
+              <div>
+                <p className="text-sm font-medium">Lead qualificado</p>
+                <p className="text-xs text-gray-500">João Santos - há 6 horas</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="mt-2 h-2 w-2 rounded-full bg-purple-500"></div>
+              <div>
+                <p className="text-sm font-medium">Projeto iniciado</p>
+                <p className="text-xs text-gray-500">Editora ABC - ontem</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Projetos Críticos */}
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Projetos Críticos</h3>
+          {metrics?.criticalProjects && metrics.criticalProjects.length > 0 ? (
+            <div className="space-y-4">
+              {metrics.criticalProjects.map((project) => (
+                <div key={project.id} className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <p className="font-medium text-red-900">{project.title}</p>
+                  <p className="text-sm text-red-700">{project.clientName}</p>
+                  <p className="text-xs text-red-600">Vence em {project.daysToDeadline} dias</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Nenhum projeto crítico no momento</p>
+          )}
         </Card>
       </div>
 
-      {/* ✅ MODAL MANTIDO */}
-      <LeadModal
-        isOpen={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setSelectedLead(null);
-        }}
-        lead={selectedLead}
-        onSave={async (leadData) => {
-          console.log('Lead salvo:', leadData);
-          setModalOpen(false);
-          setSelectedLead(null);
-        }}
-      />
+      {/* Modais */}
+      {showLeadModal && (
+        <LeadModal
+          isOpen={showLeadModal}
+          onClose={handleCloseLeadModal}
+          onSubmit={handleSaveLead}
+          lead={selectedLead}
+        />
+      )}
+
+      {showClientModal && (
+        <ClientModal
+          isOpen={showClientModal}
+          onClose={handleCloseClientModal}
+          onSubmit={handleSaveClient}
+        />
+      )}
+
+      {showProjectModal && (
+        <ProjectModal
+          isOpen={showProjectModal}
+          onClose={handleCloseProjectModal}
+          onSubmit={handleSaveProject}
+          clients={(clients || []) as any}
+          users={users}
+        />
+      )}
+
+      {showQuoteModal && (
+        <QuoteModal
+          isOpen={showQuoteModal}
+          onClose={handleCloseQuoteModal}
+          onSubmit={handleSaveQuote}
+          clients={(clients || []) as any}
+        />
+      )}
     </div>
   );
 }

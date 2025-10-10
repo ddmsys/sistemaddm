@@ -2,6 +2,7 @@
 
 import { Menu, Transition } from '@headlessui/react';
 import { Bell, Menu as MenuIcon, Search, User } from 'lucide-react';
+import Image from 'next/image';
 import { Fragment } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +66,13 @@ export function Header({ onMenuClick, user }: HeaderProps) {
               <Menu.Button className="flex items-center gap-2 rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100">
                   {user.avatar ? (
-                    <img className="h-8 w-8 rounded-full" src={user.avatar} alt={user.name} />
+                    <Image
+                      className="h-8 w-8 rounded-full"
+                      src={user.avatar}
+                      alt={user.name}
+                      width={32}
+                      height={32}
+                    />
                   ) : (
                     <User className="h-4 w-4 text-primary-600" />
                   )}

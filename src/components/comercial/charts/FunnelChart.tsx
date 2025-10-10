@@ -16,7 +16,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LeadStatus } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 
-
+interface FunnelData {
+  status: string;
+  count: number;
+  label: string;
+  color?: string;
+}
 
 interface FunnelChartProps {
   data: {
@@ -30,12 +35,12 @@ interface FunnelChartProps {
 
 const stageConfig = {
   new: { label: 'Novos Leads', color: '#3b82f6' },
-  contacted: { label: 'Contatados', color: '#8b5cf6' },
-  qualified: { label: 'Qualificados', color: '#f59e0b' },
-  proposal: { label: 'Propostas', color: '#06b6d4' },
-  negotiation: { label: 'Negociação', color: '#f97316' },
-  closed_won: { label: 'Fechados', color: '#10b981' },
-  closed_lost: { label: 'Perdidos', color: '#ef4444' },
+  primeiro_contato: { label: 'Primeiro Contato', color: '#8b5cf6' },
+  qualificado: { label: 'Qualificado', color: '#f59e0b' },
+  proposta_enviada: { label: 'Proposta Enviada', color: '#06b6d4' },
+  negociacao: { label: 'Negociação', color: '#f97316' },
+  fechado_ganho: { label: 'Fechado - Ganhou', color: '#10b981' },
+  fechado_perdido: { label: 'Fechado - Perdido', color: '#ef4444' },
 };
 
 export function FunnelChart({
@@ -44,7 +49,7 @@ export function FunnelChart({
   showValues = true,
 }: FunnelChartProps) {
   const chartData = useMemo(() => {
-    const totalLeads = data.find((item) => item.status === 'new')?.count || 0;
+    const totalLeads = data.find((item) => item.status === 'primeiro_contato')?.count || 0;
 
     return Object.entries(stageConfig)
       .map(([status, config]) => {
@@ -64,22 +69,22 @@ export function FunnelChart({
       .filter((item) => item.count > 0);
   }, [data]);
 
-    const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }> }) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload;
+      const item = payload[0].payload || payload[0];
       return (
         <div className="rounded-lg border bg-white p-3 shadow-lg">
-          <p className="font-medium text-primary-900">{label}</p>
+          <p className="font-medium text-primary-900">{item.label}</p>
           <p className="text-sm text-primary-600">
-            <span className="font-medium">{data.count}</span> leads
+            <span className="font-medium">{item.count}</span> leads
           </p>
-          {showValues && data.value > 0 && (
+          {showValues && item.value > 0 && (
             <p className="text-sm text-primary-600">
-              Valor: <span className="font-medium">{formatCurrency(data.value)}</span>
+              Valor: <span className="font-medium">{formatCurrency(item.value)}</span>
             </p>
           )}
           <p className="text-sm text-primary-600">
-            Taxa: <span className="font-medium">{data.conversion.toFixed(1)}%</span>
+            Taxa: <span className="font-medium">{item.conversion.toFixed(1)}%</span>
           </p>
         </div>
       );

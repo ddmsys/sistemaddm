@@ -1,447 +1,323 @@
-//src/app/(authenticated/crm/projects/[id]/page.tsx//
+// src/app/(authenticated)/crm/projects/[id]/page.tsx
 'use client';
 
-import {
-  ArrowLeftIcon,
-  ChatBubbleLeftRightIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  DocumentCheckIcon,
-  PencilIcon,
-} from '@heroicons/react/24/outline';
 import { Timestamp } from 'firebase/firestore';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-hot-toast';
 
-import { ProjectModal } from '@/components/comercial/modals/ProjectModal';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { useProjects } from '@/hooks/comercial/useProjects';
-import { Project } from '@/lib/types/comercial';
-import { PRODUCT_TYPE_LABELS } from '@/lib/types/shared';
-import { formatDate } from '@/lib/utils/formatters';
+import ProjectModal from '@/components/comercial/modals/ProjectModal'; // Corrigido import
+import { useFirestore } from '@/hooks/useFirestore';
+import { Client, Project, ProjectFormData } from '@/lib/types/projects'; // Types separados
+import { formatCurrency, formatDate } from '@/lib/utils';
 
-export default function ProjectDetailPage() {
+export default function ProjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { getProject, updateProjectStatus } = useProjects();
+  const projectId = params?.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  const projectId = params?.id as string | undefined;
+  const { update, getById } = useFirestore<Project>('projects');
+  const { data: clientsData } = useFirestore<Client>('clients');
+  const clients = clientsData || [];
 
-  // ================ LOAD PROJECT ================
+  // Mock users
+  const users = [
+    { id: '1', name: 'João Silva' },
+    { id: '2', name: 'Maria Santos' },
+    { id: '3', name: 'Pedro Costa' },
+  ];
+
   useEffect(() => {
-    const loadProject = async () => {
-      if (!projectId) return;
+    const fetchProject = async () => {
+      if (!projectId) {
+        router.push('/crm/projects');
+        return;
+      }
 
-      setLoading(true);
       try {
-        const projectData = await getProject(projectId);
+        setLoading(true);
+        const projectData = await getById(projectId);
         if (projectData) {
-          setProject(projectData);
+          setProject(projectData as Project); // Cast para o tipo correto
         } else {
-          toast.error('Projeto não encontrado');
+          console.error('Projeto não encontrado');
           router.push('/crm/projects');
         }
       } catch (error) {
         console.error('Erro ao carregar projeto:', error);
-        toast.error('Erro ao carregar projeto');
+        router.push('/crm/projects');
       } finally {
         setLoading(false);
       }
     };
 
-    void loadProject();
-  }, [projectId, getProject, router]);
+    fetchProject();
+  }, [projectId, getById, router]);
 
-  // ================ HANDLERS ================
-  const handleEdit = () => {
-    setIsModalOpen(true);
-  };
+  const handleUpdateProject = async (updatedData: ProjectFormData) => {
+    if (!project?.id) return;
 
-  const handleStatusUpdate = async (newStatus: Project['status']) => {
-    if (!project) return;
+    try {
+      const updatePayload = {
+        ...updatedData,
+        // Converter datas
+        startDate: updatedData.startDate
+          ? Timestamp.fromDate(new Date(updatedData.startDate))
+          : project.startDate,
+        dueDate: updatedData.dueDate
+          ? Timestamp.fromDate(new Date(updatedData.dueDate))
+          : project.dueDate,
 
-    const success = await updateProjectStatus(project.id ?? '', newStatus);
-    if (success) {
-      // Recarregar dados
-      const updatedProject = await getProject(project.id ?? '');
-      if (updatedProject) {
-        setProject(updatedProject);
+        // Manter campos obrigatórios existentes
+        progress: project.progress,
+        teamMembers: project.teamMembers,
+        actualCost: project.actualCost,
+        files: project.files,
+        tasks: project.tasks,
+        timeline: project.timeline,
+        proofsCount: project.proofsCount,
+
+        updatedAt: Timestamp.now(),
+      };
+
+      try {
+        await update(project.id, updatePayload);
+
+        // Recarregar dados do projeto
+        const refreshedProject = await getById(project.id);
+        if (refreshedProject) {
+          setProject(refreshedProject as Project);
+        }
+        setShowEditModal(false);
+      } catch (error) {
+        console.error('Erro ao atualizar projeto:', error);
+        throw error;
       }
+    } catch (error) {
+      console.error('Erro ao atualizar projeto:', error);
+      throw error;
     }
-  };
-
-  // const handleCloseModal = () => {
-  //   setIsModalOpen(false);
-  // };
-
-  // ================ UTILS ================
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
   };
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-64 animate-pulse rounded bg-gray-200" />
-        <div className="h-64 animate-pulse rounded-lg bg-gray-200" />
-        <div className="h-96 animate-pulse rounded-lg bg-gray-200" />
-      </div>
-    );
-  }
-
-  if (!projectId) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-red-500">Erro: ID do projeto não encontrado</p>
-        <Button onClick={() => router.push('/crm/projects')} className="mt-4">
-          Voltar para projetos
-        </Button>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-gray-500">Carregando projeto...</div>
       </div>
     );
   }
 
   if (!project) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-gray-500">Projeto não encontrado</p>
-        <Button onClick={() => router.push('/crm/projects')} className="mt-4">
-          Voltar para projetos
-        </Button>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800">Projeto não encontrado</h2>
+          <p className="mt-2 text-gray-600">O projeto solicitado não existe ou foi removido.</p>
+          <button
+            onClick={() => router.push('/crm/projects')}
+            className="mt-4 rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+          >
+            Voltar aos Projetos
+          </button>
+        </div>
       </div>
     );
   }
 
-  const isOverdue = project.dueDate
-    ? project.dueDate.toDate() < new Date() &&
-      !['done', 'cancelled', 'shipped'].includes(project.status)
-    : false;
-
   return (
     <div className="space-y-6">
-      {/* ================ HEADER ================ */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push('/crm/projects')}
-            leftIcon={<ArrowLeftIcon className="h-4 w-4" />}
-          >
-            Voltar
-          </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{project.title}</h1>
+          <p className="text-sm text-gray-600">
+            {project.catalogCode || 'Código em processamento...'}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowEditModal(true)}
+          className="rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+        >
+          Editar Projeto
+        </button>
+      </div>
 
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{project.title}</h1>
-            <div className="mt-1 flex items-center space-x-3">
-              <p className="font-mono text-sm text-gray-600">
-                {project.catalogCode || 'Código em processamento...'}
-              </p>
-              <span className="text-gray-400">•</span>
-              <p className="text-sm text-gray-600">
-                {PRODUCT_TYPE_LABELS[project.category]} ({project.category})
-              </p>
-              <Badge variant="default">{project.status}</Badge>
-              <Badge variant="outline">{project.priority}</Badge>
-              {isOverdue && <span className="text-sm font-medium text-red-600">(Atrasado)</span>}
+      {/* Project Info */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {/* Basic Info */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Informações Básicas</h3>
+
+          <div className="space-y-3">
+            <div>
+              <span className="text-sm text-gray-600">Cliente:</span>
+              <p className="font-medium">{project.clientName}</p>
+            </div>
+
+            <div>
+              <span className="text-sm text-gray-600">Status:</span>
+              <p className="font-medium">{project.status}</p>
+            </div>
+
+            <div>
+              <span className="text-sm text-gray-600">Prioridade:</span>
+              <p className="font-medium">{project.priority}</p>
+            </div>
+
+            <div>
+              <span className="text-sm text-gray-600">Produto:</span>
+              <p className="font-medium">{project.product}</p>
+            </div>
+
+            {project.description && (
+              <div>
+                <span className="text-sm text-gray-600">Descrição:</span>
+                <p className="font-medium">{project.description}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Financial Info */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Informações Financeiras</h3>
+
+          <div className="space-y-3">
+            <div>
+              <span className="text-sm text-gray-600">Orçamento:</span>
+              <p className="font-medium">{formatCurrency(project.budget || 0)}</p>
+            </div>
+
+            <div>
+              <span className="text-sm text-gray-600">Custo Real:</span>
+              <p className="font-medium">{formatCurrency(project.actualCost)}</p>
+            </div>
+
+            <div>
+              <span className="text-sm text-gray-600">Progresso:</span>
+              <p className="font-medium">{project.progress}%</p>
+            </div>
+
+            <div>
+              <span className="text-sm text-gray-600">Provas Enviadas:</span>
+              <p className="font-medium">{project.proofsCount}</p>
             </div>
           </div>
         </div>
 
-        <div className="flex space-x-3">
-          <Button
-            variant="outline"
-            onClick={handleEdit}
-            leftIcon={<PencilIcon className="h-4 w-4" />}
-          >
-            Editar
-          </Button>
+        {/* Timeline Info */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Cronograma</h3>
+
+          <div className="space-y-3">
+            <div>
+              <span className="text-sm text-gray-600">Data de Início:</span>
+              <p className="font-medium">
+                {formatDate(
+                  project.startDate instanceof Date
+                    ? project.startDate
+                    : project.startDate.toDate(),
+                )}
+              </p>
+            </div>
+
+            {project.dueDate && (
+              <div>
+                <span className="text-sm text-gray-600">Data de Entrega:</span>
+                <p className="font-medium">
+                  {formatDate(
+                    project.dueDate instanceof Date ? project.dueDate : project.dueDate.toDate(),
+                  )}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <span className="text-sm text-gray-600">Criado em:</span>
+              <p className="font-medium">
+                {formatDate(
+                  project.createdAt instanceof Date
+                    ? project.createdAt
+                    : project.createdAt.toDate(),
+                )}
+              </p>
+            </div>
+
+            <div>
+              <span className="text-sm text-gray-600">Atualizado em:</span>
+              <p className="font-medium">
+                {formatDate(
+                  project.updatedAt instanceof Date
+                    ? project.updatedAt
+                    : project.updatedAt.toDate(),
+                )}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ================ QUICK ACTIONS ================ */}
-      <Card className="border shadow-sm">
-        <CardHeader>
-          <h3 className="text-lg font-semibold">Ações Rápidas</h3>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant={project.status === 'design' ? 'default' : 'outline'}
-              onClick={() => void handleStatusUpdate('design')}
-              disabled={project.status === 'design'}
-            >
-              Iniciar Design
-            </Button>
+      {/* Tasks and Timeline */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* Tasks */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Tarefas</h3>
 
-            <Button
-              size="sm"
-              variant={project.status === 'review' ? 'default' : 'outline'}
-              onClick={() => void handleStatusUpdate('review')}
-              disabled={project.status === 'review'}
-            >
-              Enviar para Revisão
-            </Button>
-
-            <Button
-              size="sm"
-              variant={project.status === 'production' ? 'default' : 'outline'}
-              onClick={() => void handleStatusUpdate('production')}
-              disabled={project.status === 'production'}
-            >
-              Iniciar Produção
-            </Button>
-
-            <Button
-              size="sm"
-              variant={project.status === 'done' ? 'default' : 'outline'}
-              onClick={() => void handleStatusUpdate('done')}
-              disabled={project.status === 'done'}
-            >
-              Marcar como Concluído
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ================ INFORMAÇÕES PRINCIPAIS ================ */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="border shadow-sm lg:col-span-2">
-          <CardHeader>
-            <h3 className="text-lg font-semibold">Informações do Projeto</h3>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Cliente</dt>
-                <dd className="mt-1 text-sm text-gray-900">{project.clientName}</dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Status</dt>
-                <dd className="mt-1">
-                  <Badge variant="default">{project.status}</Badge>
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Prioridade</dt>
-                <dd className="mt-1">
-                  <Badge variant="outline">{project.priority}</Badge>
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Tipo de Produto</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {PRODUCT_TYPE_LABELS[project.category]} ({project.category})
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Prazo de Entrega</dt>
-                <dd
-                  className={`mt-1 text-sm ${
-                    isOverdue ? 'font-medium text-red-600' : 'text-gray-900'
-                  }`}
-                >
-                  {project.dueDate ? formatDate(project.dueDate) : 'Não definido'}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Criado em</dt>
-                <dd className="mt-1 text-sm text-gray-900">{formatDate(project.createdAt)}</dd>
-              </div>
-
-              {project.assignedTo && (
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Responsável</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{project.assignedTo}</dd>
-                </div>
-              )}
-
-              {project.quoteId && (
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Orçamento Vinculado</dt>
-                  <dd className="mt-1 text-sm text-blue-600">
-                    <button
-                      onClick={() => router.push(`/crm/quotes/${project.quoteId}`)}
-                      className="hover:underline"
-                    >
-                      Ver orçamento →
-                    </button>
-                  </dd>
-                </div>
-              )}
-
-              {project.description && (
-                <div className="sm:col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">Descrição</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{project.description}</dd>
-                </div>
-              )}
-            </dl>
-          </CardContent>
-        </Card>
-
-        {/* ================ RESUMO DO PROJETO ================ */}
-        <Card className="border shadow-sm">
-          <CardHeader>
-            <h3 className="text-lg font-semibold">Resumo</h3>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Orçamento</p>
-                  <p className="text-lg font-semibold text-green-600">
-                    {formatCurrency(project.budget)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <ClockIcon className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Dias até o prazo</p>
-                  <p
-                    className={`text-lg font-semibold ${
-                      isOverdue ? 'text-red-600' : 'text-gray-900'
-                    }`}
-                  >
-                    {project.dueDate
-                      ? Math.ceil(
-                          (project.dueDate.toDate().getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-                        )
-                      : 'N/A'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <DocumentCheckIcon className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Provas Enviadas</p>
-                  <p className="text-lg font-semibold text-gray-900">{project.proofsCount || 0}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <ChatBubbleLeftRightIcon className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Aprovações Pendentes</p>
-                  <p className="text-lg font-semibold text-orange-600">
-                    {project.clientApprovalTasks?.filter(
-                      (task: { status: string }) => task.status === 'pending',
-                    ).length || 0}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ================ TAREFAS DE APROVAÇÃO ================ */}
-      {project.clientApprovalTasks && project.clientApprovalTasks.length > 0 && (
-        <Card className="border shadow-sm">
-          <CardHeader>
-            <h3 className="text-lg font-semibold">Tarefas de Aprovação do Cliente</h3>
-          </CardHeader>
-          <CardContent>
+          {project.tasks.length === 0 ? (
+            <p className="text-gray-600">Nenhuma tarefa cadastrada.</p>
+          ) : (
             <div className="space-y-3">
-              {project.clientApprovalTasks?.map(
-                (
-                  task: {
-                    id?: string;
-                    description: string;
-                    dueDate: Timestamp | Date | string | null | undefined;
-                    notes?: string;
-                    status: 'pending' | 'approved' | 'rejected';
-                  },
-                  index: number,
-                ) => (
-                  <div
-                    key={task.id || index}
-                    className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
-                  >
-                    <div>
-                      <p className="font-medium text-gray-900">{task.description}</p>
-                      <p className="text-sm text-gray-500">Prazo: {formatDate(task.dueDate)}</p>
-                      {task.notes && <p className="mt-1 text-sm text-gray-600">{task.notes}</p>}
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs font-medium ${
-                          task.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : task.status === 'approved'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {task.status === 'pending'
-                          ? 'Pendente'
-                          : task.status === 'approved'
-                            ? 'Aprovado'
-                            : 'Rejeitado'}
-                      </span>
-                    </div>
-                  </div>
-                ),
-              )}
+              {project.tasks.map((task, index) => (
+                <div key={task.id || index} className="rounded-lg border border-gray-200 p-3">
+                  <p className="font-medium">{task.title}</p>
+                  <p className="text-sm text-gray-600">{task.status}</p>
+                  {task.description && (
+                    <p className="mt-1 text-sm text-gray-600">{task.description}</p>
+                  )}
+                </div>
+              ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
 
-      {/* ================ OBSERVAÇÕES ================ */}
+        {/* Files */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Arquivos</h3>
+
+          {project.files.length === 0 ? (
+            <p className="text-gray-600">Nenhum arquivo anexado.</p>
+          ) : (
+            <div className="space-y-3">
+              {project.files.map((file, index) => (
+                <div key={file.id || index} className="rounded-lg border border-gray-200 p-3">
+                  <p className="font-medium">{file.name}</p>
+                  <p className="text-sm text-gray-600">{file.category}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Notes */}
       {project.notes && (
-        <Card className="border shadow-sm">
-          <CardHeader>
-            <h3 className="text-lg font-semibold">Observações</h3>
-          </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-wrap text-sm text-gray-900">{project.notes}</p>
-          </CardContent>
-        </Card>
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Observações</h3>
+          <p className="text-gray-700">{project.notes}</p>
+        </div>
       )}
 
-      {/* ================ MODAL ================ */}
+      {/* Edit Modal */}
       <ProjectModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSubmit={handleUpdateProject}
         project={project}
-        onSave={async (updatedData) => {
-          try {
-            // TODO: implementar salvamento real
-            console.log('Salvando projeto:', updatedData);
-            setIsModalOpen(false);
-            // Recarregar projeto após salvar
-            if (project?.id) {
-              const refreshedProject = await getProject(project.id);
-              if (refreshedProject) {
-                setProject(refreshedProject);
-              }
-            }
-          } catch (error) {
-            console.error('Erro ao salvar:', error);
-            toast.error('Erro ao salvar projeto');
-          }
-        }}
+        clients={clients}
+        users={users}
       />
     </div>
   );

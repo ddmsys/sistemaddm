@@ -1,16 +1,11 @@
+// src/components/comercial/modals/QuoteModal.tsx
 'use client';
 
 import { Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 
-import { Client, Quote, QuoteFormData } from '@/lib/types';
+import { Client, Quote, QuoteFormData, QuoteItem } from '@/lib/types/quotes';
 import { formatCurrency } from '@/lib/utils';
-
-interface QuoteItem {
-  description: string;
-  quantity: number;
-  unit_price: number;
-}
 
 interface QuoteModalProps {
   isOpen: boolean;
@@ -20,27 +15,34 @@ interface QuoteModalProps {
   clients: Client[];
 }
 
-export function QuoteModal({ isOpen, onClose, onSubmit, quote, clients }: QuoteModalProps) {
+// Interface local para itens do form (simplificada)
+interface FormQuoteItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export default function QuoteModal({ isOpen, onClose, onSubmit, quote, clients }: QuoteModalProps) {
   const [formData, setFormData] = useState({
-    client_id: quote?.client_id || '',
-    title: quote?.title || '',
+    clientId: quote?.clientId || '',
+    title: quote?.projectTitle || '', // Corrigido: projectTitle
     description: quote?.description || '',
-    discount_percentage: quote?.discount_percentage || 0,
-    valid_until: quote?.valid_until
-      ? (quote.valid_until as any).seconds
-        ? new Date(quote.valid_until.seconds * 1000).toISOString().split('T')[0]
-        : new Date(quote.valid_until).toISOString().split('T')[0]
+    discount: quote?.discount || 0, // Corrigido: discount
+    validUntil: quote?.validUntil
+      ? quote.validUntil instanceof Date
+        ? quote.validUntil.toISOString().split('T')[0]
+        : quote.validUntil.toDate().toISOString().split('T')[0]
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     notes: quote?.notes || '',
-    terms_conditions: quote?.terms_conditions || '',
+    terms: quote?.terms || '', // Corrigido: terms
   });
 
-  const [items, setItems] = useState<QuoteItem[]>(
+  const [items, setItems] = useState<FormQuoteItem[]>(
     quote?.items?.map((item) => ({
       description: item.description,
       quantity: item.quantity,
-      unit_price: item.unit_price,
-    })) || [{ description: '', quantity: 1, unit_price: 0 }],
+      unitPrice: item.unitPrice || item.value || 0, // Suporte aos dois campos
+    })) || [{ description: '', quantity: 1, unitPrice: 0 }],
   );
 
   const [loading, setLoading] = useState(false);
@@ -49,7 +51,7 @@ export function QuoteModal({ isOpen, onClose, onSubmit, quote, clients }: QuoteM
   if (!isOpen) return null;
 
   const addItem = () => {
-    setItems([...items, { description: '', quantity: 1, unit_price: 0 }]);
+    setItems([...items, { description: '', quantity: 1, unitPrice: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -58,26 +60,26 @@ export function QuoteModal({ isOpen, onClose, onSubmit, quote, clients }: QuoteM
     }
   };
 
-  const updateItem = (index: number, field: keyof QuoteItem, value: string | number) => {
+  const updateItem = (index: number, field: keyof FormQuoteItem, value: string | number) => {
     const newItems = [...items];
-    if (field === 'quantity' || field === 'unit_price') {
+    if (field === 'quantity' || field === 'unitPrice') {
       newItems[index] = { ...newItems[index], [field]: Number(value) || 0 };
     } else {
-      newItems[index] = { ...newItems[index], [field]: value };
+      newItems[index] = { ...newItems[index], [field]: String(value) }; // Forçar string
     }
     setItems(newItems);
   };
 
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-  const discountAmount = (subtotal * formData.discount_percentage) / 100;
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const discountAmount = formData.discount || 0;
   const total = subtotal - discountAmount;
 
   const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.client_id) newErrors.client_id = 'Cliente é obrigatório';
+    if (!formData.clientId) newErrors.clientId = 'Cliente é obrigatório';
     if (!formData.title.trim()) newErrors.title = 'Título é obrigatório';
-    if (!formData.valid_until) newErrors.valid_until = 'Data de validade é obrigatória';
+    if (!formData.validUntil) newErrors.validUntil = 'Data de validade é obrigatória';
 
     const hasEmptyItems = items.some((item) => !item.description.trim());
     if (hasEmptyItems) {
@@ -98,19 +100,44 @@ export function QuoteModal({ isOpen, onClose, onSubmit, quote, clients }: QuoteM
 
     try {
       const validationErrors = validateForm();
-
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
         return;
       }
 
+      // Montar dados compatíveis com QuoteFormData
       const submitData: QuoteFormData = {
-        ...formData,
-        items: items.map((item) => ({
+        // Relacionamentos
+        clientId: formData.clientId,
+        clientName: clients.find((c) => c.id === formData.clientId)?.name || '',
+
+        // Dados básicos
+        title: formData.title, // Será mapeado para projectTitle no hook
+        projectTitle: formData.title,
+        description: formData.description,
+        quoteType: 'producao', // Default
+
+        // Datas
+        issueDate: new Date().toISOString(),
+        validUntil: formData.validUntil,
+
+        // Status
+        status: quote?.status || 'draft',
+
+        // Itens - converter para QuoteItem
+        items: items.map((item, index) => ({
+          id: `item_${index + 1}`,
           description: item.description,
+          kind: 'etapa',
           quantity: item.quantity,
-          unit_price: item.unit_price,
-        })),
+          unitPrice: item.unitPrice,
+          value: item.quantity * item.unitPrice,
+          totalPrice: item.quantity * item.unitPrice,
+        })) as QuoteItem[],
+
+        // Campos opcionais
+        discount: discountAmount,
+        notes: formData.notes,
       };
 
       await onSubmit(submitData);
@@ -118,15 +145,15 @@ export function QuoteModal({ isOpen, onClose, onSubmit, quote, clients }: QuoteM
 
       // Reset form
       setFormData({
-        client_id: '',
+        clientId: '',
         title: '',
         description: '',
-        discount_percentage: 0,
-        valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        discount: 0,
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         notes: '',
-        terms_conditions: '',
+        terms: '',
       });
-      setItems([{ description: '', quantity: 1, unit_price: 0 }]);
+      setItems([{ description: '', quantity: 1, unitPrice: 0 }]);
       setErrors({});
     } catch (error) {
       console.error('Erro ao salvar orçamento:', error);
@@ -142,275 +169,281 @@ export function QuoteModal({ isOpen, onClose, onSubmit, quote, clients }: QuoteM
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white">
         {/* Header */}
         <div className="flex items-center justify-between border-b p-6">
-          <h2 className="text-xl font-semibold text-primary-900">
+          <h2 className="text-2xl font-bold text-gray-800">
             {quote ? 'Editar Orçamento' : 'Novo Orçamento'}
           </h2>
-          <button onClick={handleClose} className="p-1 text-primary-400 hover:text-primary-600">
-            <X className="h-5 w-5" />
+          <button
+            onClick={handleClose}
+            className="text-gray-500 transition-colors hover:text-gray-700"
+          >
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="max-h-[calc(90vh-140px)] overflow-y-auto p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {errors.general && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                {errors.general}
-              </div>
-            )}
+        <form onSubmit={handleSubmit} className="space-y-6 p-6">
+          {/* Error Message */}
+          {errors.general && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+              {errors.general}
+            </div>
+          )}
 
-            {/* Dados Básicos */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">Cliente *</label>
-                <select
-                  className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.client_id}
-                  onChange={(e) => {
-                    setFormData({ ...formData, client_id: e.target.value });
-                    if (errors.client_id) setErrors({ ...errors, client_id: '' });
-                  }}
-                >
-                  <option value="">Selecione o cliente</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name} ({client.client_number})
-                    </option>
-                  ))}
-                </select>
-                {errors.client_id && (
-                  <p className="mt-1 text-sm text-red-600">{errors.client_id}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">
-                  Válido até *
-                </label>
-                <input
-                  type="date"
-                  className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.valid_until}
-                  onChange={(e) => {
-                    setFormData({ ...formData, valid_until: e.target.value });
-                    if (errors.valid_until) setErrors({ ...errors, valid_until: '' });
-                  }}
-                />
-                {errors.valid_until && (
-                  <p className="mt-1 text-sm text-red-600">{errors.valid_until}</p>
-                )}
-              </div>
+          {/* Dados Básicos */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Cliente */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Cliente *</label>
+              <select
+                value={formData.clientId}
+                onChange={(e) => {
+                  setFormData({ ...formData, clientId: e.target.value });
+                  if (errors.clientId) setErrors({ ...errors, clientId: '' });
+                }}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Selecione o cliente</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name} {client.clientNumber && `(${client.clientNumber})`}
+                  </option>
+                ))}
+              </select>
+              {errors.clientId && <p className="mt-1 text-sm text-red-600">{errors.clientId}</p>}
             </div>
 
+            {/* Válido até */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-primary-700">
+              <label className="mb-2 block text-sm font-medium text-gray-700">Válido até *</label>
+              <input
+                type="date"
+                value={formData.validUntil}
+                onChange={(e) => {
+                  setFormData({ ...formData, validUntil: e.target.value });
+                  if (errors.validUntil) setErrors({ ...errors, validUntil: '' });
+                }}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              {errors.validUntil && (
+                <p className="mt-1 text-sm text-red-600">{errors.validUntil}</p>
+              )}
+            </div>
+
+            {/* Título */}
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Título do orçamento *
               </label>
               <input
                 type="text"
-                className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 value={formData.title}
                 onChange={(e) => {
                   setFormData({ ...formData, title: e.target.value });
                   if (errors.title) setErrors({ ...errors, title: '' });
                 }}
                 placeholder="Ex: Impressão de livro infantil"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                required
               />
               {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-primary-700">Descrição</label>
+            {/* Descrição */}
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">Descrição</label>
               <textarea
-                rows={3}
-                className="w-full rounded-md border border-primary-200 px-3 py-2 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Descrição detalhada do projeto..."
+                rows={3}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
 
-            {/* Itens */}
+          {/* Itens */}
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Itens do Orçamento</h3>
+              <button
+                type="button"
+                onClick={addItem}
+                className="flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar Item
+              </button>
+            </div>
+
+            {errors.items && <p className="mb-4 text-sm text-red-600">{errors.items}</p>}
+
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-primary-900">Itens do Orçamento</h3>
-                <button
-                  type="button"
-                  onClick={addItem}
-                  className="flex items-center gap-1 rounded-md border border-blue-300 px-3 py-2 text-sm text-blue-600 transition-colors hover:bg-blue-50"
+              {items.map((item, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-12 items-end gap-4 rounded-lg border border-gray-200 p-4"
                 >
-                  <Plus className="h-4 w-4" />
-                  Adicionar Item
-                </button>
-              </div>
-
-              {errors.items && <p className="text-sm text-red-600">{errors.items}</p>}
-
-              <div className="space-y-3">
-                {items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-12 items-end gap-2 rounded-lg bg-primary-50 p-3"
-                  >
-                    <div className="col-span-5">
-                      <label className="mb-1 block text-xs font-medium text-primary-700">
-                        Descrição
-                      </label>
-                      <input
-                        type="text"
-                        className="h-10 w-full rounded-md border border-primary-200 px-2 text-sm focus:ring-1 focus:ring-blue-500"
-                        value={item.description}
-                        onChange={(e) => updateItem(index, 'description', e.target.value)}
-                        placeholder="Descrição do item"
-                      />
-                    </div>
-
-                    <div className="col-span-2">
-                      <label className="mb-1 block text-xs font-medium text-primary-700">Qtd</label>
-                      <input
-                        type="number"
-                        min="1"
-                        className="h-10 w-full rounded-md border border-primary-200 px-2 text-sm focus:ring-1 focus:ring-blue-500"
-                        value={item.quantity}
-                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                      />
-                    </div>
-
-                    <div className="col-span-3">
-                      <label className="mb-1 block text-xs font-medium text-primary-700">
-                        Preço Unit.
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="h-10 w-full rounded-md border border-primary-200 px-2 text-sm focus:ring-1 focus:ring-blue-500"
-                        value={item.unit_price}
-                        onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
-                      />
-                    </div>
-
-                    <div className="col-span-1 text-center">
-                      <div className="mb-1 text-xs text-primary-700">Total</div>
-                      <div className="text-sm font-medium">
-                        {formatCurrency(item.quantity * item.unit_price)}
-                      </div>
-                    </div>
-
-                    <div className="col-span-1 text-center">
-                      {items.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="p-1 text-red-600 transition-colors hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
+                  {/* Descrição */}
+                  <div className="col-span-5">
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Descrição
+                    </label>
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) => updateItem(index, 'description', e.target.value)}
+                      placeholder="Descrição do item"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
-                ))}
-              </div>
 
-              {/* Totais */}
-              <div className="space-y-2 rounded-lg bg-primary-100 p-4">
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal:</span>
-                  <span className="font-medium">{formatCurrency(subtotal)}</span>
-                </div>
+                  {/* Quantidade */}
+                  <div className="col-span-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Qtd</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span>Desconto:</span>
+                  {/* Preço Unitário */}
+                  <div className="col-span-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Preço Unit.
+                    </label>
                     <input
                       type="number"
                       min="0"
-                      max="100"
-                      step="0.1"
-                      className="h-8 w-16 rounded border border-primary-200 px-2 text-sm"
-                      value={formData.discount_percentage}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          discount_percentage: parseFloat(e.target.value) || 0,
-                        })
-                      }
+                      step="0.01"
+                      value={item.unitPrice}
+                      onChange={(e) => updateItem(index, 'unitPrice', e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                     />
-                    <span>%</span>
                   </div>
-                  <span className="font-medium text-red-600">
-                    -{formatCurrency(discountAmount)}
-                  </span>
-                </div>
 
-                <div className="flex justify-between border-t border-primary-300 pt-2 text-lg font-bold text-primary-900">
-                  <span>Total:</span>
-                  <span>{formatCurrency(total)}</span>
+                  {/* Total */}
+                  <div className="col-span-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Total</label>
+                    <div className="rounded-lg bg-gray-50 px-3 py-2 font-medium">
+                      {formatCurrency(item.quantity * item.unitPrice)}
+                    </div>
+                  </div>
+
+                  {/* Remove Button */}
+                  <div className="col-span-1">
+                    {items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeItem(index)}
+                        className="p-1 text-red-600 transition-colors hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Totais */}
+          <div className="rounded-lg bg-gray-50 p-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Subtotal:</span>
+                <span className="font-medium">{formatCurrency(subtotal)}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Desconto:</span>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.discount}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        discount: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    className="w-24 rounded border border-gray-300 px-2 py-1 text-center"
+                  />
+                  <span>R$</span>
+                  <span className="text-red-600">-{formatCurrency(discountAmount)}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t pt-2 text-lg font-bold">
+                <span>Total:</span>
+                <span className="text-blue-600">{formatCurrency(total)}</span>
               </div>
             </div>
+          </div>
 
-            {/* Observações */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">
-                  Observações
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full rounded-md border border-primary-200 px-3 py-2 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Observações internas..."
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">
-                  Termos e Condições
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full rounded-md border border-primary-200 px-3 py-2 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.terms_conditions}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      terms_conditions: e.target.value,
-                    })
-                  }
-                  placeholder="Termos específicos deste orçamento..."
-                />
-              </div>
+          {/* Observações */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Observações</label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Observações internas..."
+                rows={3}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              />
             </div>
-          </form>
-        </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t bg-primary-50 px-6 py-4">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-md border border-primary-300 px-4 py-2 text-primary-700 transition-colors hover:bg-primary-100"
-            disabled={loading}
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex items-center gap-2 rounded-md bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading && (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-            )}
-            {quote ? 'Salvar Alterações' : 'Criar Orçamento'}
-          </button>
-        </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Termos e Condições
+              </label>
+              <textarea
+                value={formData.terms}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    terms: e.target.value,
+                  })
+                }
+                placeholder="Termos específicos deste orçamento..."
+                rows={3}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end space-x-4 border-t pt-6">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="rounded-lg border border-gray-300 px-6 py-2 text-gray-600 transition-colors hover:bg-gray-50"
+              disabled={loading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading && (
+                <div className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border border-white border-t-transparent" />
+              )}
+              {quote ? 'Salvar Alterações' : 'Criar Orçamento'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -19,24 +19,46 @@ export interface Contact {
   email?: string;
   phone?: string;
 }
+export type ClientType = 'individual' | 'company';
 
 export interface Client {
   id?: string;
-  number: string; // CLT001, CLT002...
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  document: string; // CPF ou CNPJ
-  address?: Address;
-  contacts?: Contact[];
+  clientNumber?: number;
+  type: ClientType;
+
+  // ✅ Campos obrigatórios básicos
+  name: string; // Nome sempre obrigatório
+  email: string; // Email sempre obrigatório
+  phone: string; // Telefone sempre obrigatório
   status: ClientStatus;
-  indication?: string;
+  document: string; // ADICIONAR ESSA LINHA!
+
+  // ✅ Pessoa Física
+  cpf?: string;
+  rg?: string;
+  birthDate?: string;
+
+  // ✅ Pessoa Jurídica
+  company?: string; // Razão social
+  companyName?: string; // Alias para compatibilidade
+  cnpj?: string;
+  stateRegistration?: string;
+  contactPerson?: string;
+  businessType?: string;
+
+  // ✅ Campos adicionais
+  source?: string;
   notes?: string;
+  socialMedia?: SocialMedia;
+  address?: Address;
+  firebaseAuthUid?: string;
+  referredBy?: string; // nome da pessoa que indicou, pode ser opcional
+  tags?: string[];
+
+  // ✅ Timestamps obrigatórios
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
-
 export interface ClientFilters {
   status?: ClientStatus[];
   search?: string;
@@ -44,4 +66,39 @@ export interface ClientFilters {
     start: Date;
     end: Date;
   };
+}
+export interface ClientFormData {
+  type: ClientType;
+  name: string;
+  email: string;
+  phone: string;
+  document: string; // CPF ou CNPJ
+  cpf?: string;
+  cnpj?: string;
+  company?: string;
+  companyName?: string;
+  stateRegistration?: string;
+  contactPerson?: string;
+  businessType?: string;
+  status: ClientStatus;
+  tags: string[];
+  source?: string;
+  notes?: string;
+  socialMedia?: SocialMedia;
+  address?: Address;
+  referredBy?: string; // nome da pessoa que indicou, pode ser opcional
+}
+export interface ClientModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  client?: Client | null;
+  onSave: (data: Client) => Promise<void>;
+  loading?: boolean;
+}
+export interface SocialMedia {
+  facebook?: string;
+  instagram?: string;
+  linkedin?: string;
+  twitter?: string;
+  website?: string;
 }

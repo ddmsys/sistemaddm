@@ -29,7 +29,7 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     try {
       connectFunctionsEmulator(functions, 'localhost', 5001);
     } catch {
-    console.warn('Firebase já foi inicializado');
+      console.warn('Firebase já foi inicializado');
     }
   }
 }

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useClients } from '@/hooks/comercial/useClients';
-import { Client } from '@/lib/types/comercial';
+import { Client } from '@/lib/types/clients';
 
 export default function ClientPage() {
   const router = useRouter();

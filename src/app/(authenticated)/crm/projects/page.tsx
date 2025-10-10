@@ -1,3 +1,4 @@
+// src/app/(authenticated)/crm/projects/page.tsx
 'use client';
 
 import { Timestamp } from 'firebase/firestore';
@@ -13,9 +14,15 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-import { ProjectModal } from '@/components/comercial/modals/ProjectModal';
-import { useFirestore } from '@/hooks/useFirestore';
-import { Client, Project, ProjectFormData, ProjectPriority, ProjectStatus } from '@/lib/types';
+import ProjectModal from '@/components/comercial/modals/ProjectModal'; // Corrigido import
+import { useFirestore } from '@/hooks/useFirestore'; // Voltando para o hook original
+import {
+  Client,
+  Project,
+  ProjectFormData,
+  ProjectPriority,
+  ProjectStatus,
+} from '@/lib/types/projects'; // Usando types separados
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface FilterState {
@@ -25,8 +32,12 @@ interface FilterState {
 }
 
 export default function ProjectsPage() {
-  const { data: projects, loading, create, update, remove } = useFirestore<Project>('projects');
-  const { data: clients } = useFirestore<Client>('clients');
+  // ================ HOOKS ================
+  const { data: projects, loading, create, update, remove } = useFirestore<Project>('projects'); // Usando hook original
+
+  const { data: clientsData } = useFirestore<Client>('clients');
+  const clients = clientsData || [];
+
   const [showModal, setShowModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [filters, setFilters] = useState<FilterState>({
@@ -35,35 +46,89 @@ export default function ProjectsPage() {
     search: '',
   });
 
-  // Mock users - substituir por dados reais
+  // Mock users - substituir por dados reais do contexto de usuários
   const users = [
     { id: '1', name: 'João Silva' },
     { id: '2', name: 'Maria Santos' },
     { id: '3', name: 'Pedro Costa' },
   ];
 
+  // ================ HANDLERS ================
   const handleCreateProject = async (data: ProjectFormData) => {
     try {
       if (selectedProject) {
-        await update(selectedProject.id, {
+        // Editando projeto existente
+        await update(selectedProject.id!, {
           ...data,
-          start_date: Timestamp.fromDate(new Date(data.start_date)),
-          due_date: Timestamp.fromDate(new Date(data.due_date)),
+          // Converter datas corretamente
+          startDate: data.startDate
+            ? Timestamp.fromDate(new Date(data.startDate))
+            : Timestamp.now(),
+          dueDate: data.dueDate ? Timestamp.fromDate(new Date(data.dueDate)) : undefined,
+
+          // Campos obrigatórios
+          progress: selectedProject.progress || 0,
+          teamMembers: selectedProject.teamMembers || [],
+          actualCost: selectedProject.actualCost || 0,
+          files: selectedProject.files || [],
+          tasks: selectedProject.tasks || [],
+          timeline: selectedProject.timeline || [],
+          proofsCount: selectedProject.proofsCount || 0,
+
+          updatedAt: Timestamp.now(),
         });
       } else {
-        // Encontrar cliente para pegar o nome
-        const client = clients.find((c) => c.id === data.client_id);
+        // Criando novo projeto - garantir todos campos obrigatórios
+        const projectData: Omit<Project, 'id'> = {
+          // Relacionamentos
+          clientId: data.clientId,
+          clientName: data.clientName || '',
+          quoteId: data.quoteId,
 
-        await create({
-          ...data,
-          project_number: `PRJ-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-          status: 'planning' as ProjectStatus,
-          client_name: client?.name || '',
+          // Dados básicos OBRIGATÓRIOS
+          title: data.title,
+          description: data.description || '',
+          product: data.product,
+          status: data.status || 'open',
+          priority: data.priority || 'medium',
+
+          // Datas OBRIGATÓRIAS
+          startDate: data.startDate
+            ? Timestamp.fromDate(new Date(data.startDate))
+            : Timestamp.now(),
+          dueDate: data.dueDate ? Timestamp.fromDate(new Date(data.dueDate)) : undefined,
+
+          // Campos OBRIGATÓRIOS para gestão
           progress: 0,
-          start_date: Timestamp.fromDate(new Date(data.start_date)),
-          due_date: Timestamp.fromDate(new Date(data.due_date)),
-        });
+          teamMembers: [],
+          projectManager: data.projectManager,
+          actualCost: 0,
+
+          // Arrays OBRIGATÓRIOS (vazios inicialmente)
+          files: [],
+          tasks: [],
+          timeline: [],
+
+          // Campos OBRIGATÓRIOS de gestão
+          proofsCount: 0,
+
+          // Campos opcionais
+          specifications: data.specifications,
+          budget: data.budget || 0,
+          assignedTo: data.assignedTo,
+          clientApprovalTasks: [],
+          tags: [],
+          notes: data.notes || '',
+          createdBy: 'user-id', // Pegar do contexto de auth
+
+          // Timestamps OBRIGATÓRIOS
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        };
+
+        await create(projectData);
       }
+
       setShowModal(false);
       setSelectedProject(null);
     } catch (error) {
@@ -87,14 +152,20 @@ export default function ProjectsPage() {
     }
   };
 
+  // ================ CONFIGURAÇÕES ================
   const statusOptions = [
     { value: '', label: 'Todos os status' },
-    { value: 'planning', label: 'Planejamento' },
-    { value: 'in_progress', label: 'Em Andamento' },
-    { value: 'review', label: 'Em Revisão' },
-    { value: 'completed', label: 'Concluído' },
+    { value: 'open', label: 'Aberto' },
+    { value: 'design', label: 'Design' },
+    { value: 'review', label: 'Revisão' },
+    { value: 'production', label: 'Produção' },
+    { value: 'clientApproval', label: 'Aprovação Cliente' },
+    { value: 'approved', label: 'Aprovado' },
+    { value: 'printing', label: 'Impressão' },
+    { value: 'delivering', label: 'Entregando' },
+    { value: 'shipped', label: 'Enviado' },
+    { value: 'done', label: 'Concluído' },
     { value: 'cancelled', label: 'Cancelado' },
-    { value: 'on_hold', label: 'Pausado' },
   ];
 
   const priorityOptions = [
@@ -105,28 +176,39 @@ export default function ProjectsPage() {
     { value: 'urgent', label: 'Urgente' },
   ];
 
+  // ================ FUNÇÕES AUXILIARES ================
   const getStatusColor = (status: ProjectStatus) => {
     const colors = {
-      planning: 'bg-gray-50 text-gray-700 border-gray-200',
-      in_progress: 'bg-blue-50 text-blue-700 border-blue-200',
-      review: 'bg-amber-50 text-amber-700 border-amber-200',
-      completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      open: 'bg-gray-50 text-gray-700 border-gray-200',
+      design: 'bg-blue-50 text-blue-700 border-blue-200',
+      review: 'bg-purple-50 text-purple-700 border-purple-200',
+      production: 'bg-amber-50 text-amber-700 border-amber-200',
+      clientApproval: 'bg-orange-50 text-orange-700 border-orange-200',
+      approved: 'bg-green-50 text-green-700 border-green-200',
+      printing: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      delivering: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+      shipped: 'bg-teal-50 text-teal-700 border-teal-200',
+      done: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       cancelled: 'bg-red-50 text-red-700 border-red-200',
-      on_hold: 'bg-orange-50 text-orange-700 border-orange-200',
     };
-    return colors[status];
+    return colors[status] || colors.open;
   };
 
   const getStatusLabel = (status: ProjectStatus) => {
     const labels = {
-      planning: 'Planejamento',
-      in_progress: 'Em Andamento',
-      review: 'Em Revisão',
-      completed: 'Concluído',
+      open: 'Aberto',
+      design: 'Design',
+      review: 'Revisão',
+      production: 'Produção',
+      clientApproval: 'Aprovação Cliente',
+      approved: 'Aprovado',
+      printing: 'Impressão',
+      delivering: 'Entregando',
+      shipped: 'Enviado',
+      done: 'Concluído',
       cancelled: 'Cancelado',
-      on_hold: 'Pausado',
     };
-    return labels[status];
+    return labels[status] || status;
   };
 
   const getPriorityColor = (priority: ProjectPriority) => {
@@ -149,271 +231,279 @@ export default function ProjectsPage() {
     return labels[priority];
   };
 
-  const displayProjects = projects.filter((project) => {
+  // ================ FILTROS ================
+  const displayProjects = (projects || []).filter((project: Project) => {
     if (filters.status && project.status !== filters.status) return false;
     if (filters.priority && project.priority !== filters.priority) return false;
     if (
       filters.search &&
       !project.title.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !project.client_name.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !project.project_number.toLowerCase().includes(filters.search.toLowerCase())
-    )
+      !project.clientName?.toLowerCase().includes(filters.search.toLowerCase()) &&
+      !project.catalogCode?.toLowerCase().includes(filters.search.toLowerCase())
+    ) {
       return false;
+    }
     return true;
   });
 
   const isOverdue = (project: Project) => {
-    if (!project.due_date) return false;
-    const dueDate = new Date(project.due_date.seconds * 1000);
-    return dueDate < new Date() && project.status !== 'completed' && project.status !== 'cancelled';
+    if (!project.dueDate) return false;
+
+    const dueDate = project.dueDate instanceof Date ? project.dueDate : project.dueDate.toDate();
+
+    return dueDate < new Date() && project.status !== 'done' && project.status !== 'cancelled';
   };
 
   return (
-    <div className="min-h-screen bg-primary-50 p-6">
-      <div className="mx-auto max-w-7xl space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-primary-900">Projetos</h1>
-            <p className="mt-2 text-primary-600">Gerencie seus projetos em andamento</p>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Projetos</h1>
+          <p className="mt-2 text-gray-600">Gerencie seus projetos em andamento</p>
+        </div>
+        <button
+          onClick={() => {
+            setSelectedProject(null);
+            setShowModal(true);
+          }}
+          className="mt-4 flex items-center rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700 sm:mt-0"
+        >
+          <Plus className="mr-2 h-5 w-5" />
+          Novo Projeto
+        </button>
+      </div>
 
+      {/* Filters */}
+      <div className="grid gap-4 sm:grid-cols-4">
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">Buscar projetos</label>
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Título, cliente, código..."
+              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:ring-blue-500"
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">Status</label>
+          <select
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+            value={filters.status}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                status: e.target.value as ProjectStatus | '',
+              })
+            }
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">Prioridade</label>
+          <select
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+            value={filters.priority}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                priority: e.target.value as ProjectPriority | '',
+              })
+            }
+          >
+            {priorityOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-end">
+          <button className="flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <Filter className="mr-2 h-4 w-4" />
+            Filtros
+          </button>
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          {loading ? 'Carregando...' : `${displayProjects.length} projetos encontrados`}
+        </div>
+        <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <span>
+            Em andamento:{' '}
+            {
+              (projects || []).filter(
+                (p: Project) => p.status === 'design' || p.status === 'production',
+              ).length
+            }
+          </span>
+          <span>Total: {projects?.length || 0}</span>
+        </div>
+      </div>
+
+      {/* Projects Grid/List */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-500">Carregando projetos...</div>
+        </div>
+      ) : displayProjects.length === 0 ? (
+        <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
+          <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-4 text-lg font-semibold text-gray-900">Nenhum projeto encontrado</h3>
+          <p className="mt-2 text-gray-600">Comece criando seu primeiro projeto.</p>
           <button
             onClick={() => {
               setSelectedProject(null);
               setShowModal(true);
             }}
-            className="mt-4 flex items-center rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700 sm:mt-0"
+            className="mt-4 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700"
           >
-            <Plus className="mr-2 h-5 w-5" />
-            Novo Projeto
+            Criar Primeiro Projeto
           </button>
         </div>
-
-        {/* Filters */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-            <div className="flex-1">
-              <label className="mb-2 block text-sm font-medium text-primary-700">
-                Buscar projetos
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-primary-400" />
-                <input
-                  type="text"
-                  className="h-12 w-full rounded-lg border border-primary-200 pl-10 pr-4 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  placeholder="Título, número ou cliente..."
-                  value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="w-full lg:w-48">
-              <label className="mb-2 block text-sm font-medium text-primary-700">Status</label>
-              <select
-                className="h-12 w-full rounded-lg border border-primary-200 px-4 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                value={filters.status}
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    status: e.target.value as ProjectStatus | '',
-                  })
-                }
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="w-full lg:w-48">
-              <label className="mb-2 block text-sm font-medium text-primary-700">Prioridade</label>
-              <select
-                className="h-12 w-full rounded-lg border border-primary-200 px-4 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                value={filters.priority}
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    priority: e.target.value as ProjectPriority | '',
-                  })
-                }
-              >
-                {priorityOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button className="flex items-center rounded-lg border border-primary-300 px-4 py-3 text-primary-700 transition-colors hover:bg-primary-50">
-              <Filter className="mr-2 h-5 w-5" />
-              Filtros
-            </button>
-          </div>
-        </div>
-
-        {/* Results */}
-        <div className="rounded-lg border bg-white shadow-sm">
-          <div className="border-b p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-primary-900">
-                {loading ? 'Carregando...' : `${displayProjects.length} projetos encontrados`}
-              </h2>
-              <div className="flex items-center space-x-4 text-sm text-primary-600">
-                <div className="flex items-center">
-                  <div className="mr-2 h-3 w-3 rounded-full bg-blue-500"></div>
-                  <span>
-                    Em andamento: {projects.filter((p) => p.status === 'in_progress').length}
-                  </span>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {displayProjects.map((project: Project) => (
+            <div
+              key={project.id}
+              className="relative overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+            >
+              {/* Overdue indicator */}
+              {isOverdue(project) && (
+                <div className="absolute right-2 top-2 flex items-center rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+                  <AlertCircle className="mr-1 h-3 w-3" />
+                  Atrasado
                 </div>
-                <div className="flex items-center">
-                  <Briefcase className="mr-1 h-4 w-4" />
-                  <span>Total: {projects.length}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+              )}
 
-          <div className="p-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-                <span className="ml-2 text-primary-600">Carregando projetos...</span>
+              {/* Header */}
+              <div className="mb-4">
+                <h3 className="truncate text-lg font-semibold text-gray-900">{project.title}</h3>
+                <p className="text-xs text-primary-500">
+                  {project.catalogCode || 'Código em processamento...'}
+                </p>
               </div>
-            ) : displayProjects.length === 0 ? (
-              <div className="py-12 text-center">
-                <Briefcase className="mx-auto mb-4 h-12 w-12 text-primary-300" />
-                <h3 className="mb-2 text-lg font-medium text-primary-900">
-                  Nenhum projeto encontrado
-                </h3>
-                <p className="mb-6 text-primary-600">Comece criando seu primeiro projeto.</p>
-                <button
-                  onClick={() => {
-                    setSelectedProject(null);
-                    setShowModal(true);
-                  }}
-                  className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700"
+
+              {/* Status */}
+              <div className="mb-3">
+                <span
+                  className={`inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium ${getStatusColor(project.status)}`}
                 >
-                  Criar Primeiro Projeto
+                  {getStatusLabel(project.status)}
+                </span>
+              </div>
+
+              {/* Client */}
+              <div className="mb-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <User className="mr-2 h-4 w-4" />
+                  <span className="truncate">{project.clientName}</span>
+                </div>
+              </div>
+
+              {/* Due Date */}
+              {project.dueDate && (
+                <div className="mb-3 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Entrega:{' '}
+                    {formatDate(
+                      project.dueDate instanceof Date ? project.dueDate : project.dueDate.toDate(),
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Budget */}
+              {project.budget && (
+                <div className="mb-3 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <DollarSign className="mr-2 h-4 w-4" />
+                    Orçamento: {formatCurrency(project.budget)}
+                  </div>
+                </div>
+              )}
+
+              {/* Priority */}
+              <div className="mb-4 text-sm">
+                <span className="text-gray-600">Prioridade: </span>
+                <span className={`font-medium ${getPriorityColor(project.priority)}`}>
+                  {getPriorityLabel(project.priority)}
+                </span>
+              </div>
+
+              {/* Progress */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Progresso</span>
+                  <span className="font-medium">{project.progress || 0}% concluído</span>
+                </div>
+                <div className="mt-2 h-2 rounded-full bg-gray-200">
+                  <div
+                    className="h-2 rounded-full bg-blue-600 transition-all"
+                    style={{ width: `${project.progress || 0}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Created date */}
+              <div className="text-xs text-gray-500">
+                Criado em:{' '}
+                {project.createdAt &&
+                  formatDate(
+                    project.createdAt instanceof Date
+                      ? project.createdAt
+                      : project.createdAt.toDate(),
+                  )}
+              </div>
+
+              {/* Actions */}
+              <div className="mt-4 flex justify-end space-x-2">
+                <button
+                  onClick={() => handleEditProject(project)}
+                  className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => handleDeleteProject(project.id!)}
+                  className="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700"
+                >
+                  Excluir
                 </button>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {displayProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className={`relative rounded-lg border p-6 transition-all hover:shadow-md ${getStatusColor(
-                      project.status,
-                    )}`}
-                  >
-                    {isOverdue(project) && (
-                      <div className="absolute -right-2 -top-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500">
-                          <AlertCircle className="h-4 w-4 text-white" />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="mb-4 flex items-start justify-between">
-                      <div className="flex items-center">
-                        <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                          <Briefcase className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold leading-tight text-primary-900">
-                            {project.title}
-                          </h3>
-                          <p className="text-xs text-primary-500">{project.project_number}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="rounded-full border px-2 py-1 text-xs font-medium">
-                          {getStatusLabel(project.status)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mb-4 space-y-2">
-                      <div className="flex items-center text-sm text-primary-600">
-                        <User className="mr-2 h-4 w-4" />
-                        <span className="truncate">{project.client_name}</span>
-                      </div>
-                      <div className="flex items-center text-sm text-primary-600">
-                        <Calendar className="mr-2 h-4 w-4" />
-                        <span>
-                          Entrega: {formatDate(new Date(project.due_date.seconds * 1000))}
-                        </span>
-                      </div>
-                      <div className="flex items-center text-sm text-primary-600">
-                        <DollarSign className="mr-2 h-4 w-4" />
-                        <span>Orçamento: {formatCurrency(project.budget)}</span>
-                      </div>
-                    </div>
-
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="text-sm">
-                        <span className="text-primary-600">Prioridade: </span>
-                        <span className={`font-medium ${getPriorityColor(project.priority)}`}>
-                          {getPriorityLabel(project.priority)}
-                        </span>
-                      </div>
-                      <div className="text-sm text-primary-600">
-                        <span className="font-medium">{project.progress || 0}%</span> concluído
-                      </div>
-                    </div>
-
-                    {/* Progress bar */}
-                    <div className="mb-4 h-2 w-full rounded-full bg-primary-200">
-                      <div
-                        className="h-2 rounded-full bg-blue-600 transition-all duration-300"
-                        style={{ width: `${project.progress || 0}%` }}
-                      ></div>
-                    </div>
-
-                    <div className="flex items-center justify-between border-t border-white border-opacity-20 pt-4">
-                      <div className="text-xs text-primary-500">
-                        {project.created_at &&
-                          formatDate(new Date(project.created_at.seconds * 1000))}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditProject(project)}
-                          className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProject(project.id)}
-                          className="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          ))}
         </div>
+      )}
 
-        {/* Modal */}
-        <ProjectModal
-          isOpen={showModal}
-          onClose={() => {
-            setShowModal(false);
-            setSelectedProject(null);
-          }}
-          onSubmit={handleCreateProject}
-          project={selectedProject}
-          clients={clients}
-          users={users}
-        />
-      </div>
+      {/* Modal */}
+      <ProjectModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setSelectedProject(null);
+        }}
+        onSubmit={handleCreateProject}
+        project={selectedProject}
+        clients={clients}
+        users={users}
+      />
     </div>
   );
 }

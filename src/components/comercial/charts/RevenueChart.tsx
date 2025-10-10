@@ -34,7 +34,11 @@ export function RevenueChart({
   title = 'Receita vs Despesas',
   type = 'area',
 }: RevenueChartProps) {
-  const CustomTooltip = ({ active, payload, label }: {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
     active?: boolean;
     payload?: Array<{ name: string; value: number; color: string }>;
     label?: string;

@@ -18,7 +18,7 @@ import { toast } from 'react-hot-toast';
 
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
-import { Client, ClientStatus } from '@/lib/types/comercial';
+import { Client, ClientStatus } from '@/lib/types/clients';
 import { AsyncState, SelectOption } from '@/lib/types/shared';
 import { getErrorMessage } from '@/lib/utils/errors';
 
@@ -36,12 +36,20 @@ export interface ClientFormData {
   name: string;
   email: string;
   phone: string;
+  status: ClientStatus;
+  document: string; // cpf ou cnpj, obrigatório!
   cpf?: string;
   cnpj?: string;
   company?: string;
-  status: ClientStatus;
-  indication?: string;
+  companyName?: string;
+  stateRegistration?: string;
+  contactPerson?: string;
+  businessType?: string;
+  tags?: string[];
+  source?: string;
   notes?: string;
+  referredBy?: string;
+  indication?: string;
 }
 
 export function useClients() {
@@ -72,7 +80,7 @@ export function useClients() {
           ...doc.data(),
         })) as Client[];
 
-        // Aplicar filtros no frontend
+        // Filtros adicionais frontend
         let filteredClients = clientsData;
 
         if (filters?.search) {
@@ -80,7 +88,7 @@ export function useClients() {
           filteredClients = filteredClients.filter(
             (client) =>
               client.name.toLowerCase().includes(searchLower) ||
-              client.email.toLowerCase().includes(searchLower) ||
+              client.email?.toLowerCase().includes(searchLower) ||
               client.company?.toLowerCase().includes(searchLower) ||
               (client.cpf && client.cpf.includes(filters.search!)) ||
               (client.cnpj && client.cnpj.includes(filters.search!)),
@@ -92,7 +100,6 @@ export function useClients() {
             const createdAt = client.createdAt.toDate();
             const start = filters.dateRange?.start ? new Date(filters.dateRange.start) : null;
             const end = filters.dateRange?.end ? new Date(filters.dateRange.end) : null;
-
             if (start && createdAt < start) return false;
             if (end && createdAt > end) return false;
             return true;
@@ -145,7 +152,8 @@ export function useClients() {
       }
 
       try {
-        const clientData: Omit<Client, 'id' | 'clientNumber'> = {
+        // Adiciona timestamps, o resto dos campos já está em ClientFormData
+        const clientData: Omit<Client, 'id'> = {
           ...data,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
@@ -219,8 +227,9 @@ export function useClients() {
   const getClientsOptions = useCallback((): SelectOption[] => {
     if (!clients.data) return [];
 
+    // Só retorna clientes com status correto (ex: 'ativo' ou 'active')
     return clients.data
-      .filter((client) => client.status === 'ativo' && client.id)
+      .filter((client) => client.status === 'active' && client.id)
       .map((client) => ({
         value: client.id!,
         label: `${client.name}${client.company ? ` (${client.company})` : ''}`,
@@ -231,7 +240,6 @@ export function useClients() {
   const getClientByEmail = useCallback(async (email: string): Promise<Client | null> => {
     try {
       const clientsQuery = query(collection(db, 'clients'), where('email', '==', email));
-
       const snapshot = await getDocs(clientsQuery);
 
       if (!snapshot.empty) {
