@@ -3,303 +3,59 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // ========== HELPER FUNCTIONS ==========
-    
+    // Função auxiliar - verifica se está autenticado
     function isAuthenticated() {
       return request.auth != null;
     }
     
+    // Função auxiliar - verifica se é o próprio usuário
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    function isAdmin() {
-      return isAuthenticated() && 
-             resource.data.role == 'admin';
-    }
-    
-    function hasRole(role) {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
-    }
-    
-    function hasAnyRole(roles) {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
-    }
-    
-    function isActive() {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;
-    }
-    
-    function validateRequiredFields(fields) {
-      return request.resource.data.keys().hasAll(fields);
-    }
-    
-    function validateEmail(email) {
-      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
-    }
-    
-    function validatePhone(phone) {
-      return phone == null || phone.matches('^\\+?[1-9]\\d{1,14}$');
-    }
-    
-    function timestampNow() {
-      return request.time;
-    }
-    
-    // ========== USER MANAGEMENT ==========
-    
-    match /users/{userId} {
-      allow read: if isAuthenticated() && (
-        isOwner(userId) || 
-        hasAnyRole(['admin', 'comercial', 'marketing'])
-      );
-      
-      allow create: if isAuthenticated() && 
-        validateRequiredFields(['email', 'name', 'role']) &&
-        validateEmail(request.resource.data.email) &&
-        validatePhone(request.resource.data.get('phone', null)) &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow() &&
-        request.resource.data.isActive == true;
-      
-      allow update: if isAuthenticated() && (
-        (isOwner(userId) && 
-         !request.resource.data.keys().hasAny(['role', 'permissions', 'isActive'])) ||
-        hasRole('admin')
-      ) && 
-      request.resource.data.updatedAt == timestampNow() &&
-      validateEmail(request.resource.data.email) &&
-      validatePhone(request.resource.data.get('phone', null));
-      
-      allow delete: if hasRole('admin');
-    }
-    
-    // ========== CLIENT MANAGEMENT ==========
-    
+    // === CLIENTES ===
     match /clients/{clientId} {
-      allow read: if isActive() && hasAnyRole(['admin', 'comercial', 'financeiro']);
-      
-      allow create: if isActive() && 
-        hasAnyRole(['admin', 'comercial']) &&
-        validateRequiredFields(['name', 'email']) &&
-        validateEmail(request.resource.data.email) &&
-        validatePhone(request.resource.data.get('phone', null)) &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow() &&
-        request.resource.data.isActive == true &&
-        request.resource.data.totalProjects == 0 &&
-        request.resource.data.totalRevenue == 0;
-      
-      allow update: if isActive() && 
-        hasAnyRole(['admin', 'comercial']) &&
-        request.resource.data.updatedAt == timestampNow() &&
-        validateEmail(request.resource.data.email) &&
-        validatePhone(request.resource.data.get('phone', null));
-      
-      allow delete: if hasRole('admin');
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
     
-    // ========== CRM - LEADS ==========
-    
+    // === LEADS ===
     match /leads/{leadId} {
-      allow read: if isActive() && hasAnyRole(['admin', 'comercial', 'marketing']);
-      
-      allow create: if isActive() && 
-        hasAnyRole(['admin', 'comercial', 'marketing']) &&
-        validateRequiredFields(['name', 'email', 'source', 'status']) &&
-        validateEmail(request.resource.data.email) &&
-        validatePhone(request.resource.data.get('phone', null)) &&
-        request.resource.data.status in ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'closedWon', 'closedLost'] &&
-        request.resource.data.source in ['website', 'socialMedia', 'referral', 'advertising', 'emailMarketing', 'event', 'coldCall', 'other'] &&
-        request.resource.data.score >= 0 && request.resource.data.score <= 100 &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow update: if isActive() && 
-        hasAnyRole(['admin', 'comercial', 'marketing']) &&
-        request.resource.data.updatedAt == timestampNow() &&
-        validateEmail(request.resource.data.email) &&
-        validatePhone(request.resource.data.get('phone', null)) &&
-        request.resource.data.status in ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'closedWon', 'closedLost'] &&
-        request.resource.data.score >= 0 && request.resource.data.score <= 100;
-      
-      allow delete: if hasRole('admin');
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
     
-    // ========== CRM - QUOTES ==========
-    
+    // === ORÇAMENTOS ===
     match /quotes/{quoteId} {
-      allow read: if isActive() && hasAnyRole(['admin', 'comercial', 'financeiro']);
-      
-      allow create: if isActive() && 
-        hasAnyRole(['admin', 'comercial']) &&
-        validateRequiredFields(['clientId', 'clientName', 'title', 'status', 'items', 'total', 'validUntil', 'createdBy']) &&
-        request.resource.data.status in ['draft', 'sent', 'viewed', 'signed', 'rejected', 'expired'] &&
-        request.resource.data.total >= 0 &&
-        request.resource.data.subtotal >= 0 &&
-        request.resource.data.discountPercentage >= 0 && request.resource.data.discountPercentage <= 100 &&
-        request.resource.data.createdBy == request.auth.uid &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow update: if isActive() && 
-        hasAnyRole(['admin', 'comercial']) &&
-        request.resource.data.updatedAt == timestampNow() &&
-        request.resource.data.status in ['draft', 'sent', 'viewed', 'signed', 'rejected', 'expired'] &&
-        request.resource.data.total >= 0;
-      
-      allow delete: if hasRole('admin');
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
     
-    // ========== CRM - PROJECTS ==========
-    
+    // === PROJETOS ===
     match /projects/{projectId} {
-      allow read: if isActive() && (
-        hasAnyRole(['admin', 'comercial', 'producao', 'financeiro']) ||
-        resource.data.teamMembers.hasAny([request.auth.uid]) ||
-        resource.data.projectManager == request.auth.uid
-      );
-      
-      allow create: if isActive() && 
-        hasAnyRole(['admin', 'comercial']) &&
-        validateRequiredFields(['title', 'clientId', 'clientName', 'type', 'status', 'priority', 'startDate', 'dueDate', 'budget', 'projectManager']) &&
-        request.resource.data.status in ['approved', 'inProduction', 'review', 'clientApproval', 'completed', 'onHold', 'cancelled'] &&
-        request.resource.data.type in ['livroFisico', 'ebook', 'audiobook', 'revista', 'catalogo', 'materialPromocional', 'outros'] &&
-        request.resource.data.priority in ['low', 'medium', 'high', 'urgent'] &&
-        request.resource.data.progress >= 0 && request.resource.data.progress <= 100 &&
-        request.resource.data.budget >= 0 &&
-        request.resource.data.actualCost >= 0 &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow update: if isActive() && (
-        hasAnyRole(['admin', 'comercial']) ||
-        (hasRole('producao') && resource.data.teamMembers.hasAny([request.auth.uid])) ||
-        resource.data.projectManager == request.auth.uid
-      ) &&
-      request.resource.data.updatedAt == timestampNow() &&
-      request.resource.data.status in ['approved', 'inProduction', 'review', 'clientApproval', 'completed', 'onHold', 'cancelled'] &&
-      request.resource.data.progress >= 0 && request.resource.data.progress <= 100;
-      
-      allow delete: if hasRole('admin');
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
     
-    // ========== FINANCE - INVOICES ==========
-    
-    match /invoices/{invoiceId} {
-      allow read: if isActive() && hasAnyRole(['admin', 'comercial', 'financeiro']);
-      
-      allow create: if isActive() && 
-        hasAnyRole(['admin', 'financeiro']) &&
-        validateRequiredFields(['clientId', 'clientName', 'status', 'items', 'total', 'dueDate', 'issueDate']) &&
-        request.resource.data.status in ['draft', 'sent', 'paid', 'overdue', 'cancelled'] &&
-        request.resource.data.total >= 0 &&
-        request.resource.data.subtotal >= 0 &&
-        request.resource.data.taxAmount >= 0 &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow update: if isActive() && 
-        hasAnyRole(['admin', 'financeiro']) &&
-        request.resource.data.updatedAt == timestampNow() &&
-        request.resource.data.status in ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
-      
-      allow delete: if hasRole('admin');
+    // === CONTADORES (numeração automática) ===
+    match /counters/{counterId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Só Cloud Functions podem escrever
     }
     
-    // ========== SUPPLIERS ==========
-    
-    match /suppliers/{supplierId} {
-      allow read: if isActive() && hasAnyRole(['admin', 'compras', 'producao']);
-      
-      allow create: if isActive() && 
-        hasAnyRole(['admin', 'compras']) &&
-        validateRequiredFields(['name']) &&
-        validateEmail(request.resource.data.get('email', '')) &&
-        validatePhone(request.resource.data.get('phone', null)) &&
-        request.resource.data.rating >= 1 && request.resource.data.rating <= 5 &&
-        request.resource.data.isActive == true &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow update: if isActive() && 
-        hasAnyRole(['admin', 'compras']) &&
-        request.resource.data.updatedAt == timestampNow() &&
-        request.resource.data.rating >= 1 && request.resource.data.rating <= 5;
-      
-      allow delete: if hasRole('admin');
-    }
-    
-    // ========== NOTIFICATIONS ==========
-    
-    match /notifications/{notificationId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      
-      allow create: if isActive() && 
-        validateRequiredFields(['userId', 'title', 'message', 'type', 'category']) &&
-        request.resource.data.type in ['info', 'success', 'warning', 'error'] &&
-        request.resource.data.category in ['system', 'project', 'financial', 'marketing'] &&
-        request.resource.data.isRead == false &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow update: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-    }
-    
-    // ========== AUDIT LOG ==========
-    
-    match /auditLog/{logId} {
-      allow read: if hasRole('admin');
-      
-      allow create: if isActive() && 
-        validateRequiredFields(['userId', 'userEmail', 'action', 'resourceType', 'resourceId']) &&
-        request.resource.data.userId == request.auth.uid &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow update, delete: if false; // Audit logs são imutáveis
-    }
-    
-    // ========== PRODUCTION QUEUE ==========
-    
-    match /productionQueue/{queueId} {
-      allow read: if isActive() && hasAnyRole(['admin', 'producao']);
-      
-      allow create, update: if isActive() && hasAnyRole(['admin', 'producao']) &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow delete: if hasRole('admin');
-    }
-    
-    // ========== CAMPAIGNS ==========
-    
-    match /campaigns/{campaignId} {
-      allow read: if isActive() && hasAnyRole(['admin', 'marketing']);
-      
-      allow create: if isActive() && 
-        hasAnyRole(['admin', 'marketing']) &&
-        validateRequiredFields(['name', 'type', 'status', 'startDate', 'endDate', 'budget', 'createdBy']) &&
-        request.resource.data.type in ['email', 'socialMedia', 'advertising', 'event', 'content'] &&
-        request.resource.data.status in ['draft', 'active', 'paused', 'completed'] &&
-        request.resource.data.budget >= 0 &&
-        request.resource.data.actualSpend >= 0 &&
-        request.resource.data.createdBy == request.auth.uid &&
-        request.resource.data.createdAt == timestampNow() &&
-        request.resource.data.updatedAt == timestampNow();
-      
-      allow update: if isActive() && 
-        hasAnyRole(['admin', 'marketing']) &&
-        request.resource.data.updatedAt == timestampNow() &&
-        request.resource.data.status in ['draft', 'active', 'paused', 'completed'];
-      
-      allow delete: if hasRole('admin');
+    // === USUÁRIOS ===
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
     }
   }
 }
+s
