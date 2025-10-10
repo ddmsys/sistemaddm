@@ -1,23 +1,15 @@
+// src/components/comercial/cards/ProjectCard.tsx
 'use client';
 
-import {
-  AlertCircle,
-  Briefcase,
-  CheckCircle2,
-  MoreHorizontal,
-  Pause,
-  Play,
-  User,
-  Users,
-} from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, MoreHorizontal, Play, User, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Modal } from '@/components/ui/Modal';
-import { Project, ProjectStatus } from '@/lib/types';
-import { calculateProgress, cn, formatCurrency, formatDate } from '@/lib/utils';
+import { Project, ProjectStatus } from '@/lib/types/projects'; // Corrigido import
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
 interface ProjectCardProps {
   project: Project;
@@ -27,42 +19,67 @@ interface ProjectCardProps {
   onViewDetails?: (projectId: string) => void;
 }
 
+// ================ CONFIGURAÇÕES ================
 const statusConfig = {
-  approved: {
-    label: 'Aprovado',
+  open: {
+    label: 'Aberto',
+    color: 'secondary',
+    class: 'bg-gray-50 text-gray-700 border-gray-200',
+    icon: Clock,
+  },
+  design: {
+    label: 'Design',
     color: 'info',
     class: 'bg-blue-50 text-blue-700 border-blue-200',
-    icon: CheckCircle2,
-  },
-  in_production: {
-    label: 'Em Produção',
-    color: 'warning',
-    class: 'bg-amber-50 text-amber-700 border-amber-200',
     icon: Play,
   },
   review: {
     label: 'Revisão',
-    color: 'secondary',
+    color: 'warning',
     class: 'bg-purple-50 text-purple-700 border-purple-200',
     icon: AlertCircle,
   },
-  client_approval: {
+  production: {
+    label: 'Produção',
+    color: 'warning',
+    class: 'bg-amber-50 text-amber-700 border-amber-200',
+    icon: Play,
+  },
+  clientApproval: {
     label: 'Aprovação Cliente',
     color: 'warning',
     class: 'bg-orange-50 text-orange-700 border-orange-200',
     icon: User,
   },
-  completed: {
+  approved: {
+    label: 'Aprovado',
+    color: 'success',
+    class: 'bg-green-50 text-green-700 border-green-200',
+    icon: CheckCircle2,
+  },
+  printing: {
+    label: 'Impressão',
+    color: 'info',
+    class: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    icon: Play,
+  },
+  delivering: {
+    label: 'Entregando',
+    color: 'info',
+    class: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+    icon: Play,
+  },
+  shipped: {
+    label: 'Enviado',
+    color: 'info',
+    class: 'bg-teal-50 text-teal-700 border-teal-200',
+    icon: CheckCircle2,
+  },
+  done: {
     label: 'Concluído',
     color: 'success',
     class: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     icon: CheckCircle2,
-  },
-  on_hold: {
-    label: 'Pausado',
-    color: 'secondary',
-    class: 'bg-gray-50 text-gray-700 border-gray-200',
-    icon: Pause,
   },
   cancelled: {
     label: 'Cancelado',
@@ -73,13 +90,16 @@ const statusConfig = {
 };
 
 const typeConfig = {
-  livro_fisico: { label: 'Livro Físico', icon: '📖' },
-  ebook: { label: 'E-book', icon: '📱' },
-  audiobook: { label: 'Audiobook', icon: '🎧' },
-  revista: { label: 'Revista', icon: '📰' },
-  catalogo: { label: 'Catálogo', icon: '📋' },
-  material_promocional: { label: 'Material Promocional', icon: '📢' },
-  outros: { label: 'Outros', icon: '📄' },
+  L: { label: 'Livro', icon: '📖' },
+  E: { label: 'E-book', icon: '📱' },
+  K: { label: 'Kindle', icon: '📱' },
+  C: { label: 'CD', icon: '💿' },
+  D: { label: 'DVD', icon: '📀' },
+  G: { label: 'Material Gráfico', icon: '🎨' },
+  P: { label: 'Plataforma Digital', icon: '💻' },
+  S: { label: 'Single', icon: '🎵' },
+  X: { label: 'Livro Terceiros', icon: '📚' },
+  A: { label: 'Arte', icon: '🎭' },
 };
 
 const priorityConfig = {
@@ -97,108 +117,86 @@ export function ProjectCard({
   onViewDetails,
 }: ProjectCardProps) {
   const [showActions, setShowActions] = useState(false);
+
+  // ================ CONFIGURAÇÕES ================
   const status = statusConfig[project.status];
-  const type = typeConfig[project.type];
+  const type = typeConfig[project.product]; // Corrigido de .type para .product
   const priority = priorityConfig[project.priority];
   const StatusIcon = status.icon;
 
-  const isOverdue = project.due_date.toDate() < new Date() && project.status !== 'completed';
-  const daysUntilDue = Math.ceil(
-    (project.due_date.toDate().getTime() - new Date().getTime()) / (1000 * 3600 * 24),
-  );
+  // ================ CÁLCULOS ================
+  const isOverdue =
+    project.dueDate &&
+    (project.dueDate instanceof Date ? project.dueDate : project.dueDate.toDate()) < new Date() &&
+    project.status !== 'done';
+
+  const daysUntilDue = project.dueDate
+    ? Math.ceil(
+        ((project.dueDate instanceof Date ? project.dueDate : project.dueDate.toDate()).getTime() -
+          new Date().getTime()) /
+          (1000 * 3600 * 24),
+      )
+    : null;
 
   const completedTasks = project.tasks.filter((task) => task.status === 'done').length;
   const totalTasks = project.tasks.length;
+
   const taskProgress =
-    totalTasks > 0 ? calculateProgress(completedTasks, totalTasks) : project.progress;
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : project.progress;
 
   return (
     <>
-      <Card
-        variant="interactive"
-        className={cn(
-          'group relative transition-all duration-200 hover:shadow-lg',
-          status.class,
-          isOverdue && 'ring-2 ring-red-200',
-        )}
-      >
+      <Card className="relative overflow-hidden transition-shadow hover:shadow-lg">
         {/* Header */}
-        <div className="p-4 pb-2">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                <StatusIcon className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="truncate text-sm font-semibold text-primary-900">{project.title}</h3>
-                <p className="text-xs text-primary-500">{project.project_code}</p>
-                <div className="mt-1 flex items-center text-xs text-primary-600">
-                  <User className="mr-1 h-3 w-3" />
-                  <span className="truncate">{project.client_name}</span>
-                </div>
-              </div>
-            </div>
+        <div className="flex items-start justify-between p-6 pb-4">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-lg font-semibold text-gray-900">{project.title}</h3>
+            <p className="text-xs text-primary-500">
+              {project.catalogCode || 'Código em processamento...'}
+            </p>
+            <p className="mt-1 truncate text-sm text-gray-600">
+              <User className="mr-1 inline h-4 w-4" />
+              {project.clientName}
+            </p>
+          </div>
 
-            <div className="flex items-center space-x-2">
-              <Badge
-                variant={
-                  status.color as
-                    | 'default'
-                    | 'secondary'
-                    | 'success'
-                    | 'warning'
-                    | 'destructive'
-                    | 'info'
-                    | 'outline'
-                }
-                size="sm"
-              >
-                {status.label}
-              </Badge>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                onClick={() => setShowActions(true)}
-              >
-                <MoreHorizontal className="w-4" />
-              </Button>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Badge className={status.class}>
+              <StatusIcon className="mr-1 h-3 w-3" />
+              {status.label}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setShowActions(true)}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="space-y-3 px-4 pb-4">
+        <div className="space-y-4 px-6 pb-6">
           {/* Type & Priority */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-xs text-primary-600">
-              <span className="mr-1">{type.icon}</span>
-              {type.label}
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center">
+              <span className="mr-2">{type.icon}</span>
+              <span className="text-gray-600">{type.label}</span>
             </div>
-
-            <div
-              className={cn(
-                'rounded-full px-2 py-0.5 text-xs font-medium',
-                priority.color,
-                priority.bg,
-              )}
-            >
-              {priority.label}
-            </div>
+            <Badge className={`${priority.bg} ${priority.color}`}>{priority.label}</Badge>
           </div>
 
           {/* Progress */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-primary-600">Progresso</span>
-              <span className="font-medium text-primary-900">{taskProgress}%</span>
+          <div>
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="text-gray-600">Progresso</span>
+              <span className="font-medium">{taskProgress}%</span>
             </div>
-
-            <div className="h-2 w-full rounded-full bg-primary-200">
+            <div className="h-2 w-full rounded-full bg-gray-200">
               <div
                 className={cn(
-                  'h-2 rounded-full transition-all duration-300',
+                  'h-2 rounded-full transition-all',
                   taskProgress >= 100
                     ? 'bg-emerald-500'
                     : taskProgress >= 75
@@ -214,88 +212,94 @@ export function ProjectCard({
 
           {/* Tasks Summary */}
           {totalTasks > 0 && (
-            <div className="flex items-center justify-between text-xs text-primary-600">
-              <span>Tarefas</span>
-              <span>
+            <div className="text-sm">
+              <span className="text-gray-600">Tarefas: </span>
+              <span className="font-medium">
                 {completedTasks}/{totalTasks} concluídas
               </span>
             </div>
           )}
 
           {/* Budget vs Cost */}
-          <div className="space-y-1 text-xs">
-            <div className="flex items-center justify-between text-primary-600">
-              <span>Orçamento:</span>
-              <span className="font-medium text-primary-900">{formatCurrency(project.budget)}</span>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Orçamento:</span>
+              <span className="font-medium">{formatCurrency(project.budget || 0)}</span>
             </div>
-            {project.actual_cost > 0 && (
-              <div className="flex items-center justify-between text-primary-600">
-                <span>Custo Real:</span>
+            {project.actualCost > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Custo Real:</span>
                 <span
                   className={cn(
                     'font-medium',
-                    project.actual_cost > project.budget ? 'text-red-600' : 'text-emerald-600',
+                    project.actualCost > (project.budget || 0)
+                      ? 'text-red-600'
+                      : 'text-emerald-600',
                   )}
                 >
-                  {formatCurrency(project.actual_cost)}
+                  {formatCurrency(project.actualCost)}
                 </span>
               </div>
             )}
           </div>
 
           {/* Dates */}
-          <div className="space-y-1 text-xs text-primary-600">
+          <div className="space-y-1 text-sm">
             <div className="flex items-center justify-between">
-              <span>Início:</span>
-              <span>{formatDate(project.start_date.toDate())}</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span>Prazo:</span>
-              <span className={cn(isOverdue && 'font-medium text-red-600')}>
-                {formatDate(project.due_date.toDate())}
-                {daysUntilDue > 0 && daysUntilDue <= 7 && (
-                  <span className="ml-1">({daysUntilDue}d)</span>
+              <span className="text-gray-600">Início:</span>
+              <span>
+                {formatDate(
+                  project.startDate instanceof Date
+                    ? project.startDate
+                    : project.startDate.toDate(),
                 )}
-                {isOverdue && <span className="ml-1">(Atrasado)</span>}
               </span>
             </div>
+            {project.dueDate && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Prazo:</span>
+                <div className="flex items-center">
+                  {formatDate(
+                    project.dueDate instanceof Date ? project.dueDate : project.dueDate.toDate(),
+                  )}
+                  {daysUntilDue !== null && daysUntilDue > 0 && daysUntilDue <= 7 && (
+                    <span className="ml-2 text-xs text-amber-600">({daysUntilDue}d)</span>
+                  )}
+                  {isOverdue && <span className="ml-2 text-xs text-red-600">(Atrasado)</span>}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Team */}
-          {project.team_members.length > 0 && (
-            <div className="flex items-center justify-between text-xs text-primary-600">
-              <span>Equipe</span>
-              <div className="flex items-center">
-                <Users className="mr-1 h-3 w-3" />
-                <span>{project.team_members.length} membros</span>
-              </div>
+          {project.teamMembers.length > 0 && (
+            <div className="flex items-center text-sm">
+              <Users className="mr-2 h-4 w-4 text-gray-400" />
+              <span className="text-gray-600">Equipe: </span>
+              <span>{project.teamMembers.length} membros</span>
             </div>
           )}
-        </div>
 
-        {/* Quick Actions */}
-        <div className="flex items-center space-x-2 px-4 pb-3 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button
-            size="sm"
-            variant="default"
-            className="text-xs"
-            onClick={() => onViewDetails?.(project.id)}
-          >
-            Ver Detalhes
-          </Button>
-
-          <Button size="sm" variant="outline" className="text-xs" onClick={() => onEdit?.(project)}>
-            Editar
-          </Button>
+          {/* Quick Actions */}
+          <div className="flex space-x-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => onViewDetails?.(project.id!)}
+            >
+              Ver Detalhes
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => onEdit?.(project)}>
+              Editar
+            </Button>
+          </div>
         </div>
 
         {/* Overdue Indicator */}
         {isOverdue && (
-          <div className="absolute -right-2 -top-2">
-            <Badge variant="destructive" className="animate-pulse text-xs">
-              Atrasado
-            </Badge>
+          <div className="absolute right-0 top-0 rounded-bl bg-red-500 px-2 py-1 text-xs text-white">
+            Atrasado
           </div>
         )}
       </Card>
@@ -309,14 +313,13 @@ export function ProjectCard({
       >
         <div className="space-y-2">
           <Button
-            variant="default"
+            variant="ghost"
             className="w-full justify-start"
             onClick={() => {
-              onViewDetails?.(project.id);
+              onViewDetails?.(project.id!);
               setShowActions(false);
             }}
           >
-            <Briefcase className="mr-2 h-4 w-4" />
             Ver Detalhes
           </Button>
 
@@ -331,15 +334,14 @@ export function ProjectCard({
             Editar Projeto
           </Button>
 
-          <hr className="my-2" />
-
+          {/* Status change options */}
           {Object.entries(statusConfig).map(([key, config]) => (
             <Button
               key={key}
-              variant={project.status === key ? 'default' : 'ghost'}
+              variant="ghost"
               className="w-full justify-start"
               onClick={() => {
-                onStatusChange?.(project.id, key as ProjectStatus);
+                onStatusChange?.(project.id!, key as ProjectStatus);
                 setShowActions(false);
               }}
             >
@@ -347,13 +349,11 @@ export function ProjectCard({
             </Button>
           ))}
 
-          <hr className="my-2" />
-
           <Button
             variant="ghost"
-            className="w-full justify-start text-red-600 hover:text-red-700"
+            className="w-full justify-start text-red-600"
             onClick={() => {
-              onDelete?.(project.id);
+              onDelete?.(project.id!);
               setShowActions(false);
             }}
           >

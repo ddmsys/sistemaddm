@@ -1,48 +1,65 @@
+// src/app/(authenticated)/crm/leads/page.tsx
 'use client';
-
-import { Building2, Filter, Mail, MoreHorizontal, Phone, Plus, Search, Users } from 'lucide-react';
+import { Filter, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 
-import { LeadModal } from '@/components/comercial/modals/LeadModal';
-import { useFirestore } from '@/hooks/useFirestore';
-import { Lead, LeadFormData, LeadSource, LeadStatus } from '@/lib/types';
-
-interface FilterState {
-  status: LeadStatus | '';
-  source: LeadSource | '';
-  search: string;
-}
+import { LeadModal } from '@/components/comercial/modals/LeadModal'; // named import corrigido
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useLeads } from '@/hooks/comercial/useLeads'; // caminho correto e hooks corretos
+import { Lead, LeadFormData, LeadSource, LeadStatus } from '@/lib/types/leads';
+import { cn } from '@/lib/utils';
 
 export default function LeadsPage() {
-  const { data: leads, loading, create, update, remove } = useFirestore<Lead>('leads');
   const [showModal, setShowModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [filters, setFilters] = useState<FilterState>({
-    status: '',
-    source: '',
-    search: '',
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
+  const [sourceFilter, setSourceFilter] = useState<LeadSource | 'all'>('all');
+
+  const { leads, createLead, updateLead, updateLeadStage, deleteLead } = useLeads();
+
+  // CORRIGIDO: Status colors com nomes corretos
+  const getStatusColor = (status: LeadStatus) => {
+    const colors = {
+      primeiro_contato: 'bg-blue-100 text-blue-800',
+      qualificado: 'bg-yellow-100 text-yellow-800', // CORRIGIDO: não é 'primeiro_contato'
+      proposta_enviada: 'bg-purple-100 text-purple-800',
+      negociacao: 'bg-orange-100 text-orange-800',
+      fechado_ganho: 'bg-emerald-100 text-emerald-800',
+      fechado_perdido: 'bg-red-100 text-red-800',
+    };
+    return colors[status] || colors.primeiro_contato; // CORRIGIDO: retorna cor válida
+  };
+
+  const getStatusLabel = (status: LeadStatus) => {
+    const labels = {
+      primeiro_contato: 'Primeiro Contato',
+      qualificado: 'Qualificado',
+      proposta_enviada: 'Proposta Enviada',
+      negociacao: 'Negociação',
+      fechado_ganho: 'Fechado - Ganho',
+      fechado_perdido: 'Fechado - Perdido',
+    };
+    return labels[status] || labels.primeiro_contato;
+  };
+
+  // CORRIGIDO: Tipagem explícita dos leads
+  const displayLeads = leads.filter((lead: Lead) => {
+    const matchesSearch =
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (lead.company && lead.company.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
+    const matchesSource = sourceFilter === 'all' || lead.source === sourceFilter;
+
+    return matchesSearch && matchesStatus && matchesSource;
   });
 
-  const handleCreateLead = async (data: LeadFormData) => {
-    try {
-      if (selectedLead) {
-        await update(selectedLead.id, data);
-      } else {
-        await create({
-          ...data,
-          lead_number: `LED-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-          status: 'new' as LeadStatus,
-          score: 0,
-          tags: [],
-          activities: [],
-        });
-      }
-      setShowModal(false);
-      setSelectedLead(null);
-    } catch (error) {
-      console.error('Erro ao salvar lead:', error);
-      throw error;
-    }
+  const handleCreateLead = () => {
+    setSelectedLead(null);
+    setShowModal(true);
   };
 
   const handleEditLead = (lead: Lead) => {
@@ -50,317 +67,253 @@ export default function LeadsPage() {
     setShowModal(true);
   };
 
-  const handleDeleteLead = async (leadId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este lead?')) {
-      try {
-        await remove(leadId);
-      } catch (error) {
-        console.error('Erro ao excluir lead:', error);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedLead(null);
+  };
+
+  const handleSaveLead = async (leadData: LeadFormData) => {
+    try {
+      if (selectedLead) {
+        await updateLead(selectedLead.id!, leadData);
+      } else {
+        await createLead(leadData);
       }
+      setShowModal(false);
+      setSelectedLead(null);
+    } catch (error) {
+      console.error('Erro ao salvar lead:', error);
     }
   };
 
-  const statusOptions = [
-    { value: '', label: 'Todos os status' },
-    { value: 'new', label: 'Novo' },
-    { value: 'contacted', label: 'Contatado' },
-    { value: 'qualified', label: 'Qualificado' },
-    { value: 'proposal', label: 'Proposta' },
-    { value: 'negotiation', label: 'Negociação' },
-    { value: 'closed_won', label: 'Ganho' },
-    { value: 'closed_lost', label: 'Perdido' },
-  ];
-
-  const sourceOptions = [
-    { value: '', label: 'Todas as fontes' },
-    { value: 'website', label: 'Website' },
-    { value: 'social_media', label: 'Redes Sociais' },
-    { value: 'referral', label: 'Indicação' },
-    { value: 'advertising', label: 'Publicidade' },
-    { value: 'email_marketing', label: 'Email Marketing' },
-    { value: 'event', label: 'Evento' },
-    { value: 'cold_call', label: 'Cold Call' },
-    { value: 'other', label: 'Outro' },
-  ];
-
-  const getStatusColor = (status: LeadStatus) => {
-    const colors = {
-      new: 'bg-blue-50 text-blue-700 border-blue-200',
-      contacted: 'bg-amber-50 text-amber-700 border-amber-200',
-      qualified: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      proposal: 'bg-purple-50 text-purple-700 border-purple-200',
-      negotiation: 'bg-orange-50 text-orange-700 border-orange-200',
-      closed_won: 'bg-green-50 text-green-700 border-green-200',
-      closed_lost: 'bg-red-50 text-red-700 border-red-200',
-    };
-    return colors[status];
+  const handleStatusChange = async (leadId: string, status: LeadStatus) => {
+    try {
+      await updateLeadStage(leadId, status);
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+    }
   };
 
-  const getStatusLabel = (status: LeadStatus) => {
-    const labels = {
-      new: 'Novo',
-      contacted: 'Contatado',
-      qualified: 'Qualificado',
-      proposal: 'Proposta',
-      negotiation: 'Negociação',
-      closed_won: 'Ganho',
-      closed_lost: 'Perdido',
-    };
-    return labels[status];
+  const handleConvertLead = async (leadId: string) => {
+    // Implementar conversão para cliente/projeto
+    console.log('Converting lead:', leadId);
   };
 
-  const displayLeads = leads.filter((lead) => {
-    if (filters.status && lead.status !== filters.status) return false;
-    if (filters.source && lead.source !== filters.source) return false;
-    if (
-      filters.search &&
-      !lead.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !lead.email.toLowerCase().includes(filters.search.toLowerCase())
-    )
-      return false;
-    return true;
-  });
+  const handleDeleteLead = async (leadId: string) => {
+    try {
+      await deleteLead(leadId);
+    } catch (error) {
+      console.error('Erro ao excluir lead:', error);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-primary-50 p-6">
-      <div className="mx-auto max-w-7xl space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-primary-900">Leads</h1>
-            <p className="mt-2 text-primary-600">Gerencie seus leads e oportunidades</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
+          <p className="text-gray-600">Gerencie seus leads e oportunidades</p>
+        </div>
+        <Button onClick={handleCreateLead}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Lead
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="text-2xl font-bold text-gray-900">{leads.length}</div>
+          <div className="text-sm text-gray-600">Total de Leads</div>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="text-2xl font-bold text-blue-600">
+            {leads.filter((l: Lead) => l.status === 'primeiro_contato').length}
+          </div>
+          <div className="text-sm text-gray-600">Novos</div>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="text-2xl font-bold text-yellow-600">
+            {leads.filter((l: Lead) => l.status === 'qualificado').length}
+          </div>
+          <div className="text-sm text-gray-600">Em Contato</div>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="text-2xl font-bold text-purple-600">
+            {leads.filter((l: Lead) => l.status === 'proposta_enviada').length}
+          </div>
+          <div className="text-sm text-gray-600">Propostas</div>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="text-2xl font-bold text-emerald-600">
+            {leads.filter((l: Lead) => l.status === 'fechado_ganho').length}
+          </div>
+          <div className="text-sm text-gray-600">Convertidos</div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+            <Input
+              placeholder="Buscar leads..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
 
-          <button
-            onClick={() => {
-              setSelectedLead(null);
-              setShowModal(true);
-            }}
-            className="mt-4 flex items-center rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700 sm:mt-0"
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as LeadStatus | 'all')}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
           >
-            <Plus className="mr-2 h-5 w-5" />
-            Novo Lead
-          </button>
-        </div>
+            <option value="all">Todos os status</option>
+            <option value="primeiro_contato">Primeiro Contato</option>
+            <option value="qualificado">Qualificado</option>
+            <option value="proposta_enviada">Proposta Enviada</option>
+            <option value="negociacao">Negociação</option>
+            <option value="fechado_ganho">Fechado - Ganho</option>
+            <option value="fechado_perdido">Fechado - Perdido</option>
+          </select>
 
-        {/* Filters */}
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-            <div className="flex-1">
-              <label className="mb-2 block text-sm font-medium text-primary-700">
-                Buscar leads
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-primary-400" />
-                <input
-                  type="text"
-                  className="h-12 w-full rounded-lg border border-primary-200 pl-10 pr-4 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nome, email ou empresa..."
-                  value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                />
-              </div>
-            </div>
+          <select
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value as LeadSource | 'all')}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todas as fontes</option>
+            <option value="website">Website</option>
+            <option value="socialmedia">Redes Sociais</option>
+            <option value="referral">Indicação</option>
+            <option value="advertising">Publicidade</option>
+            <option value="email">Email Marketing</option>
+            <option value="event">Eventos</option>
+            <option value="coldcall">Cold Call</option>
+            <option value="phone">Telefone</option>
+            <option value="other">Outros</option>
+          </select>
 
-            <div className="w-full lg:w-48">
-              <label className="mb-2 block text-sm font-medium text-primary-700">Status</label>
-              <select
-                className="h-12 w-full rounded-lg border border-primary-200 px-4 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                value={filters.status}
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    status: e.target.value as LeadStatus | '',
-                  })
-                }
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="w-full lg:w-48">
-              <label className="mb-2 block text-sm font-medium text-primary-700">Fonte</label>
-              <select
-                className="h-12 w-full rounded-lg border border-primary-200 px-4 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                value={filters.source}
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    source: e.target.value as LeadSource | '',
-                  })
-                }
-              >
-                {sourceOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button className="flex items-center rounded-lg border border-primary-300 px-4 py-3 text-primary-700 transition-colors hover:bg-primary-50">
-              <Filter className="mr-2 h-5 w-5" />
-              Filtros
-            </button>
+          <div className="flex items-center space-x-2">
+            <Filter className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-600">{displayLeads.length} resultados</span>
           </div>
         </div>
+      </div>
 
-        {/* Results */}
-        <div className="rounded-lg border bg-white shadow-sm">
-          <div className="border-b p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-primary-900">
-                {loading ? 'Carregando...' : `${displayLeads.length} leads encontrados`}
-              </h2>
-              <div className="flex items-center space-x-2 text-sm text-primary-600">
-                <Users className="h-4 w-4" />
-                <span>Total: {leads.length}</span>
+      {/* Leads Grid */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {displayLeads.map((lead: Lead) => (
+          <div
+            key={lead.id}
+            className="rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:shadow-lg"
+          >
+            <div className="mb-4 flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="truncate text-lg font-semibold text-gray-900">{lead.name}</h3>
+                {lead.company && <p className="truncate text-sm text-gray-500">{lead.company}</p>}
               </div>
-            </div>
-          </div>
-
-          <div className="p-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-                <span className="ml-2 text-primary-600">Carregando leads...</span>
-              </div>
-            ) : displayLeads.length === 0 ? (
-              <div className="py-12 text-center">
-                <Users className="mx-auto mb-4 h-12 w-12 text-primary-300" />
-                <h3 className="mb-2 text-lg font-medium text-primary-900">
-                  Nenhum lead encontrado
-                </h3>
-                <p className="mb-6 text-primary-600">
-                  Comece criando seu primeiro lead ou ajuste os filtros.
-                </p>
-                <button
-                  onClick={() => {
-                    setSelectedLead(null);
-                    setShowModal(true);
-                  }}
-                  className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700"
+              <div className="flex flex-col space-y-2">
+                <span
+                  className={cn(
+                    'rounded-full px-2 py-1 text-xs font-medium',
+                    getStatusColor(lead.status),
+                  )}
                 >
-                  Criar Primeiro Lead
-                </button>
+                  {getStatusLabel(lead.status)}
+                </span>
+                <select
+                  value={lead.status}
+                  onChange={(e) => handleStatusChange(lead.id!, e.target.value as LeadStatus)}
+                  className="rounded border px-1 py-1 text-xs"
+                >
+                  <option value="primeiro_contato">Primeiro Contato</option>
+                  <option value="qualificado">Qualificado</option>
+                  <option value="proposta_enviada">Proposta Enviada</option>
+                  <option value="negociacao">Negociação</option>
+                  <option value="fechado_ganho">Fechado - Ganho</option>
+                  <option value="fechado_perdido">Fechado - Perdido</option>
+                </select>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {displayLeads.map((lead) => (
-                  <div
-                    key={lead.id}
-                    className={`rounded-lg border p-6 transition-all hover:shadow-md ${getStatusColor(
-                      lead.status,
-                    )}`}
-                  >
-                    <div className="mb-4 flex items-start justify-between">
-                      <div className="flex items-center">
-                        <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                          <Users className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-primary-900">{lead.name}</h3>
-                          <p className="text-xs text-primary-500">{lead.lead_number}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="rounded-full border px-2 py-1 text-xs font-medium">
-                          {getStatusLabel(lead.status)}
-                        </span>
-                        <div className="relative">
-                          <button className="p-1 text-primary-400 hover:text-primary-600">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+            </div>
 
-                    <div className="mb-4 space-y-2">
-                      <div className="flex items-center text-sm text-primary-600">
-                        <Mail className="mr-2 h-4 w-4" />
-                        <span className="truncate">{lead.email}</span>
-                      </div>
-                      {lead.phone && (
-                        <div className="flex items-center text-sm text-primary-600">
-                          <Phone className="mr-2 h-4 w-4" />
-                          <span>{lead.phone}</span>
-                        </div>
-                      )}
-                      {lead.company && (
-                        <div className="flex items-center text-sm text-primary-600">
-                          <Building2 className="mr-2 h-4 w-4" />
-                          <span className="truncate">{lead.company}</span>
-                        </div>
-                      )}
-                    </div>
+            <div className="mb-4 space-y-2">
+              <p className="truncate text-sm text-gray-600">{lead.email}</p>
+              {lead.phone && <p className="text-sm text-gray-600">{lead.phone}</p>}
+            </div>
 
-                    {lead.interest_area && (
-                      <div className="mb-4">
-                        <p className="text-sm text-primary-700">
-                          <span className="font-medium">Interesse:</span> {lead.interest_area}
-                        </p>
-                      </div>
-                    )}
-
-                    {lead.tags && lead.tags.length > 0 && (
-                      <div className="mb-4 flex flex-wrap gap-1">
-                        {lead.tags.slice(0, 2).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="rounded bg-white bg-opacity-50 px-2 py-1 text-xs"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {lead.tags.length > 2 && (
-                          <span className="rounded bg-white bg-opacity-50 px-2 py-1 text-xs">
-                            +{lead.tags.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between border-t border-white border-opacity-20 pt-4">
-                      <div className="text-sm text-primary-600">
-                        Score: <span className="font-medium">{lead.score || 0}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditLead(lead)}
-                          className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteLead(lead.id)}
-                          className="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-700"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            {/* Tags - CORRIGIDO: verificação de undefined */}
+            {lead.tags && lead.tags.length > 0 && (
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-1">
+                  {lead.tags.slice(0, 2).map((tag: string, index: number) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  {lead.tags.length > 2 && (
+                    <span className="text-xs text-gray-500">+{lead.tags.length - 2}</span>
+                  )}
+                </div>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Modal */}
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEditLead(lead)}
+                className="flex-1"
+              >
+                Editar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleConvertLead(lead.id!)}
+                className="flex-1"
+              >
+                Converter
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDeleteLead(lead.id!)}
+                className="text-red-600 hover:text-red-700"
+              >
+                Excluir
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {displayLeads.length === 0 && (
+        <div className="py-12 text-center">
+          <div className="mb-4 text-gray-500">Nenhum lead encontrado</div>
+          <Button variant="outline" onClick={handleCreateLead}>
+            <Plus className="mr-2 h-4 w-4" />
+            Criar Primeiro Lead
+          </Button>
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
         <LeadModal
           isOpen={showModal}
-          onClose={() => {
-            setShowModal(false);
-            setSelectedLead(null);
-          }}
-          onSubmit={handleCreateLead}
+          onClose={handleCloseModal}
+          onSubmit={handleSaveLead}
           lead={selectedLead}
         />
-      </div>
+      )}
     </div>
   );
 }

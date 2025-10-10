@@ -1,34 +1,35 @@
 import { Timestamp } from 'firebase/firestore';
 
 // ========== ENUMS ==========
+
 export type LeadStatus =
   | 'new'
   | 'contacted'
   | 'qualified'
   | 'proposal'
   | 'negotiation'
-  | 'closed_won'
-  | 'closed_lost';
+  | 'closedWon'
+  | 'closedLost';
 
 export type LeadSource =
   | 'website'
-  | 'social_media'
+  | 'socialMedia'
   | 'referral'
   | 'advertising'
-  | 'email_marketing'
+  | 'emailMarketing'
   | 'event'
-  | 'cold_call'
+  | 'coldCall'
   | 'other';
 
 export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'rejected' | 'expired';
 
 export type ProjectStatus =
   | 'approved'
-  | 'in_production'
+  | 'inProduction'
   | 'review'
-  | 'client_approval'
+  | 'clientApproval'
   | 'completed'
-  | 'on_hold'
+  | 'onHold'
   | 'cancelled';
 
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
@@ -44,30 +45,32 @@ export type UserRole =
   | 'cliente';
 
 export type ProjectType =
-  | 'livro_fisico'
+  | 'livroFisico'
   | 'ebook'
   | 'audiobook'
   | 'revista'
   | 'catalogo'
-  | 'material_promocional'
+  | 'materialPromocional'
   | 'outros';
 
 // ========== BASE INTERFACES ==========
+
 export interface BaseEntity {
   id: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 // ========== USER MANAGEMENT ==========
+
 export interface User extends BaseEntity {
   email: string;
   name: string;
   role: UserRole;
-  avatar_url?: string;
+  avatarUrl?: string;
   phone?: string;
-  is_active: boolean;
-  last_login?: Timestamp;
+  isActive: boolean;
+  lastLogin?: Timestamp;
   permissions: string[];
 }
 
@@ -76,24 +79,25 @@ export interface UserProfile {
   email: string;
   name: string;
   role: UserRole;
-  avatar_url?: string;
-  created_at: Timestamp;
+  avatarUrl?: string;
+  createdAt: Timestamp;
 }
 
 // ========== CLIENT MANAGEMENT ==========
+
 export interface Client extends BaseEntity {
-  client_number: string; // AUTO: CLI-2025-001
+  clientNumber: string; // AUTO: CLI-2025-001
   name: string;
   email: string;
   phone?: string;
   document?: string; // CPF/CNPJ
   address?: Address;
-  company_name?: string;
-  contact_person?: string;
-  is_active: boolean;
-  total_projects: number;
-  total_revenue: number;
-  last_project_date?: Timestamp;
+  companyName?: string;
+  contactPerson?: string;
+  isActive: boolean;
+  totalProjects: number;
+  totalRevenue: number;
+  lastProjectDate?: Timestamp;
   tags: string[];
   notes?: string;
 }
@@ -105,29 +109,30 @@ export interface Address {
   neighborhood: string;
   city: string;
   state: string;
-  zip_code: string;
+  zipCode: string;
   country: string;
 }
 
 // ========== CRM - LEADS ==========
+
 export interface Lead extends BaseEntity {
-  lead_number: string; // AUTO: LED-2025-001
+  leadNumber: string; // AUTO: LED-2025-001
   name: string;
   email: string;
   phone?: string;
   company?: string;
   source: LeadSource;
   status: LeadStatus;
-  assigned_to?: string; // User ID
-  interest_area?: string;
-  budget_range?: string;
+  assignedTo?: string; // User ID
+  interestArea?: string;
+  budgetRange?: string;
   message?: string;
   score: number; // 0-100
-  last_contact?: Timestamp;
-  next_follow_up?: Timestamp;
+  lastContact?: Timestamp;
+  nextFollowUp?: Timestamp;
   tags: string[];
   activities: Activity[];
-  converted_to_client_id?: string;
+  convertedToClientId?: string;
 }
 
 export interface Activity {
@@ -136,71 +141,73 @@ export interface Activity {
   title: string;
   description?: string;
   date: Timestamp;
-  user_id: string;
-  user_name: string;
+  userId: string;
+  userName: string;
   completed?: boolean;
 }
 
 // ========== CRM - QUOTES ==========
+
 export interface Quote extends BaseEntity {
-  quote_number: string; // AUTO: ORC-2025-001
-  client_id: string;
-  client_name: string;
-  lead_id?: string;
+  quoteNumber: string; // v5_0821.2354
+  clientId: string;
+  clientName: string;
+  leadId?: string;
   title: string;
   description?: string;
   status: QuoteStatus;
   items: QuoteItem[];
   subtotal: number;
-  discount_percentage: number;
-  discount_amount: number;
+  discountPercentage: number;
+  discountAmount: number;
   total: number;
-  valid_until: Timestamp;
-  created_by: string;
-  assigned_to?: string;
-  sent_date?: Timestamp;
-  viewed_date?: Timestamp;
-  signed_date?: Timestamp;
-  pdf_url?: string;
+  validUntil: Timestamp;
+  createdBy: string;
+  assignedTo?: string;
+  sentDate?: Timestamp;
+  viewedDate?: Timestamp;
+  signedDate?: Timestamp;
+  pdfUrl?: string;
   notes?: string;
-  terms_conditions?: string;
-  converted_to_project_id?: string;
+  termsConditions?: string;
+  convertedToProjectId?: string;
 }
 
 export interface QuoteItem {
   id: string;
   description: string;
   quantity: number;
-  unit_price: number;
+  unitPrice: number;
   total: number;
   category?: string;
 }
 
 // ========== CRM - PROJECTS ==========
+
 export interface Project extends BaseEntity {
-  project_code: string; // AUTO: DDM-2025-001
+  projectCode: string; // AUTO: DDML0349
   title: string;
   description?: string;
-  client_id: string;
-  client_name: string;
-  quote_id?: string;
+  clientId: string;
+  clientName: string;
+  quoteId?: string;
   type: ProjectType;
   status: ProjectStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  start_date: Timestamp;
-  due_date: Timestamp;
-  completion_date?: Timestamp;
+  startDate: Timestamp;
+  dueDate: Timestamp;
+  completionDate?: Timestamp;
   progress: number; // 0-100
-  team_members: string[]; // User IDs
-  project_manager: string; // User ID
+  teamMembers: string[]; // User IDs
+  projectManager: string; // User ID
   budget: number;
-  actual_cost: number;
+  actualCost: number;
   files: ProjectFile[];
   tasks: ProjectTask[];
   timeline: ProjectTimeline[];
   specifications?: ProjectSpecifications;
-  delivery_address?: Address;
-  invoice_id?: string;
+  deliveryAddress?: Address;
+  invoiceId?: string;
 }
 
 export interface ProjectFile {
@@ -209,8 +216,8 @@ export interface ProjectFile {
   url: string;
   type: string;
   size: number;
-  uploaded_by: string;
-  uploaded_at: Timestamp;
+  uploadedBy: string;
+  uploadedAt: Timestamp;
   category: 'brief' | 'proof' | 'final' | 'reference' | 'other';
 }
 
@@ -218,13 +225,13 @@ export interface ProjectTask {
   id: string;
   title: string;
   description?: string;
-  assigned_to: string;
-  status: 'todo' | 'in_progress' | 'review' | 'done';
-  due_date?: Timestamp;
-  completed_date?: Timestamp;
+  assignedTo: string;
+  status: 'todo' | 'inProgress' | 'review' | 'done';
+  dueDate?: Timestamp;
+  completedDate?: Timestamp;
   dependencies: string[]; // Task IDs
-  estimated_hours: number;
-  actual_hours: number;
+  estimatedHours: number;
+  actualHours: number;
 }
 
 export interface ProjectTimeline {
@@ -232,8 +239,8 @@ export interface ProjectTimeline {
   event: string;
   description?: string;
   date: Timestamp;
-  user_id: string;
-  user_name: string;
+  userId: string;
+  userName: string;
   type: 'milestone' | 'update' | 'issue' | 'approval';
 }
 
@@ -241,64 +248,66 @@ export interface ProjectSpecifications {
   format?: string;
   pages?: number;
   copies?: number;
-  paper_type?: string;
+  paperType?: string;
   binding?: string;
   colors?: string;
   finishing?: string[];
-  special_requirements?: string;
+  specialRequirements?: string;
 }
 
 // ========== FINANCE ==========
+
 export interface Invoice extends BaseEntity {
-  invoice_number: string; // AUTO: FAT-2025-001
-  client_id: string;
-  client_name: string;
-  project_id?: string;
-  project_title?: string;
+  invoiceNumber: string; // AUTO: FAT-2025-001
+  clientId: string;
+  clientName: string;
+  projectId?: string;
+  projectTitle?: string;
   status: InvoiceStatus;
   items: InvoiceItem[];
   subtotal: number;
-  tax_percentage: number;
-  tax_amount: number;
-  discount_amount: number;
+  taxPercentage: number;
+  taxAmount: number;
+  discountAmount: number;
   total: number;
-  due_date: Timestamp;
-  issue_date: Timestamp;
-  paid_date?: Timestamp;
-  payment_method?: string;
+  dueDate: Timestamp;
+  issueDate: Timestamp;
+  paidDate?: Timestamp;
+  paymentMethod?: string;
   notes?: string;
-  pdf_url?: string;
-  payment_link?: string;
-  overdue_days?: number;
+  pdfUrl?: string;
+  paymentLink?: string;
+  overdueDays?: number;
 }
 
 export interface InvoiceItem {
   id: string;
   description: string;
   quantity: number;
-  unit_price: number;
+  unitPrice: number;
   total: number;
 }
 
 // ========== PRODUCTION ==========
+
 export interface ProductionQueue extends BaseEntity {
-  project_id: string;
-  project_title: string;
-  client_name: string;
+  projectId: string;
+  projectTitle: string;
+  clientName: string;
   priority: number;
-  estimated_completion: Timestamp;
-  assigned_team: string[];
-  current_stage: string;
+  estimatedCompletion: Timestamp;
+  assignedTeam: string[];
+  currentStage: string;
   requirements: string[];
 }
 
 export interface QualityCheck extends BaseEntity {
-  project_id: string;
-  checked_by: string;
+  projectId: string;
+  checkedBy: string;
   checklist: QualityCheckItem[];
-  overall_status: 'passed' | 'failed' | 'pending';
+  overallStatus: 'passed' | 'failed' | 'pending';
   notes?: string;
-  approved_date?: Timestamp;
+  approvedDate?: Timestamp;
 }
 
 export interface QualityCheckItem {
@@ -309,33 +318,34 @@ export interface QualityCheckItem {
 }
 
 // ========== SUPPLIERS ==========
+
 export interface Supplier extends BaseEntity {
   name: string;
-  contact_person?: string;
+  contactPerson?: string;
   email?: string;
   phone?: string;
   address?: Address;
   services: string[];
   rating: number; // 1-5
-  is_active: boolean;
-  payment_terms?: string;
+  isActive: boolean;
+  paymentTerms?: string;
   notes?: string;
 }
 
 export interface PurchaseOrder extends BaseEntity {
-  po_number: string; // AUTO: PO-2025-001
-  supplier_id: string;
-  supplier_name: string;
-  project_id?: string;
+  poNumber: string; // AUTO: PO-2025-001
+  supplierId: string;
+  supplierName: string;
+  projectId?: string;
   items: PurchaseOrderItem[];
   subtotal: number;
-  tax_amount: number;
+  taxAmount: number;
   total: number;
   status: 'draft' | 'sent' | 'confirmed' | 'received' | 'cancelled';
-  order_date: Timestamp;
-  expected_delivery: Timestamp;
-  actual_delivery?: Timestamp;
-  created_by: string;
+  orderDate: Timestamp;
+  expectedDelivery: Timestamp;
+  actualDelivery?: Timestamp;
+  createdBy: string;
   notes?: string;
 }
 
@@ -343,72 +353,75 @@ export interface PurchaseOrderItem {
   id: string;
   description: string;
   quantity: number;
-  unit_price: number;
+  unitPrice: number;
   total: number;
 }
 
 // ========== LOGISTICS ==========
+
 export interface Shipment extends BaseEntity {
-  tracking_number: string;
-  project_id: string;
-  project_title: string;
-  client_id: string;
-  client_name: string;
-  delivery_address: Address;
-  status: 'preparing' | 'shipped' | 'in_transit' | 'delivered' | 'failed';
+  trackingNumber: string;
+  projectId: string;
+  projectTitle: string;
+  clientId: string;
+  clientName: string;
+  deliveryAddress: Address;
+  status: 'preparing' | 'shipped' | 'inTransit' | 'delivered' | 'failed';
   carrier?: string;
-  shipping_date?: Timestamp;
-  delivery_date?: Timestamp;
-  estimated_delivery: Timestamp;
-  tracking_url?: string;
+  shippingDate?: Timestamp;
+  deliveryDate?: Timestamp;
+  estimatedDelivery: Timestamp;
+  trackingUrl?: string;
   notes?: string;
 }
 
 // ========== MARKETING ==========
+
 export interface Campaign extends BaseEntity {
   name: string;
   description?: string;
-  type: 'email' | 'social_media' | 'advertising' | 'event' | 'content';
+  type: 'email' | 'socialMedia' | 'advertising' | 'event' | 'content';
   status: 'draft' | 'active' | 'paused' | 'completed';
-  start_date: Timestamp;
-  end_date: Timestamp;
+  startDate: Timestamp;
+  endDate: Timestamp;
   budget: number;
-  actual_spend: number;
-  target_audience?: string;
+  actualSpend: number;
+  targetAudience?: string;
   goals: string[];
   metrics: CampaignMetrics;
-  created_by: string;
+  createdBy: string;
 }
 
 export interface CampaignMetrics {
   impressions: number;
   clicks: number;
   conversions: number;
-  leads_generated: number;
-  cost_per_lead: number;
+  leadsGenerated: number;
+  costPerLead: number;
   roi: number;
 }
 
 export interface Creative extends BaseEntity {
   name: string;
   type: 'image' | 'video' | 'text' | 'banner';
-  campaign_id?: string;
-  file_url?: string;
+  campaignId?: string;
+  fileUrl?: string;
   content?: string;
   dimensions?: string;
-  status: 'draft' | 'approved' | 'in_use' | 'archived';
-  created_by: string;
-  approved_by?: string;
-  approval_date?: Timestamp;
+  status: 'draft' | 'approved' | 'inUse' | 'archived';
+  createdBy: string;
+  approvedBy?: string;
+  approvalDate?: Timestamp;
 }
 
 // ========== DASHBOARD METRICS ==========
+
 export interface KPIMetric {
   key: string;
   label: string;
   value: number;
-  formatted_value: string;
-  change_percentage: number;
+  formattedValue: string;
+  changePercentage: number;
   trend: 'up' | 'down' | 'stable';
   period: string;
 }
@@ -427,40 +440,43 @@ export interface ChartDataset {
 }
 
 // ========== NOTIFICATIONS ==========
+
 export interface Notification extends BaseEntity {
-  user_id: string;
+  userId: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
   category: 'system' | 'project' | 'financial' | 'marketing';
-  is_read: boolean;
-  action_url?: string;
-  action_label?: string;
-  expires_at?: Timestamp;
+  isRead: boolean;
+  actionUrl?: string;
+  actionLabel?: string;
+  expiresAt?: Timestamp;
 }
 
 // ========== AUDIT LOG ==========
+
 export interface AuditLog extends BaseEntity {
-  user_id: string;
-  user_email: string;
+  userId: string;
+  userEmail: string;
   action: string;
-  resource_type: string;
-  resource_id: string;
-  old_values?: Record<string, any>;
-  new_values?: Record<string, any>;
-  ip_address?: string;
-  user_agent?: string;
+  resourceType: string;
+  resourceId: string;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
 }
 
 // ========== FORM TYPES ==========
+
 export interface LeadFormData {
   name: string;
   email: string;
   phone?: string;
   company?: string;
   source: LeadSource;
-  interest_area?: string;
-  budget_range?: string;
+  interestArea?: string;
+  budgetRange?: string;
   message?: string;
 }
 
@@ -469,33 +485,33 @@ export interface ClientFormData {
   email: string;
   phone?: string;
   document?: string;
-  company_name?: string;
-  contact_person?: string;
+  companyName?: string;
+  contactPerson?: string;
   address?: Partial<Address>;
 }
 
 export interface QuoteFormData {
-  client_id: string;
+  clientId: string;
   title: string;
   description?: string;
   items: Omit<QuoteItem, 'id' | 'total'>[];
-  discount_percentage: number;
-  valid_until: string; // YYYY-MM-DD format
+  discountPercentage: number;
+  validUntil: string; // YYYY-MM-DD format
   notes?: string;
-  terms_conditions?: string;
+  termsConditions?: string;
 }
 
 export interface ProjectFormData {
   title: string;
   description?: string;
-  client_id: string;
+  clientId: string;
   type: ProjectType;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  start_date: string; // YYYY-MM-DD format
-  due_date: string; // YYYY-MM-DD format
+  startDate: string; // YYYY-MM-DD format
+  dueDate: string; // YYYY-MM-DD format
   budget: number;
-  team_members: string[];
-  project_manager: string;
+  teamMembers: string[];
+  projectManager: string;
   specifications?: Partial<ProjectSpecifications>;
-  delivery_address?: Partial<Address>;
+  deliveryAddress?: Partial<Address>;
 }

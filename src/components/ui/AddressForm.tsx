@@ -1,162 +1,190 @@
+// src/components/ui/AddressForm.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import { MaskedInput } from '@/components/ui/MaskedInput';
-import { useAddress } from '@/hooks/useAddress';
+import { Input } from '@/components/ui/input';
 
-import { Input } from './input';
-import { Label } from './label';
-
-interface AddressFormProps {
-  value?: {
-    street: string;
-    number: string;
-    complement?: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
-  onChange: (address: any) => void;
-  errors?: Record<string, string>;
+// CORRIGIDO: Interface Address definida localmente
+interface Address {
+  street: string;
+  number?: string;
+  complement?: string;
+  district: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
 }
 
-export function AddressForm({ value, onChange, errors = {} }: AddressFormProps) {
-  const { address, loading, error, updateAddress, searchCep } = useAddress(value);
+interface AddressFormProps {
+  value?: Address;
+  address?: Address; // CORRIGIDO: Interface definida
+  onChange: (address: Address) => void; // CORRIGIDO: Interface definida
+  errors?: Record<string, string>;
+  required?: boolean;
+}
 
-  // ✅ NOTIFICAR MUDANÇAS PARA O FORMULÁRIO PAI
+export default function AddressForm({
+  value,
+  address,
+  onChange,
+  errors = {},
+  required = false,
+}: AddressFormProps) {
+  const [formData, setFormData] = useState<Address>({
+    street: '',
+    number: '',
+    complement: '',
+    district: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: 'Brasil',
+    ...(value || address || {}),
+  });
+
   useEffect(() => {
-    onChange(address);
-  }, [address, onChange]);
+    if (value || address) {
+      setFormData({
+        street: '',
+        number: '',
+        complement: '',
+        district: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: 'Brasil',
+        ...(value || address || {}),
+      });
+    }
+  }, [value, address]);
 
-  // ✅ HANDLER PARA CEP
-  const handleCepChange = async (cep: string) => {
-    updateAddress('zipCode', cep);
+  const handleChange = (field: keyof Address, newValue: string) => {
+    const updatedAddress = {
+      ...formData,
+      [field]: newValue,
+    };
+    setFormData(updatedAddress);
+    onChange(updatedAddress);
+  };
 
-    // ✅ AUTO-BUSCAR QUANDO CEP ESTIVER COMPLETO
-    if (cep.replace(/\D/g, '').length === 8) {
-      await searchCep(cep);
+  const handleCEPChange = async (cep: string) => {
+    const cleanCEP = cep.replace(/\D/g, '');
+    handleChange('zipCode', cep);
+
+    if (cleanCEP.length === 8) {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
+        const data = await response.json();
+
+        if (!data.erro) {
+          const updatedAddress = {
+            ...formData,
+            zipCode: cep,
+            street: data.logradouro || formData.street,
+            district: data.bairro || formData.district,
+            city: data.localidade || formData.city,
+            state: data.uf || formData.state,
+          };
+          setFormData(updatedAddress);
+          onChange(updatedAddress);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
+      }
     }
   };
 
   return (
     <div className="space-y-4">
-      {/* ✅ CEP COM AUTO-PREENCHIMENTO */}
+      <h3 className="text-lg font-medium text-gray-900">
+        Endereço {required && <span className="text-red-500">*</span>}
+      </h3>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <Label htmlFor="zipCode">CEP *</Label>
-          <div className="relative">
-            <MaskedInput
-              id="zipCode"
-              mask="cep"
-              placeholder="12345-678"
-              value={address.zipCode}
-              onChange={handleCepChange}
-              error={errors.zipCode || error || undefined}
-              disabled={loading}
-            />
-            {loading && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 transform">
-                <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-500"></div>
-              </div>
-            )}
-          </div>
+        <div className="md:col-span-1">
+          <Input
+            label={`CEP ${required ? '*' : ''}`}
+            value={formData.zipCode}
+            onChange={(e) => handleCEPChange(e.target.value)}
+            placeholder="00000-000"
+            error={errors.zipCode}
+            maxLength={9}
+          />
         </div>
 
-        {/* ✅ ESTADO */}
-        <div>
-          <Label htmlFor="state">Estado *</Label>
+        <div className="md:col-span-1">
           <Input
-            id="state"
+            label={`Estado ${required ? '*' : ''}`}
+            value={formData.state}
+            onChange={(e) => handleChange('state', e.target.value)}
             placeholder="SP"
-            value={address.state}
-            onChange={(e) => updateAddress('state', e.target.value.toUpperCase())}
-            maxLength={2}
-            className={address.state && !errors.state ? 'bg-green-50' : ''}
             error={errors.state}
-          />
-        </div>
-      </div>
-
-      {/* ✅ CIDADE E BAIRRO */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <Label htmlFor="city">Cidade *</Label>
-          <Input
-            id="city"
-            placeholder="São Paulo"
-            value={address.city}
-            onChange={(e) => updateAddress('city', e.target.value)}
-            className={address.city && !errors.city ? 'bg-green-50' : ''}
-            error={errors.city}
+            maxLength={2}
           />
         </div>
 
-        <div>
-          <Label htmlFor="neighborhood">Bairro *</Label>
-          <Input
-            id="neighborhood"
-            placeholder="Centro"
-            value={address.neighborhood}
-            onChange={(e) => updateAddress('neighborhood', e.target.value)}
-            className={address.neighborhood && !errors.neighborhood ? 'bg-green-50' : ''}
-            error={errors.neighborhood}
-          />
-        </div>
-      </div>
-
-      {/* ✅ RUA E NÚMERO */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="md:col-span-2">
-          <Label htmlFor="street">Endereço *</Label>
           <Input
-            id="street"
+            label={`Logradouro ${required ? '*' : ''}`}
+            value={formData.street}
+            onChange={(e) => handleChange('street', e.target.value)}
             placeholder="Rua das Flores"
-            value={address.street}
-            onChange={(e) => updateAddress('street', e.target.value)}
-            className={address.street && !errors.street ? 'bg-green-50' : ''}
             error={errors.street}
           />
         </div>
 
-        <div>
-          <Label htmlFor="number">Número *</Label>
+        <div className="md:col-span-1">
           <Input
-            id="number"
+            label="Número"
+            value={formData.number || ''}
+            onChange={(e) => handleChange('number', e.target.value)}
             placeholder="123"
-            value={address.number}
-            onChange={(e) => updateAddress('number', e.target.value)}
             error={errors.number}
           />
         </div>
-      </div>
 
-      {/* ✅ COMPLEMENTO */}
-      <div>
-        <Label htmlFor="complement">Complemento</Label>
-        <Input
-          id="complement"
-          placeholder="Apto 45, Bloco B"
-          value={address.complement}
-          onChange={(e) => updateAddress('complement', e.target.value)}
-        />
-      </div>
-
-      {/* ✅ INDICADOR VISUAL DE AUTO-PREENCHIMENTO */}
-      {address.street && address.city && address.state && (
-        <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-600">
-          <svg
-            className="h-5 w-5 text-green-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Endereço preenchido automaticamente via CEP</span>
+        <div className="md:col-span-1">
+          <Input
+            label="Complemento"
+            value={formData.complement || ''}
+            onChange={(e) => handleChange('complement', e.target.value)}
+            placeholder="Apto 45"
+            error={errors.complement}
+          />
         </div>
-      )}
+
+        <div className="md:col-span-1">
+          <Input
+            label={`Bairro ${required ? '*' : ''}`}
+            value={formData.district}
+            onChange={(e) => handleChange('district', e.target.value)}
+            placeholder="Centro"
+            error={errors.district}
+          />
+        </div>
+
+        <div className="md:col-span-1">
+          <Input
+            label={`Cidade ${required ? '*' : ''}`}
+            value={formData.city}
+            onChange={(e) => handleChange('city', e.target.value)}
+            placeholder="São Paulo"
+            error={errors.city}
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <Input
+            label={`País ${required ? '*' : ''}`}
+            value={formData.country}
+            onChange={(e) => handleChange('country', e.target.value)}
+            placeholder="Brasil"
+            error={errors.country}
+          />
+        </div>
+      </div>
     </div>
   );
 }

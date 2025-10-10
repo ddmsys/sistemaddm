@@ -190,17 +190,6 @@ export interface AuthUser {
 }
 
 /**
- * Perfil de usuário estendido
- */
-export interface UserProfile extends AuthUser {
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  isActive: boolean;
-  department?: string;
-  phone?: string;
-}
-
-/**
  * Configuração de tabela
  */
 export interface TableConfig<T> {
@@ -277,4 +266,108 @@ export type LeadSource =
 export interface SelectOption {
   value: string;
   label: string;
+}
+// ========== BASE INTERFACES ==========
+
+export interface BaseEntity {
+  id: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ========== COMMON TYPES ==========
+
+export type UserRole =
+  | 'admin'
+  | 'comercial'
+  | 'producao'
+  | 'financeiro'
+  | 'compras'
+  | 'logistica'
+  | 'marketing'
+  | 'cliente';
+
+export interface Address {
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+// ========== USER MANAGEMENT ==========
+export interface UserProfile {
+  uid: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  avatarUrl?: string;
+  createdAt: Timestamp;
+}
+
+// ========== DASHBOARD METRICS ==========
+
+export interface KPIMetric {
+  key: string;
+  label: string;
+  value: number;
+  formattedValue: string;
+  changePercentage: number;
+  trend: 'up' | 'down' | 'stable';
+  period: string;
+}
+
+export interface ChartData {
+  labels: string[];
+  datasets: ChartDataset[];
+}
+
+export interface ChartDataset {
+  label: string;
+  data: number[];
+  backgroundColor?: string | string[];
+  borderColor?: string;
+  fill?: boolean;
+}
+
+// ========== NOTIFICATIONS ==========
+
+export interface Notification extends BaseEntity {
+  userId: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  category: 'system' | 'project' | 'financial' | 'marketing';
+  isRead: boolean;
+  actionUrl?: string;
+  actionLabel?: string;
+  expiresAt?: Timestamp;
+}
+
+// ========== AUDIT LOG ==========
+
+export interface AuditLog extends BaseEntity {
+  userId: string;
+  userEmail: string;
+  action: string;
+  resourceType: string;
+  resourceId: string;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export interface Activity {
+  id: string;
+  type: 'call' | 'email' | 'meeting' | 'note' | 'task';
+  title: string;
+  description?: string;
+  date: Timestamp;
+  userId: string;
+  userName: string;
+  completed?: boolean;
 }

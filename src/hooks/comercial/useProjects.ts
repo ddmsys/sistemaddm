@@ -1,3 +1,4 @@
+// src/hooks/useProjects.ts
 'use client';
 
 import {
@@ -18,7 +19,7 @@ import { toast } from 'react-hot-toast';
 
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
-import { ComercialFilters, Project, ProjectFormData } from '@/lib/types/comercial';
+import { Project, ProjectFilters, ProjectFormData, ProjectStatus } from '@/lib/types/projects'; // Corrigido import
 import { AsyncState } from '@/lib/types/shared';
 
 function isError(error: unknown): error is { message: string } {
@@ -32,7 +33,6 @@ function isError(error: unknown): error is { message: string } {
 
 export function useProjects() {
   const { user } = useAuth();
-
   const [projects, setProjects] = useState<AsyncState<Project[]>>({
     data: null,
     loading: false,
@@ -40,7 +40,7 @@ export function useProjects() {
   });
 
   const fetchProjects = useCallback(
-    async (filters?: ComercialFilters) => {
+    async (filters?: ProjectFilters) => {
       if (!user) return;
 
       setProjects((prev) => ({ ...prev, loading: true, error: null }));
@@ -61,7 +61,6 @@ export function useProjects() {
         }
 
         const snapshot = await getDocs(projectsQuery);
-
         let projectsData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -69,7 +68,10 @@ export function useProjects() {
 
         if (filters?.dateRange?.start || filters?.dateRange?.end) {
           projectsData = projectsData.filter((project) => {
-            const createdAt = project.createdAt.toDate();
+            const createdAt =
+              project.createdAt instanceof Timestamp
+                ? project.createdAt.toDate()
+                : new Date(project.createdAt);
             const start = filters.dateRange?.start ? new Date(filters.dateRange.start) : null;
             const end = filters.dateRange?.end ? new Date(filters.dateRange.end) : null;
 
@@ -96,20 +98,18 @@ export function useProjects() {
         });
       } catch (error: unknown) {
         const errorMessage = isError(error) ? error.message : 'Erro ao carregar projetos';
-
         console.error('Erro ao buscar projetos:', errorMessage);
-
         setProjects({
           data: null,
           loading: false,
           error: errorMessage,
         });
-
         toast.error(errorMessage);
       }
     },
     [user],
   );
+
   const createProject = useCallback(
     async (data: ProjectFormData): Promise<string | null> => {
       if (!user) {
@@ -118,33 +118,65 @@ export function useProjects() {
       }
 
       // Validação crítica
-      if (!data.category) {
+      if (!data.product) {
         toast.error('Tipo do produto é obrigatório');
         return null;
       }
 
+      if (!data.projectManager) {
+        toast.error('Gerente do projeto é obrigatório');
+        return null;
+      }
+
       try {
-        const projectData: Omit<Project, 'id' | 'catalogCode' | 'clientName'> = {
+        // Criar objeto Project com TODOS os campos obrigatórios
+        const projectData: Omit<Project, 'id'> = {
+          // Relacionamentos
           clientId: data.clientId,
+          clientName: data.clientName || '',
           quoteId: data.quoteId || undefined,
+
+          // Dados básicos OBRIGATÓRIOS
           title: data.title,
           description: data.description || '',
-          category: data.category,
-          status: 'open',
-          priority: data.priority,
-          dueDate: Timestamp.fromDate(new Date(data.dueDate)),
-          budget: data.budget,
-          assignedTo: data.assignedTo || '',
+          product: data.product, // Corrigido de category para product
+          status: data.status || 'open',
+          priority: data.priority || 'medium',
+
+          // Datas OBRIGATÓRIAS
+          startDate: data.startDate
+            ? Timestamp.fromDate(new Date(data.startDate))
+            : Timestamp.now(),
+          dueDate: data.dueDate ? Timestamp.fromDate(new Date(data.dueDate)) : undefined,
+
+          // Campos OBRIGATÓRIOS para gestão
+          progress: 0, // Sempre começa com 0
+          teamMembers: [], // Array vazio inicialmente
+          projectManager: data.projectManager, // OBRIGATÓRIO
+          actualCost: 0, // Sempre começa com 0
+
+          // Arrays OBRIGATÓRIOS (vazios inicialmente)
+          files: [],
+          tasks: [],
+          timeline: [],
+
+          // Campos OBRIGATÓRIOS de gestão
           proofsCount: 0,
+
+          // Campos opcionais
+          budget: data.budget || 0,
+          assignedTo: data.assignedTo || '',
           clientApprovalTasks: [],
+          tags: [],
+          notes: data.notes || '',
+          createdBy: user.uid,
+
+          // Timestamps OBRIGATÓRIOS
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
-          createdBy: user.uid,
-          notes: data.notes || '',
         };
 
         console.log('💾 Salvando projeto:', projectData);
-
         const docRef = await addDoc(collection(db, 'projects'), projectData);
 
         toast.success('Projeto criado com sucesso!');
@@ -170,25 +202,20 @@ export function useProjects() {
 
       try {
         const docRef = doc(db, 'projects', id);
-
         const updateData: Partial<Project> & { updatedAt: Timestamp } = {
           ...data,
           updatedAt: Timestamp.now(),
         };
 
         await updateDoc(docRef, updateData);
-
         toast.success('Projeto atualizado com sucesso!');
-
         await fetchProjects();
 
         return true;
       } catch (error: unknown) {
         const errorMessage = isError(error) ? error.message : 'Erro ao atualizar projeto';
         console.error(errorMessage);
-
         toast.error(errorMessage);
-
         return false;
       }
     },
@@ -196,7 +223,7 @@ export function useProjects() {
   );
 
   const updateProjectStatus = useCallback(
-    async (id: string, status: Project['status']): Promise<boolean> => {
+    async (id: string, status: ProjectStatus): Promise<boolean> => {
       if (!user) {
         toast.error('Usuário não autenticado');
         return false;
@@ -204,23 +231,19 @@ export function useProjects() {
 
       try {
         const docRef = doc(db, 'projects', id);
-
         await updateDoc(docRef, {
           status,
           updatedAt: Timestamp.now(),
         });
 
         toast.success('Status do projeto atualizado!');
-
         await fetchProjects();
 
         return true;
       } catch (error: unknown) {
         const errorMessage = isError(error) ? error.message : 'Erro ao atualizar status';
         console.error(errorMessage);
-
         toast.error(errorMessage);
-
         return false;
       }
     },
@@ -236,18 +259,14 @@ export function useProjects() {
 
       try {
         await deleteDoc(doc(db, 'projects', id));
-
         toast.success('Projeto excluído com sucesso!');
-
         await fetchProjects();
 
         return true;
       } catch (error: unknown) {
         const errorMessage = isError(error) ? error.message : 'Erro ao excluir projeto';
         console.error(errorMessage);
-
         toast.error(errorMessage);
-
         return false;
       }
     },
@@ -285,7 +304,6 @@ export function useProjects() {
       );
 
       const snapshot = await getDocs(projectsQuery);
-
       return snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -293,7 +311,6 @@ export function useProjects() {
     } catch (error: unknown) {
       const errorMessage = isError(error) ? error.message : 'Erro ao buscar projetos do orçamento';
       console.error(errorMessage);
-
       return [];
     }
   }, []);
@@ -307,7 +324,6 @@ export function useProjects() {
       );
 
       const snapshot = await getDocs(projectsQuery);
-
       return snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -315,7 +331,6 @@ export function useProjects() {
     } catch (error: unknown) {
       const errorMessage = isError(error) ? error.message : 'Erro ao buscar projetos do cliente';
       console.error(errorMessage);
-
       return [];
     }
   }, []);

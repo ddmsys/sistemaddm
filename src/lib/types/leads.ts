@@ -11,7 +11,7 @@ export type LeadSource =
   | 'advertising'
   | 'other';
 
-export type LeadStage =
+export type LeadStatus =
   | 'primeiro_contato'
   | 'qualificado'
   | 'proposta_enviada'
@@ -26,26 +26,72 @@ export interface Lead {
   phone?: string;
   company?: string;
   source: LeadSource;
-  stage: LeadStage;
-  status: LeadStage; // Alias para stage para compatibilidade
+  status: LeadStatus;
   value?: number;
   probability?: number;
   ownerId: string;
   ownerName: string;
   notes?: string;
   tags?: string[];
+  socialMedia?: SocialMedia;
+  referredBy?: string; // nome da pessoa que indicou, pode ser opcional
+  interestArea?: string; // CAMPO NOVO - igual ao do form!
   lastActivityAt: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
 export interface LeadFilters {
-  stage?: LeadStage[];
+  status?: LeadStatus[];
   source?: LeadSource[];
   ownerId?: string[];
+  probability?: {
+    min?: number;
+    max?: number;
+  };
   dateRange?: {
     start: Date;
     end: Date;
   };
   search?: string;
+}
+
+export interface LeadFormData {
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  source: LeadSource;
+  status: LeadStatus;
+  value?: number;
+  probability?: number;
+  socialMedia?: SocialMedia;
+  referredBy?: string; // nome da pessoa que indicou, pode ser opcional
+  interestArea?: string; // CAMPO NOVO - igual ao do Lead!
+  notes?: string;
+  tags?: string[];
+}
+
+export interface LeadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  lead?: Lead | null;
+  onSave: (data: LeadFormData) => Promise<void>;
+  loading?: boolean;
+}
+
+export interface LeadStats {
+  total: number;
+  byStatus: Record<LeadStatus, number>;
+  bySource: Record<LeadSource, number>;
+  conversionRate: number;
+  averageValue: number;
+  totalValue: number;
+}
+export interface SocialMedia {
+  facebook?: string;
+  instagram?: string;
+  linkedin?: string;
+  twitter?: string;
+  website?: string;
 }

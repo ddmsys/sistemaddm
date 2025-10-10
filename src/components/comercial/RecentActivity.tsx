@@ -11,7 +11,7 @@ interface RecentActivitiesProps {
   onViewLead: (lead: Lead) => void;
 }
 
-export function RecentActivities({ _leads, _quotes, _onViewLead }: RecentActivitiesProps) {
+export function RecentActivities({ leads, quotes, onViewLead }: RecentActivitiesProps) {
   const activities = [
     {
       type: 'lead',

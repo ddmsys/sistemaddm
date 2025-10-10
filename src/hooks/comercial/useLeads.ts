@@ -18,7 +18,7 @@ import { toast } from 'react-hot-toast';
 
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
-import { Lead, LeadFilters, LeadStage } from '@/lib/types/leads';
+import { Lead, LeadFilters, LeadStatus } from '@/lib/types/leads';
 import { AsyncState, SelectOption } from '@/lib/types/shared';
 import { getErrorMessage } from '@/lib/utils/errors';
 
@@ -53,8 +53,8 @@ export function useLeads() {
         let leadsQuery = query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
 
         // Aplicar filtros se fornecidos
-        if (filters?.stage && filters.stage.length > 0) {
-          leadsQuery = query(leadsQuery, where('stage', 'in', filters.stage));
+        if (filters?.status && filters.status.length > 0) {
+          leadsQuery = query(leadsQuery, where('stage', 'in', filters.status));
         }
 
         if (filters?.source && filters.source.length > 0) {
@@ -149,7 +149,6 @@ export function useLeads() {
           phone: data.phone,
           company: data.company,
           source: data.source,
-          stage: 'primeiro_contato',
           status: 'primeiro_contato', // Adicionando status obrigatório
           value: data.value || 0,
           probability: data.probability || 0,
@@ -208,7 +207,7 @@ export function useLeads() {
 
   // ================ UPDATE LEAD STAGE ================
   const updateLeadStage = useCallback(
-    async (id: string, stage: LeadStage): Promise<boolean> => {
+    async (id: string, stage: LeadStatus): Promise<boolean> => {
       if (!user) {
         toast.error('Usuário não autenticado');
         return false;
@@ -262,7 +261,7 @@ export function useLeads() {
   const getLeadsOptions = useCallback((): SelectOption[] => {
     if (!leads.data) return [];
     return leads.data
-      .filter((lead) => ['primeiro_contato', 'qualificado'].includes(lead.stage) && lead.id)
+      .filter((lead) => ['primeiro_contato', 'qualificado'].includes(lead.status) && lead.id)
       .map((lead) => ({
         value: lead.id!,
         label: `${lead.name}${lead.email ? ` (${lead.email})` : ''}`,

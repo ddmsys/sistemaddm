@@ -135,3 +135,20 @@ export interface ProjectFilters extends ComercialFilters {
 
 // ================ ALIASES PARA COMPATIBILIDADE ================
 export type LeadStage = LeadStatus;
+
+// ========== CENTRAL EXPORTS ==========
+
+// Shared types
+export * from './shared';
+
+// CRM Module exports
+export * from './clients';
+export * from './leads';
+export * from './projects';
+export * from './quotes';
+
+// Other modules exports
+export * from './finance';
+export * from './logistics';
+export * from './marketing';
+export * from './purchases';

@@ -1,9 +1,6 @@
-import { CommercialDashboard } from '@/components/dashboard/CommercialDashboard';
+// src/app/page.tsx
+import CommercialDashboard from '@/components/dashboard/CommercialDashboard';
 
-export default function Home() {
-  return (
-    <main className="p-8">
-      <CommercialDashboard />
-    </main>
-  );
+export default function Page() {
+  return <CommercialDashboard />;
 }

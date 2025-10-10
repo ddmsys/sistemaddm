@@ -74,7 +74,7 @@ export function useAddress(initialData?: Partial<Address>): UseAddressReturn {
           // number e complement mantêm valores existentes
         }));
       }
-    } catch (err) {
+    } catch {
       setError('Erro ao buscar CEP');
     } finally {
       setLoading(false);
