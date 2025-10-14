@@ -543,6 +543,10 @@ export type ProjectStatus =
   | 'design'
   | 'review'
   | 'production'
+  | 'clientApproval'
+  | 'approved'
+  | 'printing'
+  | 'delivering'
   | 'shipped'
   | 'done'
   | 'cancelled';

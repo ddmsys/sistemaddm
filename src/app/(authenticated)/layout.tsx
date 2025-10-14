@@ -25,7 +25,7 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
       icon: '🎯',
     },
     {
-      name: 'Clientes', // ✅ ADICIONADO
+      name: 'Clientes',
       href: '/crm/clients',
       icon: '🏢',
     },
@@ -38,6 +38,12 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
       name: 'Projetos',
       href: '/crm/projects',
       icon: '🚀',
+    },
+    // ✅ PRODUTOS ADICIONADO
+    {
+      name: 'Produtos',
+      href: '/products',
+      icon: '📦',
     },
   ];
 

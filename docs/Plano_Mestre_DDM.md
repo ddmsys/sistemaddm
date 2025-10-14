@@ -1,5 +1,9 @@
 # 📘 Plano Mestre — DDM Sistema (Versão Completa)
 
+> **📅 Última Atualização:** 14 de outubro de 2025  
+> **⚠️ MIGRAÇÃO IMPORTANTE:** Quote → Budget (Orçamentos)  
+> **📖 Ver:** [Documento 08 - Migração](Progress/08-DOCUMENTO%20DE%20MIGRAÇÃO%20E%20PADRONIZAÇÃO.md)
+
 ## 🏗️ Estrutura Final Definitiva
 
 ```
@@ -14,14 +18,15 @@ sistemaddm/
 │   │   ├── clients/                  # Functions de clientes
 │   │   │   ├── assignClientNumber.ts
 │   │   │   └── createClient.ts
-│   │   ├── quotes/                   # Functions de orçamentos
-│   │   │   ├── createQuotePdf.ts
-│   │   │   └── onQuoteSigned.ts
+│   │   ├── budgets/                  # ✅ Functions de orçamentos (era quotes/)
+│   │   │   ├── createBudgetPdf.ts
+│   │   │   ├── onBudgetApproved.ts
+│   │   │   └── assignBudgetNumber.ts
 │   │   ├── projects/                 # Functions de projetos
 │   │   │   ├── assignProjectCatalogCode.ts
 │   │   │   └── updateProjectStatus.ts
 │   │   ├── pdfs/                     # Geração de PDFs
-│   │   │   ├── generateQuote.ts
+│   │   │   ├── generateBudget.ts     # ✅ Atualizado
 │   │   │   └── generateInvoice.ts
 │   │   ├── notifications/            # Sistema de notificações
 │   │   │   ├── emailNotification.ts
@@ -33,14 +38,10 @@ sistemaddm/
 │   └── firestore.indexes.json       # Índices compostos
 ├── 📁 src/                           # 🏗️ Código fonte frontend
 │   ├── 📁 app/                       # App Router Next.js 14
-│   │   ├── 📁 (authenticated)/       # 🛡️ Route Group protegido
 │   │   │   ├── crm/                  # 📈 COMERCIAL COMPLETO
 │   │   │   │   ├── dashboard/        # Dashboard comercial integrado
 │   │   │   │   │   └── page.tsx
 │   │   │   │   ├── leads/            # Prospecção e qualificação
-│   │   │   │   │   ├── page.tsx
-│   │   │   │   │   └── [id]/page.tsx
-│   │   │   │   ├── quotes/           # Orçamentos e propostas
 │   │   │   │   │   ├── page.tsx
 │   │   │   │   │   └── [id]/page.tsx
 │   │   │   │   ├── projects/         # 🎯 PROJETOS (pós-venda)
@@ -48,6 +49,10 @@ sistemaddm/
 │   │   │   │   │   └── [id]/page.tsx
 │   │   │   │   └── clients/          # Base de clientes
 │   │   │   │       ├── page.tsx
+│   │   │   │       └── [id]/page.tsx
+│   │   │   ├── budgets/              # ✅ Orçamentos (era /crm/quotes)
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/page.tsx
 │   │   │   │       └── [id]/page.tsx
 │   │   │   ├── production/           # 🎨 PRODUÇÃO/ARTE
 │   │   │   │   ├── dashboard/        # Dashboard produção
@@ -550,54 +555,72 @@ Tela/Dashboard:
 
 ---
 
-### 3.3 Orçamentos (`quotes`)
+### 3.3 Orçamentos (`budgets`)
+
+> ✅ **ATUALIZADO** - Era `quotes`, agora é `budgets`
 
 - Proposta formal enviada ao autor.
-- **Automação:** `createQuotePdf`, `onQuoteSigned`.
+- **Automação:** `createBudgetPdf`, `onBudgetApproved`.
 
 Campos principais:
 
 ```ts
 | Campo | Tipo | Obrig. | Regra / Observações |
 |---|---|---|---|
-| **number** | string | S | ex.: `Q-0001` |
-| status | enum | S | `draft/sent/signed/refused` |
-| quoteType | enum | S | `producao/impressao/misto` |
-| currency | enum | S | `BRL/USD/EUR` |
-| client{Id,Name,Email,Number} | fields | S* | vínculo com cliente |
-| projectTitle | string | N | visão do escopo |
-| issueDate | Timestamp | N | emissão |
-| validityDays | number | N | prazo do orçamento |
-| productionTime | string | N | SLA |
-| material | object | N | ficha técnica (tamanho, páginas, capa/miolo, acabamento) |
-| items | array | N | ver tabela de itens |
-| totals | object | N | `subtotal, discount, freight, surcharge, total` |
-| paymentPlan | object | N | `{ type: 'avista' }` ou `{ type: 'parcelado', installments, dueDay }` |
-| terms | string | N | observações/condições |
-| pdfUrl | string | N | link assinado do PDF |
-| orderId/projectId | string | N | gerados após assinatura |
-| createdAt/updatedAt | Timestamp | N | audit |
+| **number** | string | S | ex.: `v5_1310.1435` (v5_DDMM.HHMM) |
+| **status** | enum | S | `draft/sent/approved/rejected/expired` |
+| version | number | S | 1, 2, 3... |
+| projectType | enum | N | L/E/K/C/etc (TipoProjetoCatalogo) |
+| leadId | string | N | lead que originou |
+| clientId | string | N | cliente existente |
+| bookId | string | N | livro existente (reimpressão) |
+| projectData | object | N | {title, subtitle, author, specifications} |
+| items | array | S | ver tabela de itens |
+| subtotal | number | S | soma dos itens |
+| discount | number | N | desconto em R$ |
+| discountPercentage | number | N | desconto em % |
+| total | number | S | valor final |
+| paymentMethods | array | S | ex: ["À vista", "3x"] |
+| validityDays | number | S | prazo do orçamento |
+| productionDays | number | N | prazo de produção manual |
+| clientProvidedMaterial | boolean | S | cliente fornece material? |
+| materialDescription | string | N | descrição do material |
+| notes | string | N | observações |
+| issueDate | Timestamp | S | emissão |
+| expiryDate | Timestamp | S | validade |
+| approvalDate | Timestamp | N | aprovação |
+| pdfUrl | string | N | link do PDF |
+| createdAt/updatedAt | Timestamp | S | audit |
+| createdBy | string | S | userId |
 
-**Estrutura de `items` (quotes):**
+**Estrutura de `items` (budgets):**
 | Campo | Tipo | Observações |
 |---|---|---|
-| kind | string | `etapa` \| `impressao` |
-| group | string | `pre_texto` \| `processo_editorial` \| `impressao` |
-| description | string | descrição da etapa/serviço |
-| deadlineDays | number | prazo (etapa) |
-| dueDate | Timestamp | data limite opcional |
-| value | number | valor (etapa) |
-| qty | number | quantidade (impressão) |
-| unit | string | `ex`/`un`/`h`/`pág` |
-| unitPrice | number | preço unitário (impressão) |
+| id | string | identificador único |
+| type | string | `editorial_service` \| `printing` \| `extra` |
+| description | string | descrição do item |
+| quantity | number | quantidade |
+| unitPrice | number | preço unitário |
+| totalPrice | number | calculado (quantity * unitPrice) |
 | notes | string | observações |
-| total | number | calculado (`value` ou `qty*unitPrice`) |
+| **Editorial Service:** |
+| service | enum | EditorialServiceType |
+| customService | string | se CUSTOM |
+| estimatedDays | number | prazo estimado |
+| **Printing:** |
+| printRun | number | tiragem |
+| useBookSpecs | boolean | usar specs do livro? |
+| customSpecs | object | specs personalizadas |
+| productionDays | number | prazo de produção |
+| **Extra:** |
+| extraType | enum | ExtraType |
+| customExtra | string | se CUSTOM |
 ```
 
 Tela/Dashboard:
 
-- `/crm/quotes`: lista com filtros + ações PDF.
-- `/crm/quotes/[id]`: editor completo.
+- `/budgets`: lista com filtros + ações.
+- `/budgets/[id]`: editor completo.
 
 ---
 
@@ -845,9 +868,9 @@ Tela/Dashboard:
 
 ## 3.13 Fluxos detalhados (automações)
 
-1. **Quote assinado → cria Cliente, Projeto e Pedido**
+1. **Budget aprovado → cria Cliente, Projeto e Pedido**
 
-- Trigger: `onWrite(quotes)` quando `status` muda para `signed`.
+- Trigger: `onWrite(budgets)` quando `status` muda para `approved`.
 - Se `client.id` não existir em `clients`, criar e atribuir `clientNumber`.
 - Criar `projects` com `catalogCode` (CF) e `status='open'`.
 - (Opcional) Criar usuário no Auth (`firebaseAuthUid`) e enviar e‑mail de acesso ao portal.
@@ -882,7 +905,7 @@ Tela/Dashboard:
 
 **Comercial**
 
-- Funil por `leads.stage`; "Em negociação" ordenado por `lastActivityAt asc`; Receita Ganha vs Perdida (soma `quotes.grandTotal`).
+- Funil por `leads.stage`; "Em negociação" ordenado por `lastActivityAt asc`; Receita Ganha vs Perdida (soma `budgets.total`).
 
 **Produção/Arte**
 
@@ -961,11 +984,11 @@ Regras (resumo):
 **Automações**
 
 - Validar `assignClientNumber` e `assignProjectCatalogCode`.
-- Implementar `onQuoteSigned`, `onProofUpload`, `createInvoicePdf` e lembretes de `invoices.pending`.
+- Implementar `onBudgetApproved`, `onProofUpload`, `createInvoicePdf` e lembretes de `invoices.pending`. # ✅ Atualizado
 
 **Telas**
 
-- CRM (funil Leads + Quotes), Projetos (Kanban + provas + aprovações), Qualidade (fila de `in_review`), Compras, Financeiro, Portal do Cliente.
+- CRM (funil Leads + Budgets), Projetos (Kanban + provas + aprovações), Qualidade (fila de `in_review`), Compras, Financeiro, Portal do Cliente. # ✅ Atualizado
 
 **Exportações & Observabilidade**
 
@@ -978,10 +1001,11 @@ Regras (resumo):
 - `assignClientNumber` → numeração sequencial.
 - `assignProjectCatalogCode` → gera `catalogCode`.
 - `backfillCatalogCodes` → ajuste em lote.
-- `createQuotePdf` / `createInvoicePdf` → PDFs.
-- `onQuoteSigned` → cria Cliente + Projeto + Pedido.
+- `createBudgetPdf` / `createInvoicePdf` → PDFs. # ✅ Atualizado
+- `onBudgetApproved` → cria Cliente + Projeto + Pedido. # ✅ Atualizado
 - `onProjectReadyForPrint` → gera compras.
 - `onProofUpload` → cria proofs e notifica.
+- `assignBudgetNumber` → gera número do orçamento. # ✅ Novo
 - `createOrUpdateClient` / `createOrUpdateLead` (HTTP/Callable).
 
 ---
@@ -1001,7 +1025,7 @@ Regras (resumo):
 
 1. Lead criado → responsável atribuído.
 2. Lead convertido em Orçamento → gera PDF.
-3. Orçamento assinado → cria Cliente + Projeto + Pedido + Faturas.
+3. Orçamento aprovado → cria Cliente + Projeto + Pedido + Faturas. # ✅ Atualizado
 4. Projeto pronto para gráfica → gera Compra.
 5. Upload de prova → cria proofs, dispara revisão.
 6. Aprovação de prova → atualiza Projeto + libera Compras.
@@ -1028,15 +1052,19 @@ export type LeadStage =
   | 'negociacao'
   | 'fechado_ganho'
   | 'fechado_perdido';
-export type QuoteStatus = 'draft' | 'sent' | 'signed' | 'refused';
+export type BudgetStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';  // ✅ Atualizado
 export type ProjectStatus =
   | 'open'
+  | 'design'
+  | 'review'
+  | 'production'
+  | 'clientApproval'
   | 'approved'
-  | 'in_progress'
-  | 'ready_for_review'
-  | 'revising'
-  | 'final_approved'
-  | 'done';
+  | 'printing'
+  | 'delivering'
+  | 'shipped'
+  | 'done'
+  | 'cancelled';
 export type ProofStatus = 'in_review' | 'pending_fixes' | 'approved' | 'rejected';
 export type OrderStatus = 'aberto' | 'fechado';
 export type InvoiceStatus = 'draft' | 'pending' | 'paid' | 'canceled';
@@ -1052,7 +1080,7 @@ export type PurchaseStatus =
 
 - **Proofs:** `projects/{projectId}/proofs/proof-{n}.pdf`
 - **Final do Projeto:** `projects/{projectId}/final/final-{catalogCode}.pdf`
-- **Quotes PDFs:** `quotes/{quoteId}/quote-{number}.pdf`
+- **Budgets PDFs:** `budgets/{budgetId}/budget-{number}.pdf` # ✅ Atualizado
 - **Invoices PDFs:** `invoices/{invoiceId}/invoice-{number|id}.pdf`
 
 ### 8.4 Regiões e limites
@@ -1085,7 +1113,7 @@ export const STORAGE_PATHS = {
   proof: (projectId: string, n: number) => `projects/${projectId}/proofs/proof-${n}.pdf`,
   projectFinal: (projectId: string, code: string) =>
     `projects/${projectId}/final/final-${code}.pdf`,
-  quotePdf: (quoteId: string, number: string) => `quotes/${quoteId}/quote-${number}.pdf`,
+  budgetPdf: (budgetId: string, number: string) => `budgets/${budgetId}/budget-${number}.pdf`,  // ✅ Atualizado
   invoicePdf: (invoiceId: string, number: string | null) =>
     `invoices/${invoiceId}/invoice-${number ?? invoiceId}.pdf`,
 } as const;
@@ -1121,7 +1149,7 @@ export interface InvoiceReminderJob {
 export const path = {
   proof: (projectId: string, n: number) => `projects/${projectId}/proofs/proof-${n}.pdf`,
   final: (projectId: string, code: string) => `projects/${projectId}/final/final-${code}.pdf`,
-  quote: (quoteId: string, num: string) => `quotes/${quoteId}/quote-${num}.pdf`,
+  budget: (budgetId: string, num: string) => `budgets/${budgetId}/budget-${num}.pdf`,  // ✅ Atualizado
   invoice: (invoiceId: string, num?: string) =>
     `invoices/${invoiceId}/invoice-${num ?? invoiceId}.pdf`,
 };
@@ -1229,7 +1257,7 @@ service firebase.storage {
       ]
     },
     {
-      "collectionGroup": "quotes",
+      "collectionGroup": "budgets",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
