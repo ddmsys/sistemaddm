@@ -1,373 +1,583 @@
-// src/components/dashboard/CommercialDashboard.tsx
 'use client';
 
-import { DollarSign, FileText, TrendingUp, Users } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { Timestamp } from 'firebase/firestore';
+import { Plus, RefreshCw, TrendingUp } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 
+// Componentes existentes
+import { LeadCard } from '@/components/comercial/cards/LeadCard';
+import { BookCard } from '@/components/comercial/cards/BookCard';
 import { DonutChart } from '@/components/comercial/charts/DonutChart';
 import { FunnelChart } from '@/components/comercial/charts/FunnelChart';
 import { RevenueChart } from '@/components/comercial/charts/RevenueChart';
+import { KPICards } from '@/components/comercial/KPICards';
+
+// Modals existentes
 import { ClientModal } from '@/components/comercial/modals/ClientModal';
 import { LeadModal } from '@/components/comercial/modals/LeadModal';
-import ProjectModal from '@/components/comercial/modals/ProjectModal';
-import QuoteModal from '@/components/comercial/modals/QuoteModal';
+import BookModal from '@/components/comercial/modals/BookModal';
+
+// UI Components
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useClients } from '@/hooks/comercial/useClients';
-import { useCommercialMetrics } from '@/hooks/comercial/useCommercialMetrics';
 import { useLeads } from '@/hooks/comercial/useLeads';
-import { useProjects } from '@/hooks/comercial/useProjects';
-import { useQuotes } from '@/hooks/comercial/useQuotes';
-import { Lead } from '@/lib/types/leads';
-import { formatCurrency } from '@/lib/utils';
+
+// Types
+import { Lead, LeadStatus } from '@/lib/types/leads';
+import { Book } from '@/lib/types/books';
+import { formatDate, formatDateTime } from '@/lib/utils';
+
+import { useBooks } from '@/hooks/comercial/useBooks';
+import { Budget } from '@/lib/types/budgets';
+import { useBudgets } from '@/hooks/comercial/useBudgets';
+
+// Filtros de período
+type PeriodFilter = '7d' | '30d' | '90d' | '1y' | 'all';
+
+interface DashboardMetrics {
+  totalClients: number;
+  activeLeads: number;
+  totalBudgets: number;
+  conversionRate: number;
+  budgetsWon: number;
+  totalRevenue: number;
+  avgTicket: number;
+}
+
+// ✅ Função auxiliar para converter Timestamp/Date para Date
+function getJSDate(date: Date | Timestamp | undefined): Date {
+  if (!date) return new Date();
+  if (date instanceof Date) return date;
+  if (typeof (date as any).toDate === 'function') {
+    return (date as Timestamp).toDate();
+  }
+  return new Date();
+}
+
+// Componente Select simples
+function SimpleSelect({
+  value,
+  onValueChange,
+  children,
+}: {
+  value: string;
+  onValueChange: (value: any) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onValueChange(e.target.value)}
+      className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+    >
+      {children}
+    </select>
+  );
+}
 
 export default function CommercialDashboard() {
-  const router = useRouter();
+  // ✅ CORREÇÃO 1: Desestruturar corretamente os hooks
+  const {
+    leads: leadsData = [],
+    loading: leadsLoading,
+    createLead,
+    updateLead,
+    updateLeadStage,
+  } = useLeads();
 
-  // Estados para controlar modais
+  const { clients: clientsData = [], loading: clientsLoading, createClient } = useClients();
+
+  const { books: booksData = [], loading: booksLoading, createBook } = useBooks();
+
+  const { budgets: budgetsData = [], loading: budgetsLoading, createBudget } = useBudgets();
+  // Estados dos modals
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
-  const [showProjectModal, setShowProjectModal] = useState(false);
-  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [showBookModal, setShowBookModal] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
 
-  // Estados para entidades selecionadas
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  // Estados para incrementos
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('30d');
+  const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'books' | 'budgets'>(
+    'overview',
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Hooks para operações CRUD
-  const { createLead } = useLeads();
-  const { clients, createClient } = useClients();
-  const { createProject } = useProjects();
-  const { createQuote } = useQuotes();
+  // ✅ CORREÇÃO 2: Usar dados diretos, não acessar .data
+  const metrics = useMemo((): DashboardMetrics => {
+    const activeLeadsCount = leadsData.filter((lead: Lead) =>
+      ['primeiro_contato', 'qualificado', 'proposta_enviada', 'negociacao'].includes(lead.status),
+    ).length;
 
-  // Usar o hook de métricas ao invés de dados mock
-  const { metrics, loading } = useCommercialMetrics();
+    // ✅ CORREÇÃO 3: 'won' → 'signed'
+    const wonBudgets = budgetsData.filter((budget: Budget) => budget.status === 'signed').length;
 
-  // Dados mock para usuários (pode ser substituído por hook real)
-  const users = [
-    { id: '1', name: 'Admin' },
-    { id: '2', name: 'Vendedor 1' },
-    { id: '3', name: 'Vendedor 2' },
-  ]; // Funções de criação de entidades
-  const handleCreateLead = () => {
-    setSelectedLead(null);
-    setShowLeadModal(true);
-  };
+    // ✅ CORREÇÃO 4: budget.total → budget.totals.total
+    const totalRevenue = budgetsData
+      .filter((budget: Budget) => budget.status === 'signed')
+      .reduce((sum: number, budget: Budget) => sum + (budget.totals?.total || 0), 0);
 
-  const handleCreateClient = () => {
-    setShowClientModal(true);
-  };
+    const conversionRate =
+      leadsData.length > 0
+        ? (leadsData.filter((lead: Lead) => lead.status === 'fechado_ganho').length /
+            leadsData.length) *
+          100
+        : 0;
 
-  const handleCreateProject = () => {
-    setShowProjectModal(true);
-  };
+    return {
+      totalClients: clientsData.length,
+      activeLeads: activeLeadsCount,
+      totalBudgets: budgetsData.length,
+      conversionRate,
+      budgetsWon: wonBudgets,
+      totalRevenue,
+      avgTicket: wonBudgets > 0 ? totalRevenue / wonBudgets : 0,
+    };
+  }, [leadsData, clientsData, booksData, budgetsData]);
 
-  const handleCreateQuote = () => {
-    setShowQuoteModal(true);
-  };
+  // Dados para gráficos
+  const chartData = useMemo(() => {
+    // Dados para o funil
+    const funnelData = [
+      {
+        status: 'primeiro_contato' as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === 'primeiro_contato').length,
+      },
+      {
+        status: 'qualificado' as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === 'qualificado').length,
+      },
+      {
+        status: 'proposta_enviada' as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === 'proposta_enviada').length,
+      },
+      {
+        status: 'negociacao' as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === 'negociacao').length,
+      },
+      {
+        status: 'fechado_ganho' as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === 'fechado_ganho').length,
+      },
+    ];
 
-  // Funções de navegação
-  const handleNavigateToLeads = () => {
-    router.push('/crm/leads');
-  };
+    // ✅ CORREÇÃO 5: Status corretos para budgets
+    const budgetStatusData = [
+      {
+        stage: 'draft',
+        label: 'Rascunho',
+        value: budgetsData.filter((q: Budget) => q.status === 'draft').length,
+        percentage: 0,
+        color: '#64748b',
+      },
+      {
+        stage: 'sent',
+        label: 'Enviado',
+        value: budgetsData.filter((q: Budget) => q.status === 'sent').length,
+        percentage: 0,
+        color: '#3b82f6',
+      },
+      {
+        stage: 'signed',
+        label: 'Assinado',
+        value: budgetsData.filter((q: Budget) => q.status === 'signed').length,
+        percentage: 0,
+        color: '#10b981',
+      },
+      {
+        stage: 'rejected',
+        label: 'Rejeitado',
+        value: budgetsData.filter((q: Budget) => q.status === 'rejected').length,
+        percentage: 0,
+        color: '#ef4444',
+      },
+    ].map((item) => ({
+      ...item,
+      percentage: budgetsData.length > 0 ? (item.value / budgetsData.length) * 100 : 0,
+    }));
 
-  const handleNavigateToClients = () => {
-    router.push('/crm/clients');
-  };
+    // Dados de receita (simulados)
+    const revenueData = [
+      { period: 'Jan', revenue: 25000, expenses: 15000, profit: 10000 },
+      { period: 'Fev', revenue: 32000, expenses: 18000, profit: 14000 },
+      { period: 'Mar', revenue: 28000, expenses: 16000, profit: 12000 },
+      { period: 'Abr', revenue: 35000, expenses: 20000, profit: 15000 },
+      { period: 'Mai', revenue: 42000, expenses: 22000, profit: 20000 },
+      { period: 'Jun', revenue: 38000, expenses: 21000, profit: 17000 },
+    ];
 
-  const handleNavigateToProjects = () => {
-    router.push('/crm/projects');
-  };
+    return { funnelData, budgetStatusData, revenueData };
+  }, [leadsData, budgetsData]);
 
-  const handleNavigateToQuotes = () => {
-    router.push('/crm/quotes');
-  };
+  // ✅ CORREÇÃO 6: Usar getJSDate para datas
+  const criticalBooks = useMemo(() => {
+    return booksData
+      .filter((book: Book) => {
+        if (!book.dueDate) return false;
+        const endDate = getJSDate(book.dueDate);
+        const today = new Date();
+        const diffTime = endDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 7 && diffDays >= 0;
+      })
+      .slice(0, 5);
+  }, [booksData]);
 
-  // Funções de fechamento de modais
-  const handleCloseLeadModal = () => {
-    setShowLeadModal(false);
-    setSelectedLead(null);
-  };
+  // Atividades recentes
+  const recentActivities = useMemo(() => {
+    const activities: Array<{
+      id: string;
+      type: string;
+      title: string;
+      time: any;
+      color: string;
+    }> = [];
 
-  const handleCloseClientModal = () => {
-    setShowClientModal(false);
-  };
+    // Adicionar leads recentes
+    leadsData.slice(0, 3).forEach((lead: Lead) => {
+      activities.push({
+        id: `lead-${lead.id}`,
+        type: 'lead',
+        title: `Novo lead: ${lead.name}`,
+        time: lead.createdAt,
+        color: 'bg-blue-100 text-blue-800',
+      });
+    });
 
-  const handleCloseProjectModal = () => {
-    setShowProjectModal(false);
-  };
+    // Adicionar projetos recentes
+    booksData.slice(0, 2).forEach((book: Book) => {
+      activities.push({
+        id: `book-${book.id}`,
+        type: 'book',
+        title: `Projeto iniciado: ${book.title}`,
+        time: book.createdAt,
+        color: 'bg-green-100 text-green-800',
+      });
+    });
 
-  const handleCloseQuoteModal = () => {
-    setShowQuoteModal(false);
-  };
+    return activities.sort((a, b) => b.time.toMillis() - a.time.toMillis()).slice(0, 5);
+  }, [leadsData, booksData]);
 
-  // Funções de salvamento
-  const handleSaveLead = async (leadData: any) => {
-    try {
-      await createLead(leadData);
-      setShowLeadModal(false);
-      setSelectedLead(null);
-    } catch (error) {
-      console.error('Erro ao salvar lead:', error);
-    }
-  };
+  // Função de refresh
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setTimeout(() => setIsRefreshing(false), 1000);
+  }, []);
 
-  const handleSaveClient = async (clientData: any) => {
-    try {
-      await createClient(clientData);
-      setShowClientModal(false);
-    } catch (error) {
-      console.error('Erro ao salvar cliente:', error);
-    }
-  };
-
-  const handleSaveProject = async (projectData: any) => {
-    try {
-      await createProject(projectData);
-      setShowProjectModal(false);
-    } catch (error) {
-      console.error('Erro ao salvar projeto:', error);
-    }
-  };
-
-  const handleSaveQuote = async (quoteData: any) => {
-    try {
-      await createQuote(quoteData);
-      setShowQuoteModal(false);
-    } catch (error) {
-      console.error('Erro ao salvar orçamento:', error);
-    }
-  };
+  const loading = leadsLoading || clientsLoading || booksLoading || budgetsLoading;
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-gray-500">Carregando dashboard...</div>
+      <div className="flex h-96 items-center justify-center">
+        <div className="text-lg text-slate-500">Carregando dashboard comercial...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6 p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Comercial</h1>
-          <p className="text-gray-600">Acompanhe suas métricas comerciais</p>
+          <h1 className="text-3xl font-bold text-slate-800">Dashboard Comercial</h1>
+          <p className="mt-1 text-slate-500">Acompanhe suas métricas comerciais</p>
         </div>
-        <div className="flex space-x-3">
-          <Button variant="outline" onClick={handleCreateQuote}>
-            Novo Orçamento
+
+        {/* Filtros e Ações */}
+        <div className="flex flex-wrap items-center gap-3">
+          <SimpleSelect
+            value={periodFilter}
+            onValueChange={(value: PeriodFilter) => setPeriodFilter(value)}
+          >
+            <option value="7d">Últimos 7 dias</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="90d">Últimos 90 dias</option>
+            <option value="1y">Último ano</option>
+            <option value="all">Todo período</option>
+          </SimpleSelect>
+
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Atualizar
           </Button>
-          <Button variant="outline" onClick={handleCreateProject}>
-            Novo Projeto
-          </Button>
-          <Button variant="outline" onClick={handleCreateClient}>
-            Novo Cliente
-          </Button>
-          <Button onClick={handleCreateLead}>Novo Lead</Button>
+
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowBudgetModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Orçamento
+            </Button>
+            <Button variant="outline" onClick={() => setShowClientModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Cliente
+            </Button>
+            <Button onClick={() => setShowLeadModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Lead
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Receita Total</p>
-              <p className="text-3xl font-bold text-gray-900">
-                {formatCurrency(metrics?.monthlyRevenue || 0)}
-              </p>
-            </div>
-            <DollarSign className="h-8 w-8 text-green-600" />
-          </div>
-        </Card>
+      <KPICards kpis={metrics} />
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total de Leads</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.activeLeads || 0}</p>
-            </div>
-            <Users className="h-8 w-8 text-blue-600" />
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Orçamentos</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.totalQuotes || 0}</p>
-            </div>
-            <FileText className="h-8 w-8 text-purple-600" />
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Taxa Conversão</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.conversionRate || 0}%</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-orange-600" />
-          </div>
-        </Card>
+      {/* Tabs */}
+      <div className="border-b border-slate-200">
+        <nav className="-mb-px flex space-x-8">
+          {[
+            { id: 'overview', label: 'Visão Geral', icon: TrendingUp },
+            { id: 'leads', label: 'Leads', count: metrics.activeLeads },
+            { id: 'books', label: 'Projetos', count: booksData.length },
+            { id: 'budgets', label: 'Orçamentos', count: metrics.totalBudgets },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium ${
+                activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+              }`}
+            >
+              {tab.icon && <tab.icon className="mr-2 h-4 w-4" />}
+              {tab.label}
+              {tab.count !== undefined && (
+                <Badge variant="secondary" className="ml-2">
+                  {tab.count}
+                </Badge>
+              )}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Receita Mensal</h3>
-          <RevenueChart data={metrics?.revenueData || []} />
-        </Card>
+      {/* Conteúdo Overview */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Gráficos Principais */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Receita vs Despesas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RevenueChart data={chartData.revenueData} title="" type="area" />
+              </CardContent>
+            </Card>
 
-        <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Funil de Vendas</h3>
-          <FunnelChart data={metrics?.funnelData || []} />
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Leads por Fonte</h3>
-          <DonutChart data={metrics?.leadsBySource || []} />
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Orçamentos por Status</h3>
-          <DonutChart data={metrics?.quotesbyStatus || []} />
-        </Card>
-      </div>
-
-      {/* Ações Rápidas e Atividades */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Ações Rápidas */}
-        <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Ações Rápidas</h3>
-          <div className="space-y-3">
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={handleNavigateToLeads}
-            >
-              <Users className="mr-2 h-4 w-4" />
-              Gerenciar Leads
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={handleNavigateToQuotes}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Ver Orçamentos
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={handleNavigateToProjects}
-            >
-              <TrendingUp className="mr-2 h-4 w-4" />
-              Acompanhar Projetos
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={handleNavigateToClients}
-            >
-              <DollarSign className="mr-2 h-4 w-4" />
-              Base de Clientes
-            </Button>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Funil de Vendas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FunnelChart data={chartData.funnelData} title="" showValues={true} />
+              </CardContent>
+            </Card>
           </div>
-        </Card>
 
-        {/* Atividades Recentes */}
-        <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Atividades Recentes</h3>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="mt-2 h-2 w-2 rounded-full bg-green-500"></div>
-              <div>
-                <p className="text-sm font-medium">Lead convertido</p>
-                <p className="text-xs text-gray-500">Ana Silva - há 2 horas</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="mt-2 h-2 w-2 rounded-full bg-blue-500"></div>
-              <div>
-                <p className="text-sm font-medium">Novo orçamento enviado</p>
-                <p className="text-xs text-gray-500">Projeto Livro XYZ - há 4 horas</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="mt-2 h-2 w-2 rounded-full bg-orange-500"></div>
-              <div>
-                <p className="text-sm font-medium">Lead qualificado</p>
-                <p className="text-xs text-gray-500">João Santos - há 6 horas</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="mt-2 h-2 w-2 rounded-full bg-purple-500"></div>
-              <div>
-                <p className="text-sm font-medium">Projeto iniciado</p>
-                <p className="text-xs text-gray-500">Editora ABC - ontem</p>
-              </div>
-            </div>
+          {/* Gráficos Secundários */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Status dos Orçamentos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DonutChart data={chartData.budgetStatusData} height={300} showValues={true} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Atividades Recentes</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {recentActivities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-center gap-3 rounded-lg bg-slate-50 p-3"
+                  >
+                    <div className={`h-2 w-2 rounded-full ${activity.color}`} />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-800">{activity.title}</p>
+                      <p className="text-xs text-slate-500">
+                        {formatDateTime(getJSDate(activity.time))}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {recentActivities.length === 0 && (
+                  <p className="py-4 text-center text-slate-500">Nenhuma atividade recente</p>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        </Card>
 
-        {/* Projetos Críticos */}
-        <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Projetos Críticos</h3>
-          {metrics?.criticalProjects && metrics.criticalProjects.length > 0 ? (
-            <div className="space-y-4">
-              {metrics.criticalProjects.map((project) => (
-                <div key={project.id} className="rounded-lg border border-red-200 bg-red-50 p-3">
-                  <p className="font-medium text-red-900">{project.title}</p>
-                  <p className="text-sm text-red-700">{project.clientName}</p>
-                  <p className="text-xs text-red-600">Vence em {project.daysToDeadline} dias</p>
+          {/* Projetos Críticos */}
+          {criticalBooks.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg text-red-600">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                  Projetos Críticos ({criticalBooks.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {criticalBooks.map((book: Book) => (
+                    <div
+                      key={book.id}
+                      className="rounded-lg border border-red-200 bg-red-50 p-4"
+                    >
+                      <h4 className="font-medium text-red-800">{book.title}</h4>
+                      <p className="mt-1 text-sm text-red-600">{book.clientName}</p>
+                      <p className="mt-2 text-xs text-red-500">
+                        Prazo:{' '}
+                        {book.dueDate ? formatDate(getJSDate(book.dueDate)) : 'Não definido'}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500">Nenhum projeto crítico no momento</p>
+              </CardContent>
+            </Card>
           )}
+        </>
+      )}
+
+      {/* Tab de Leads */}
+      {activeTab === 'leads' && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg">Leads Ativos</CardTitle>
+            <Button size="sm" onClick={() => setShowLeadModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Lead
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {leadsData.length > 0 ? (
+                leadsData
+                  .slice(0, 10)
+                  .map((lead: Lead) => (
+                    <LeadCard
+                      key={lead.id}
+                      lead={lead}
+                      onStatusChange={updateLeadStage}
+                      onEdit={(lead: Lead) => console.log('Edit lead:', lead)}
+                    />
+                  ))
+              ) : (
+                <p className="py-8 text-center text-slate-500">Nenhum lead encontrado</p>
+              )}
+            </div>
+          </CardContent>
         </Card>
-      </div>
+      )}
+
+      {/* Tab de Projetos */}
+      {activeTab === 'books' && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg">Projetos Ativos</CardTitle>
+            <Button size="sm" onClick={() => setShowBookModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Projeto
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {booksData.length > 0 ? (
+                booksData
+                  .slice(0, 10)
+                  .map((book: Book) => (
+                    <BookCard
+                      key={book.id}
+                      book={book}
+                      onEdit={(book: Book) => console.log('Edit book:', book)}
+                    />
+                  ))
+              ) : (
+                <p className="py-8 text-center text-slate-500">Nenhum projeto encontrado</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tab de Orçamentos */}
+      {activeTab === 'budgets' && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg">Orçamentos</CardTitle>
+            <Button size="sm" onClick={() => setShowBudgetModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Orçamento
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {budgetData.length > 0 ? (
+                budgetsData
+                  .slice(0, 10)
+                  .map((budget: Budget => (
+                    <BudgetCard
+                      key={budget.id}
+                      budget={budget}
+                      onEdit={(budget: Budget) => console.log('Edit budget:', budget)}
+                    />
+                  ))
+              ) : (
+                <p className="py-8 text-center text-slate-500">Nenhum orçamento encontrado</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Modais */}
       {showLeadModal && (
         <LeadModal
           isOpen={showLeadModal}
-          onClose={handleCloseLeadModal}
-          onSubmit={handleSaveLead}
-          lead={selectedLead}
+          onClose={() => setShowLeadModal(false)}
+          onSubmit={async (data) => {
+            await createLead?.(data);
+            setShowLeadModal(false);
+          }}
         />
       )}
 
       {showClientModal && (
         <ClientModal
           isOpen={showClientModal}
-          onClose={handleCloseClientModal}
-          onSubmit={handleSaveClient}
+          onClose={() => setShowClientModal(false)}
+          onSubmit={async (data) => {
+            await createClient?.(data);
+            setShowClientModal(false);
+          }}
         />
       )}
 
-      {showProjectModal && (
-        <ProjectModal
-          isOpen={showProjectModal}
-          onClose={handleCloseProjectModal}
-          onSubmit={handleSaveProject}
-          clients={(clients || []) as any}
-          users={users}
+      {/* Book Modal */}
+      {showBookModal && (
+        <BookModal
+          isOpen={showBookModal}
+          clients={clientsData as any}
+          users={[]}
+          onClose={() => setShowBookModal(false)}
+          onSubmit={async (data) => {
+            await createBook?.(data);
+            setShowBookModal(false);
+          }}
         />
       )}
 
-      {showQuoteModal && (
-        <QuoteModal
-          isOpen={showQuoteModal}
-          onClose={handleCloseQuoteModal}
-          onSubmit={handleSaveQuote}
-          clients={(clients || []) as any}
-        />
-      )}
+      <BudgetModal
+        isOpen={showBudgetModal}
+        clients={clientsData as any}
+        onClose={() => setShowBudgetModal(false)}
+      />
     </div>
   );
 }

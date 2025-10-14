@@ -30,7 +30,7 @@ service cloud.firestore {
     }
     
     // === ORÇAMENTOS ===
-    match /quotes/{quoteId} {
+    match /budgets/{budgetId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
       allow update: if isAuthenticated();
@@ -38,7 +38,7 @@ service cloud.firestore {
     }
     
     // === PROJETOS ===
-    match /projects/{projectId} {
+    match /books/{bookId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
       allow update: if isAuthenticated();

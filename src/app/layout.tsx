@@ -3,7 +3,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 import { Providers } from './providers';
 import './styles/globals.css'; // ✅ Caminho correto

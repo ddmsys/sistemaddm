@@ -40,16 +40,16 @@ if (!admin.apps.length)
     admin.initializeApp();
 function formatNumberDate() {
     const now = new Date();
-    const yearPrefix = "5"; // versão 5 fixa no prefixo
-    const MM = (now.getMonth() + 1).toString().padStart(2, "0");
-    const DD = now.getDate().toString().padStart(2, "0");
-    const HH = now.getHours().toString().padStart(2, "0");
-    const mm = now.getMinutes().toString().padStart(2, "0");
+    const yearPrefix = '5'; // versão 5 fixa no prefixo
+    const MM = (now.getMonth() + 1).toString().padStart(2, '0');
+    const DD = now.getDate().toString().padStart(2, '0');
+    const HH = now.getHours().toString().padStart(2, '0');
+    const mm = now.getMinutes().toString().padStart(2, '0');
     return `${yearPrefix}${MM}${DD}.${HH}${mm}`;
 }
 exports.assignQuoteNumber = functions.firestore.onDocumentCreated({
-    region: "southamerica-east1",
-    document: "quotes/{quoteId}",
+    region: 'southamerica-east1',
+    document: 'quotes/{quoteId}',
 }, async (event) => {
     const quoteDoc = event.data;
     if (!quoteDoc)
@@ -68,6 +68,6 @@ exports.assignQuoteNumber = functions.firestore.onDocumentCreated({
         console.log(`Orçamento ${event.params.quoteId} recebeu número: ${quoteNumber}`);
     }
     catch (error) {
-        console.error("Erro ao atribuir número de orçamento:", error);
+        console.error('Erro ao atribuir número de orçamento:', error);
     }
 });

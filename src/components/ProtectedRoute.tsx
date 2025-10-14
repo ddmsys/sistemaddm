@@ -4,7 +4,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
   adminOnly?: boolean;

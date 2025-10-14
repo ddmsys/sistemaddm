@@ -16,7 +16,7 @@ import {
 import { useCallback, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 import { Lead, LeadFilters, LeadStatus } from '@/lib/types/leads';
 import { AsyncState, SelectOption } from '@/lib/types/shared';

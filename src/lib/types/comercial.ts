@@ -40,10 +40,13 @@ export type ProjectStatus =
   | 'design'
   | 'review'
   | 'production'
+  | 'clientApproval'
+  | 'approved'
+  | 'printing'
+  | 'delivering'
   | 'shipped'
   | 'done'
   | 'cancelled';
-
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
 export type ClientType = 'individual' | 'company';

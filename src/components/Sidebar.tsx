@@ -9,6 +9,7 @@ import {
   FileText,
   Globe,
   Megaphone,
+  Package,
   Settings,
   ShoppingCart,
   Truck,
@@ -73,6 +74,12 @@ const navigation: NavigationItem[] = [
         href: '/crm/clients',
         icon: Users,
         roles: ['admin', 'comercial'],
+      }, // ✅ FECHAR O OBJETO ANTERIOR
+      {
+        name: 'Produtos',
+        href: '/products',
+        icon: Package,
+        roles: ['admin', 'comercial'], // ✅ ADICIONAR roles
       },
     ],
   },

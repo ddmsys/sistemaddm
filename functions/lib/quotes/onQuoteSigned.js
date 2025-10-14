@@ -39,15 +39,15 @@ const functions = __importStar(require("firebase-functions/v2"));
 if (!admin.apps.length)
     admin.initializeApp();
 exports.onQuoteSigned = functions.firestore.onDocumentUpdated({
-    region: "southamerica-east1",
-    document: "quotes/{quoteId}",
+    region: 'southamerica-east1',
+    document: 'quotes/{quoteId}',
 }, async (event) => {
     const beforeData = event.data?.before?.data();
     const afterData = event.data?.after?.data();
     if (!afterData || !beforeData)
         return;
     // Só executa se mudou de status ≠ signed para signed
-    if (beforeData.status === "signed" || afterData.status !== "signed")
+    if (beforeData.status === 'signed' || afterData.status !== 'signed')
         return;
     const db = admin.firestore();
     const quoteId = event.params.quoteId;
@@ -56,13 +56,13 @@ exports.onQuoteSigned = functions.firestore.onDocumentUpdated({
             // 1. Criar cliente se não existir ainda
             let clientId = afterData.clientId;
             if (!clientId && afterData.client) {
-                const clientRef = db.collection("clients").doc();
+                const clientRef = db.collection('clients').doc();
                 transaction.set(clientRef, {
                     name: afterData.client.name,
-                    email: afterData.client.email || "",
-                    phone: afterData.client.phone || "",
-                    status: "ativo",
-                    source: "quote",
+                    email: afterData.client.email || '',
+                    phone: afterData.client.phone || '',
+                    status: 'ativo',
+                    source: 'quote',
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
                     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     clientId: clientRef.id,
@@ -71,21 +71,21 @@ exports.onQuoteSigned = functions.firestore.onDocumentUpdated({
                 transaction.update(event.data.after.ref, { clientId });
             }
             // 2. Criar projeto para o orçamento assinado
-            const projectRef = db.collection("projects").doc();
+            const projectRef = db.collection('projects').doc();
             transaction.set(projectRef, {
                 clientId,
-                title: afterData.projectTitle || "Projeto sem título",
-                productType: afterData.quoteType === "impressao" ? "L" : "L",
-                author: afterData.client?.name || "",
+                title: afterData.projectTitle || 'Projeto sem título',
+                productType: afterData.quoteType === 'impressao' ? 'L' : 'L',
+                author: afterData.client?.name || '',
                 budget: afterData.totals?.total || 0,
-                status: "open",
+                status: 'open',
                 quoteId,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
             const projectId = projectRef.id;
             // 3. Criar pedido (order) desse projeto e orçamento
-            const orderRef = db.collection("orders").doc();
+            const orderRef = db.collection('orders').doc();
             const paymentSchedule = generatePaymentSchedule(afterData);
             transaction.set(orderRef, {
                 quoteId,
@@ -93,19 +93,19 @@ exports.onQuoteSigned = functions.firestore.onDocumentUpdated({
                 projectId,
                 total: afterData.totals?.total || 0,
                 paymentSchedule,
-                status: "aberto",
+                status: 'aberto',
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
             });
             // 4. Criar faturas baseadas no plano de pagamento
             paymentSchedule.forEach((installment, index) => {
-                const invoiceRef = db.collection("invoices").doc();
+                const invoiceRef = db.collection('invoices').doc();
                 transaction.set(invoiceRef, {
                     orderId: orderRef.id,
                     projectId,
                     clientId,
                     catalogCode: null, // será preenchido depois
                     value: installment.value,
-                    status: "pending",
+                    status: 'pending',
                     dueDate: installment.dueDate,
                     installmentNumber: index + 1,
                     totalInstallments: paymentSchedule.length,
@@ -116,24 +116,24 @@ exports.onQuoteSigned = functions.firestore.onDocumentUpdated({
         console.log(`Orçamento ${quoteId} processado com criação automática de cliente, projeto, pedido e faturas.`);
     }
     catch (error) {
-        console.error("Erro ao processar orçamento assinado:", error);
+        console.error('Erro ao processar orçamento assinado:', error);
     }
 });
 // Função auxiliar para gerar cronograma de pagamento
 function generatePaymentSchedule(quoteData) {
     const total = quoteData.totals?.total || 0;
     const paymentPlan = quoteData.paymentPlan;
-    if (!paymentPlan || paymentPlan.type === "avista") {
+    if (!paymentPlan || paymentPlan.type === 'avista') {
         // Vencimento em 30 dias para pagamento à vista
         return [
             {
                 value: total,
                 dueDate: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
-                status: "pending",
+                status: 'pending',
             },
         ];
     }
-    if (paymentPlan.type === "parcelado") {
+    if (paymentPlan.type === 'parcelado') {
         const installmentValue = total / paymentPlan.installments;
         const dueDay = paymentPlan.dueDay ?? 10;
         const schedule = [];
@@ -144,7 +144,7 @@ function generatePaymentSchedule(quoteData) {
             schedule.push({
                 value: installmentValue,
                 dueDate: admin.firestore.Timestamp.fromDate(dueDate),
-                status: "pending",
+                status: 'pending',
             });
         }
         return schedule;
