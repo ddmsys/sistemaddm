@@ -2,7 +2,40 @@
 
 **Data:** 14 de outubro de 2025  
 **Branch:** fix/comercial-layout  
+**Região:** southamerica-east1 (São Paulo, Brasil)  
 **Objetivo:** Deploy seguro das Cloud Functions renomeadas
+
+---
+
+## 🌎 CONFIGURAÇÃO DE REGIÃO
+
+**⚠️ IMPORTANTE:** Todas as Cloud Functions deste projeto estão configuradas para a região **`southamerica-east1`** (São Paulo, Brasil).
+
+### Por que São Paulo?
+
+1. **Latência Menor** - Usuários no Brasil têm resposta mais rápida
+2. **Compliance** - Dados permanecem no território brasileiro
+3. **Custos** - Menor transferência de dados entre serviços
+
+### Verificar Região nas Functions
+
+```typescript
+// ✅ CORRETO - Todas as functions usam:
+export const createBudgetPdf = functions.https.onCall(
+  { region: 'southamerica-east1' },  // ← São Paulo
+  async (request) => { ... }
+);
+```
+
+```bash
+# Verificar região deployada
+firebase functions:list
+
+# Deve mostrar:
+# createBudgetPdf(southamerica-east1)
+# assignBudgetNumber(southamerica-east1)
+# onBudgetApproved(southamerica-east1)
+```
 
 ---
 
@@ -41,15 +74,17 @@ npm run build
 
 ### 1.2 Testes Locais (Emulador)
 
-```bash
+````bash
 # Iniciar emuladores
 firebase emulators:start
 
 # Em outro terminal, testar as functions
-curl -X POST http://localhost:5001/[PROJECT_ID]/us-central1/createBudgetPdf \
+# Região: southamerica-east1 (São Paulo)
+curl -X POST http://localhost:5001/[PROJECT_ID]/southamerica-east1/createBudgetPdf \
   -H "Content-Type: application/json" \
   -d '{"data": "test-budget-id"}'
-```
+```d '{"data": "test-budget-id"}'
+````
 
 ### 1.3 Verificar Logs
 
@@ -274,6 +309,39 @@ firebase functions:shell
 > createBudgetPdf({data: 'test-id'})
 ```
 
+### Erro: "Function region mismatch"
+
+```bash
+# ⚠️ IMPORTANTE: Todas as functions devem estar em southamerica-east1
+
+# Verificar região atual
+firebase functions:list
+
+# Se alguma function estiver em us-central1 ou outra região:
+# 1. Deletar a function antiga
+firebase functions:delete createBudgetPdf --region us-central1
+
+# 2. Re-deploy na região correta
+firebase deploy --only functions:createBudgetPdf
+
+# 3. Verificar
+firebase functions:list | grep southamerica-east1
+```
+
+### Erro: "CORS" ao chamar function
+
+```bash
+# Verificar se frontend está usando região correta
+
+# ❌ ERRADO:
+const functions = getFunctions(app);
+const createPdf = httpsCallable(functions, 'createBudgetPdf');
+
+# ✅ CORRETO:
+const functions = getFunctions(app, 'southamerica-east1');
+const createPdf = httpsCallable(functions, 'createBudgetPdf');
+```
+
 ---
 
 ## 📊 ROLLBACK (Se Necessário)
@@ -330,5 +398,5 @@ firebase deploy --only functions:quotes
 ---
 
 **Criado em:** 14 de outubro de 2025  
-**Última atualização:** 14 de outubro de 2025  
+**Última atualização:** 14 de outubro de 2025 (região corrigida para southamerica-east1)  
 **Status:** ✅ Pronto para uso
