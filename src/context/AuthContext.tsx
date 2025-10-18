@@ -1,64 +1,62 @@
 // src/context/AuthContext.tsx
-"use client";
+'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
-import { auth } from "../lib/firebase";
-import {
-  onAuthStateChanged,
-  User,
-  signInWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Role = "admin" | "producao" | "financeiro" | "cliente" | null;
+import { auth } from '@/lib/firebase';
+import { AuthUser } from '@/lib/types';
 
 interface AuthContextType {
-  user: User | null;
-  role: Role;
+  user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  role?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<Role>(null);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<string | undefined>(undefined); // COLOQUE AQUI
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        const docRef = doc(db, "users", firebaseUser.uid);
-        const docSnap = await getDoc(docRef);
-        setRole(docSnap.exists() ? (docSnap.data().role as Role) : null);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+
+      // ✅ USUÁRIO TEMPORÁRIO PARA DESENVOLVIMENTO
+      if (!user) {
+        // Simular usuário logado para desenvolvimento
+        const mockUser: AuthUser = {
+          uid: 'dev-user-123',
+          email: 'dev@sistemaddm.com',
+          displayName: 'Usuário Dev',
+          photoURL: null,
+          role: 'admin',
+        };
+        setUser(mockUser);
+        setRole('admin');
       } else {
-        setUser(null);
-        setRole(null);
+        const authUser: AuthUser = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          role: 'admin', // TODO: Buscar role real do Firestore
+        };
+        setUser(authUser);
+        setRole('admin');
       }
+
       setLoading(false);
     });
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } finally {
-      setLoading(false);
-    }
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
   const logout = async () => {
@@ -66,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, role }}>
       {children}
     </AuthContext.Provider>
   );
@@ -74,7 +72,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context)
-    throw new Error("useAuth must ser usado dentro do AuthProvider");
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 };

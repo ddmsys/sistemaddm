@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+coverage
+functions/lib
+
+# ⛔️ Não formatar seus CSS de UX
+src/styles/design-system.css
+src/app/globals.css

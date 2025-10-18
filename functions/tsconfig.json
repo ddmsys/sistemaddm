@@ -1,17 +1,13 @@
 {
   "compilerOptions": {
+    "target": "es2020",
     "module": "commonjs",
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
     "outDir": "lib",
     "rootDir": "src",
-    "target": "es2020",
-    "lib": ["es2020"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src"
-, "assignClientNumber.js", "index.js"  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "lib"]
 }

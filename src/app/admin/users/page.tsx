@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { collection, getDocs } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { db } from '@/lib/firebase';
 
 interface User {
   id: string;
@@ -18,7 +19,7 @@ export default function UsersPage() {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const ref = collection(db, "users");
+        const ref = collection(db, 'users');
         const snapshot = await getDocs(ref);
         const lista: User[] = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -30,7 +31,7 @@ export default function UsersPage() {
       }
       setLoading(false);
     }
-    fetchUsers();
+    void fetchUsers();
   }, []);
 
   return (

@@ -1,0 +1,30 @@
+{
+  "root": true,
+  "extends": ["next/core-web-vitals"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "react", "react-hooks", "import"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/ban-ts-comment": ["warn", { "ts-ignore": true }],
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "import/order": [
+      "warn",
+      {
+        "groups": [["builtin", "external"], "internal", ["parent", "sibling", "index"]],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
+      }
+    ],
+    "no-console": "off"
+  },
+  "overrides": [
+    {
+      "files": ["functions/src/**/*.{ts,tsx,js}"],
+      "env": { "node": true, "browser": false },
+      "rules": { "no-console": "off" }
+    }
+  ]
+}

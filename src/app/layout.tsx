@@ -1,20 +1,32 @@
-import React from "react";
-import { AuthProvider } from "@/context/AuthContext";
+//src/app/layout.tsx//
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+
+import { AuthProvider } from '@/context/AuthContext';
+
+import { Providers } from './providers';
+import './styles/globals.css'; // ✅ Caminho correto
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: 'DDM Sistema',
+  description: 'Sistema de gestão editorial',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <head>
-        <title>Biblioteca DDM</title>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
-      <body>
-        <AuthProvider>{children}</AuthProvider>
+    <html lang="pt-BR" data-scroll-behavior="smooth">
+      <body className={inter.className}>
+        <Providers>
+          <AuthProvider>{children}</AuthProvider>
+        </Providers>
       </body>
     </html>
   );
