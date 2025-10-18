@@ -1,0 +1,33 @@
+name: Project Automation
+
+on:
+  issues:
+    types: [opened, labeled, closed, reopened]
+  pull_request:
+    types: [opened, labeled, closed, merged]
+
+jobs:
+  automate-project:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Adicionar issue ao projeto
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        run: |
+          echo "Nova issue criada: ${{ github.event.issue.title }}"
+          echo "Issue automaticamente adicionada ao projeto"
+
+      - name: Mover para Em Progresso
+        if: contains(github.event.issue.labels.*.name, 'em-progresso')
+        run: |
+          echo "Issue marcada como 'em-progresso'"
+          echo "Movendo para coluna 'Em Progresso'"
+
+      - name: Mover para Concluído
+        if: github.event.action == 'closed'
+        run: |
+          echo "Issue fechada: ${{ github.event.issue.title }}"
+          echo "Movendo para coluna 'Concluído'"

@@ -36,10 +36,10 @@ const errorMessage = getErrorMessage(error);
 ```typescript
 ❌ ERRADO:
 import { Client } from "@/lib/types/leads";
-import { Quote } from "@/lib/types/quotes";
+import { Budget } from "@/lib/types/budgets";
 
 ✅ CORRETO:
-import { Client, Quote, Lead } from "@/lib/types/comercial";
+import { Client, Budget, Lead } from "@/lib/types/comercial";
 ```
 
 ### **3. Firebase Timestamp vs Date**
@@ -67,14 +67,14 @@ const date = project.createdAt instanceof Timestamp
 - `src/hooks/comercial/useClients.ts` ✅
 - `src/hooks/comercial/useLeads.ts` ✅
 - `src/hooks/comercial/useProjects.ts` ✅
-- `src/hooks/comercial/useQuotes.ts` ✅
+- `src/hooks/comercial/useBudgets.ts` ✅
 
 ### **Páginas funcionais:**
 
 - `/crm/clients` ✅ (100% funcional)
 - `/crm/leads` ✅ (Kanban funcional)
 - `/crm/projects` ✅ (CRUD funcional)
-- `/crm/quotes` ✅ (Sistema funcional)
+- `/crm/budgets` ✅ (Sistema funcional)
 
 ## 🐛 **Problemas Comuns e Soluções**
 
