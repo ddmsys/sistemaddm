@@ -1,68 +1,197 @@
-'use client';
+// src/components/comercial/modals/BooktModal.tsx
+// ✅ REFEITO COMPLETO - compatível com SEU books.ts original
 
-import { X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+"use client";
 
+import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+
+// ✅ Import usando SEUS enums EXATOS
 import {
-  BookFormData,
-  BookType,
-  COLOR_OPTIONS,
-  FINISHING_TYPES,
-  FORMAT_TYPES,
-  PAPER_TYPES,
-  PRODUCT_TYPE_LABELS,
-} from '@/lib/types/books';
+  BindingType,
+  Book,
+  BookFormat,
+  CoverColor,
+  CoverPaper,
+  FinishingType,
+  InteriorColor,
+  InteriorPaper,
+} from "@/lib/types/books";
+
+// ✅ Interface usando a estrutura ANINHADA do seu BookSpecifications
+interface BookFormData {
+  catalogCode?: string;
+  title: string;
+  author?: string;
+  clientId?: string;
+  budgetId?: string;
+
+  // ✅ Specifications usando estrutura ANINHADA igual do SEU type
+  specifications?: {
+    format: BookFormat;
+    customFormat?: string;
+
+    cover: {
+      paper: CoverPaper;
+      customPaper?: string;
+      color: CoverColor;
+      customColor?: string;
+      finishing: FinishingType;
+      customFinishing?: string;
+      hasFlapWings: boolean;
+    };
+
+    interior: {
+      pageCount: number;
+      paper: InteriorPaper;
+      customPaper?: string;
+      color: InteriorColor;
+      customColor?: string;
+    };
+
+    binding: BindingType;
+    customBinding?: string;
+    hasShrinkWrap: boolean;
+    notes?: string;
+  };
+
+  notes?: string;
+  tags?: string[];
+}
 
 interface BookModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: BookFormData) => void;
-  initialData?: BookFormData;
+  initialData?: Partial<Book>;
   title?: string;
 }
+
+// ✅ OPTIONS usando SEUS enums EXATOS
+const FORMAT_OPTIONS = [
+  { value: BookFormat.F_140x210, label: "140x210mm" },
+  { value: BookFormat.F_160x230, label: "160x230mm" },
+  { value: BookFormat.F_A4, label: "A4 (210x297mm)" },
+  { value: BookFormat.CUSTOM, label: "Personalizado" },
+];
+
+const PAPER_OPTIONS = [
+  { value: InteriorPaper.AVENA_80G, label: "Avena 80g" },
+  { value: InteriorPaper.POLEN_SOFT_80G, label: "Pólen Soft 80g" },
+  { value: InteriorPaper.POLEN_BOLD_90G, label: "Pólen Bold 90g" },
+  { value: InteriorPaper.COUCHE_115G, label: "Couché 115g" },
+  { value: InteriorPaper.COUCHE_150G, label: "Couché 150g" },
+  { value: InteriorPaper.OFFSET_90G, label: "Offset 90g" },
+  { value: InteriorPaper.CUSTOM, label: "Personalizado" },
+];
+
+const COVER_PAPER_OPTIONS = [
+  { value: CoverPaper.TRILEX_330G, label: "Trilex 330g" },
+  { value: CoverPaper.SUPREMO_250G, label: "Supremo 250g" },
+  { value: CoverPaper.SUPREMO_350G, label: "Supremo 350g" },
+  { value: CoverPaper.COUCHE_250G, label: "Couché 250g" },
+  { value: CoverPaper.CUSTOM, label: "Personalizado" },
+];
+
+const BINDING_OPTIONS = [
+  { value: BindingType.PAPERBACK, label: "Brochura" },
+  { value: BindingType.HARDCOVER, label: "Capa dura" },
+  { value: BindingType.SADDLE_STITCH, label: "Grampo canoa" },
+  { value: BindingType.SEWN, label: "Costura" },
+  { value: BindingType.CUSTOM, label: "Personalizado" },
+];
+
+const FINISHING_OPTIONS = [
+  { value: FinishingType.MATTE_LAMINATION, label: "Laminação Fosca" },
+  { value: FinishingType.MATTE_LAMINATION_SPOT_UV, label: "Laminação Fosca + Verniz com Reserva" },
+  { value: FinishingType.GLOSS_LAMINATION, label: "Laminação Brilho" },
+  { value: FinishingType.VARNISH, label: "Verniz" },
+  { value: FinishingType.SPOT_VARNISH, label: "Verniz com Reserva" },
+  { value: FinishingType.HOT_STAMPING, label: "Hot Stamping" },
+  { value: FinishingType.CUSTOM, label: "Personalizado" },
+];
+
+const INTERIOR_COLOR_OPTIONS = [
+  { value: InteriorColor.C_1x1, label: "1x1 cor" },
+  { value: InteriorColor.C_2x2, label: "2x2 cores" },
+  { value: InteriorColor.C_4x4, label: "4x4 cores" },
+  { value: InteriorColor.CUSTOM, label: "Personalizado" },
+];
+
+const COVER_COLOR_OPTIONS = [
+  { value: CoverColor.C_4x0, label: "4x0 cor" },
+  { value: CoverColor.C_4x1, label: "4x1 cor" },
+  { value: CoverColor.C_4x4, label: "4x4 cores" },
+  { value: CoverColor.CUSTOM, label: "Personalizado" },
+];
 
 export default function BookModal({
   isOpen,
   onClose,
   onSave,
   initialData,
-  title = 'Novo Produto',
+  title = "Novo Livro",
 }: BookModalProps) {
+  // ✅ FormData com estrutura ANINHADA igual do SEU type
   const [formData, setFormData] = useState<BookFormData>({
-    name: '',
-    bookType: 'L',
-    category: '',
-    basePrice: 0,
-    baseCost: 0,
-    description: '',
-    notes: '',
-    paperType: '',
-    finishing: '',
-    format: '',
-    colors: '',
+    title: "",
+    author: "",
+    specifications: {
+      format: BookFormat.F_A4,
+      cover: {
+        paper: CoverPaper.TRILEX_330G,
+        color: CoverColor.C_4x0,
+        finishing: FinishingType.MATTE_LAMINATION,
+        hasFlapWings: false,
+      },
+      interior: {
+        pageCount: 100,
+        paper: InteriorPaper.AVENA_80G,
+        color: InteriorColor.C_1x1,
+      },
+      binding: BindingType.PAPERBACK,
+      hasShrinkWrap: false,
+    },
+    notes: "",
     tags: [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Preenche formulário quando há dados iniciais
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    } else {
-      // Reset form
+    if (initialData && isOpen) {
       setFormData({
-        name: '',
-        bookType: 'L',
-        category: '',
-        basePrice: 0,
-        baseCost: 0,
-        description: '',
-        notes: '',
-        paperType: '',
-        finishing: '',
-        format: '',
-        colors: '',
+        catalogCode: initialData.catalogCode,
+        title: initialData.title || "",
+        author: initialData.author,
+        clientId: initialData.clientId,
+        budgetId: initialData.budgetId,
+        specifications: initialData.specifications || formData.specifications,
+        notes: initialData.notes,
+        tags: initialData.tags,
+      });
+    } else if (isOpen) {
+      // Reset para defaults
+      setFormData({
+        title: "",
+        author: "",
+        specifications: {
+          format: BookFormat.F_A4,
+          cover: {
+            paper: CoverPaper.TRILEX_330G,
+            color: CoverColor.C_4x0,
+            finishing: FinishingType.MATTE_LAMINATION,
+            hasFlapWings: false,
+          },
+          interior: {
+            pageCount: 100,
+            paper: InteriorPaper.AVENA_80G,
+            color: InteriorColor.C_1x1,
+          },
+          binding: BindingType.PAPERBACK,
+          hasShrinkWrap: false,
+        },
+        notes: "",
         tags: [],
       });
     }
@@ -71,31 +200,17 @@ export default function BookModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validação básica
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Nome é obrigatório';
+    if (!formData.title?.trim()) {
+      newErrors.title = "Título é obrigatório";
     }
 
-    if (!formData.basePrice || formData.basePrice <= 0) {
-      newErrors.basePrice = 'Preço base deve ser maior que zero';
-    }
-
-    // Se for Livro, valida campos específicos
-    if (formData.bookType === 'L') {
-      if (!formData.paperType) {
-        newErrors.paperType = 'Papel é obrigatório para livros';
-      }
-      if (!formData.finishing) {
-        newErrors.finishing = 'Acabamento é obrigatório para livros';
-      }
-      if (!formData.format) {
-        newErrors.format = 'Formato é obrigatório para livros';
-      }
-      if (!formData.colors) {
-        newErrors.colors = 'Cores é obrigatório para livros';
-      }
+    if (
+      !formData.specifications?.interior.pageCount ||
+      formData.specifications.interior.pageCount <= 0
+    ) {
+      newErrors.pages = "Número de páginas deve ser maior que zero";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -107,224 +222,262 @@ export default function BookModal({
     onClose();
   };
 
-  const handleBookTypeChange = (type: BookType) => {
-    setFormData({
-      ...formData,
-      bookType: type,
-      // Limpa campos específicos ao mudar de tipo
-      paperType: '',
-      finishing: '',
-      format: '',
-      colors: '',
-      description: '',
-    });
+  // ✅ Helper para update aninhado
+  const updateSpecification = (path: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      specifications: {
+        ...prev.specifications!,
+        ...setNestedValue(prev.specifications!, path, value),
+      },
+    }));
+  };
+
+  // Helper para setar valores aninhados
+  const setNestedValue = (obj: any, path: string, value: any) => {
+    const keys = path.split(".");
+    const result = { ...obj };
+    let current = result;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      current[keys[i]] = { ...current[keys[i]] };
+      current = current[keys[i]];
+    }
+
+    current[keys[keys.length - 1]] = value;
+    return result;
   };
 
   if (!isOpen) return null;
 
-  const isBookType = formData.bookType === 'L';
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
-        {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between border-b bg-white px-6 py-4">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 transition-colors hover:text-gray-600">
-            <X className="h-5 w-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white">
+        <div className="flex items-center justify-between border-b p-6">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
-          {/* Nome do Produto */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Nome do Produto *
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className={`w-full rounded-lg border p-2 focus:ring-2 focus:ring-blue-500 ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Ex: Livro Infantil A4"
-            />
-            {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-          </div>
+          {/* Informações Básicas */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Informações Básicas</h3>
 
-          {/* Tipo e Categoria */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Tipo *</label>
-              <select
-                value={formData.bookType}
-                onChange={(e) => handleBookTypeChange(e.target.value as BookType)}
-                className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-              >
-                {Object.entries(PRODUCT_TYPE_LABELS).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Título do Livro *
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className={`w-full rounded-lg border p-2 focus:ring-2 focus:ring-blue-500 ${
+                    errors.title ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Ex: História Infantil Ilustrada"
+                />
+                {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
+              </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Categoria</label>
-              <input
-                type="text"
-                value={formData.category || ''}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: livro-infantil"
-              />
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Autor</label>
+                <input
+                  type="text"
+                  value={formData.author}
+                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nome do autor"
+                />
+              </div>
             </div>
           </div>
 
-          {/* CAMPOS ESPECÍFICOS PARA LIVROS */}
-          {isBookType && (
-            <div className="space-y-4 rounded-lg bg-blue-50 p-4">
-              <h3 className="font-medium text-gray-900">Especificações do Livro</h3>
+          {/* Especificações Técnicas */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Especificações Técnicas</h3>
 
-              {/* Papel */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Papel *</label>
-                <select
-                  value={formData.paperType || ''}
-                  onChange={(e) => setFormData({ ...formData, paperType: e.target.value })}
-                  className={`w-full rounded-lg border p-2 focus:ring-2 focus:ring-blue-500 ${
-                    errors.paperType ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Selecione o papel</option>
-                  {PAPER_TYPES.map((paper) => (
-                    <option key={paper} value={paper}>
-                      {paper}
-                    </option>
-                  ))}
-                </select>
-                {errors.paperType && (
-                  <p className="mt-1 text-sm text-red-500">{errors.paperType}</p>
-                )}
-              </div>
-
-              {/* Acabamento */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Acabamento *</label>
-                <select
-                  value={formData.finishing || ''}
-                  onChange={(e) => setFormData({ ...formData, finishing: e.target.value })}
-                  className={`w-full rounded-lg border p-2 focus:ring-2 focus:ring-blue-500 ${
-                    errors.finishing ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Selecione o acabamento</option>
-                  {FINISHING_TYPES.map((finish) => (
-                    <option key={finish} value={finish}>
-                      {finish}
-                    </option>
-                  ))}
-                </select>
-                {errors.finishing && (
-                  <p className="mt-1 text-sm text-red-500">{errors.finishing}</p>
-                )}
-              </div>
-
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {/* Formato */}
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Formato *</label>
                 <select
-                  value={formData.format || ''}
-                  onChange={(e) => setFormData({ ...formData, format: e.target.value })}
-                  className={`w-full rounded-lg border p-2 focus:ring-2 focus:ring-blue-500 ${
-                    errors.format ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  value={formData.specifications?.format}
+                  onChange={(e) => updateSpecification("format", e.target.value as BookFormat)}
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Selecione o formato</option>
-                  {FORMAT_TYPES.map((format) => (
-                    <option key={format} value={format}>
-                      {format}
+                  {FORMAT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
                     </option>
                   ))}
                 </select>
-                {errors.format && <p className="mt-1 text-sm text-red-500">{errors.format}</p>}
               </div>
 
-              {/* Cores */}
+              {/* Páginas */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Cores *</label>
-                <select
-                  value={formData.colors || ''}
-                  onChange={(e) => setFormData({ ...formData, colors: e.target.value })}
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Número de Páginas *
+                </label>
+                <input
+                  type="number"
+                  value={formData.specifications?.interior.pageCount}
+                  onChange={(e) =>
+                    updateSpecification("interior.pageCount", parseInt(e.target.value) || 0)
+                  }
                   className={`w-full rounded-lg border p-2 focus:ring-2 focus:ring-blue-500 ${
-                    errors.colors ? 'border-red-500' : 'border-gray-300'
+                    errors.pages ? "border-red-500" : "border-gray-300"
                   }`}
+                  placeholder="100"
+                />
+                {errors.pages && <p className="mt-1 text-xs text-red-500">{errors.pages}</p>}
+              </div>
+
+              {/* Encadernação */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Encadernação *
+                </label>
+                <select
+                  value={formData.specifications?.binding}
+                  onChange={(e) => updateSpecification("binding", e.target.value as BindingType)}
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Selecione as cores</option>
-                  {COLOR_OPTIONS.map((color) => (
-                    <option key={color} value={color}>
-                      {color}
+                  {BINDING_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
                     </option>
                   ))}
                 </select>
-                {errors.colors && <p className="mt-1 text-sm text-red-500">{errors.colors}</p>}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* CAMPOS GENÉRICOS (OUTROS TIPOS) */}
-          {!isBookType && (
-            <div className="rounded-lg bg-gray-50 p-4">
-              <label className="mb-1 block text-sm font-medium text-gray-700">Descrição</label>
-              <textarea
-                value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={4}
-                className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-                placeholder="Descreva as especificações do produto..."
-              />
+          {/* Miolo */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Miolo</h3>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Papel Miolo *
+                </label>
+                <select
+                  value={formData.specifications?.interior.paper}
+                  onChange={(e) =>
+                    updateSpecification("interior.paper", e.target.value as InteriorPaper)
+                  }
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+                >
+                  {PAPER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Cor Miolo *</label>
+                <select
+                  value={formData.specifications?.interior.color}
+                  onChange={(e) =>
+                    updateSpecification("interior.color", e.target.value as InteriorColor)
+                  }
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+                >
+                  {INTERIOR_COLOR_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          )}
+          </div>
 
-          {/* Preços */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Preço Base (Venda) *
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.basePrice}
-                onChange={(e) =>
-                  setFormData({ ...formData, basePrice: parseFloat(e.target.value) || 0 })
-                }
-                className={`w-full rounded-lg border p-2 focus:ring-2 focus:ring-blue-500 ${
-                  errors.basePrice ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="0.00"
-              />
-              {errors.basePrice && <p className="mt-1 text-sm text-red-500">{errors.basePrice}</p>}
+          {/* Capa */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Capa</h3>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Papel Capa *</label>
+                <select
+                  value={formData.specifications?.cover.paper}
+                  onChange={(e) => updateSpecification("cover.paper", e.target.value as CoverPaper)}
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+                >
+                  {COVER_PAPER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Cor Capa *</label>
+                <select
+                  value={formData.specifications?.cover.color}
+                  onChange={(e) => updateSpecification("cover.color", e.target.value as CoverColor)}
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+                >
+                  {COVER_COLOR_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Acabamento Capa *
+                </label>
+                <select
+                  value={formData.specifications?.cover.finishing}
+                  onChange={(e) =>
+                    updateSpecification("cover.finishing", e.target.value as FinishingType)
+                  }
+                  className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
+                >
+                  {FINISHING_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+          </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Custo Base (Produção)
+          {/* Extras */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Extras</h3>
+
+            <div className="flex gap-6">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.specifications?.cover.hasFlapWings}
+                  onChange={(e) => updateSpecification("cover.hasFlapWings", e.target.checked)}
+                  className="mr-2"
+                />
+                Orelhas
               </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.baseCost || 0}
-                onChange={(e) =>
-                  setFormData({ ...formData, baseCost: parseFloat(e.target.value) || 0 })
-                }
-                className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-                placeholder="0.00"
-              />
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.specifications?.hasShrinkWrap}
+                  onChange={(e) => updateSpecification("hasShrinkWrap", e.target.checked)}
+                  className="mr-2"
+                />
+                Shrink Wrap
+              </label>
             </div>
           </div>
 
@@ -332,11 +485,11 @@ export default function BookModal({
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Observações</label>
             <textarea
-              value={formData.notes || ''}
+              value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={3}
               className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500"
-              placeholder="Observações adicionais..."
+              placeholder="Informações adicionais sobre o livro..."
             />
           </div>
 
@@ -345,19 +498,20 @@ export default function BookModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200"
+              className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
-              Salvar Produto
+              Salvar Livro
             </button>
           </div>
         </form>
       </div>
+      export default BookCard;
     </div>
   );
 }

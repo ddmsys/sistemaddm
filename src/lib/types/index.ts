@@ -5,6 +5,12 @@
 import type {
   Address,
   ApprovalTask,
+  Budget,
+  BudgetCardProps,
+  BudgetFormData,
+  BudgetItem,
+  BudgetModalProps,
+  BudgetStatus,
   Client,
   ClientFormData,
   ClientModalProps,
@@ -25,14 +31,8 @@ import type {
   ProjectFormData,
   ProjectModalProps,
   ProjectStatus,
-  Quote,
-  QuoteCardProps,
-  QuoteFormData,
-  QuoteItem,
-  QuoteModalProps,
-  QuoteStatus,
   SocialMedia,
-} from './comercial';
+} from "./comercial";
 import type {
   ApiResponse,
   AsyncState,
@@ -48,12 +48,13 @@ import type {
   TableColumn,
   TableConfig,
   UserProfile,
-} from './shared';
+} from "./shared";
 
 // ================ RE-EXPORTS ================
 
 // Enums e Types
 export type {
+  BudgetStatus,
   ClientStatus,
   ClientType,
   LeadSource,
@@ -61,26 +62,25 @@ export type {
   Priority,
   ProductType,
   ProjectStatus,
-  QuoteStatus,
 };
 
 // Interfaces principais
-export type { Client, Lead, Project, Quote };
+export type { Budget, Client, Lead, Project };
 
 // Interfaces auxiliares
-export type { Address, ApprovalTask, QuoteItem, SocialMedia };
+export type { Address, ApprovalTask, BudgetItem, SocialMedia };
 
 // Form Data
-export type { ClientFormData, LeadFormData, ProjectFormData, QuoteFormData };
+export type { BudgetFormData, ClientFormData, LeadFormData, ProjectFormData };
 
 // Props
 export type {
+  BudgetCardProps,
+  BudgetModalProps,
   ClientModalProps,
   LeadModalProps,
   ProjectCardProps,
   ProjectModalProps,
-  QuoteCardProps,
-  QuoteModalProps,
 };
 
 // Filters do comercial
@@ -122,8 +122,8 @@ export interface ClientFilters {
   };
 }
 
-export interface QuoteFilters extends ComercialFilters {
-  status?: QuoteStatus[];
+export interface BudgetFilters extends ComercialFilters {
+  status?: BudgetStatus[];
   clientId?: string[];
 }
 
@@ -139,16 +139,16 @@ export type LeadStage = LeadStatus;
 // ========== CENTRAL EXPORTS ==========
 
 // Shared types
-export * from './shared';
+export * from "./shared";
 
 // CRM Module exports
-export * from './clients';
-export * from './leads';
-export * from './projects';
-export * from './quotes';
+export * from "./budgets";
+export * from "./clients";
+export * from "./leads";
+export * from "./projects";
 
 // Other modules exports
-export * from './finance';
-export * from './logistics';
-export * from './marketing';
-export * from './purchases';
+export * from "./finance";
+export * from "./logistics";
+export * from "./marketing";
+export * from "./purchases";

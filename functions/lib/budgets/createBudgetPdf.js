@@ -36,24 +36,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createQuotePdf = void 0;
+exports.createBudgetPdf = void 0;
 const admin = __importStar(require("firebase-admin"));
 const storage_1 = require("firebase-admin/storage");
 const functions = __importStar(require("firebase-functions/v2"));
 const pdfkit_1 = __importDefault(require("pdfkit"));
 if (!admin.apps.length)
     admin.initializeApp();
-exports.createQuotePdf = functions.https.onCall({ region: 'southamerica-east1' }, async (request) => {
-    const quoteId = request.data;
+exports.createBudgetPdf = functions.https.onCall({ region: 'southamerica-east1' }, async (request) => {
+    const budgetId = request.data;
     if (!request.auth)
         throw new functions.https.HttpsError('unauthenticated', 'Usuário não autenticado');
     try {
         const db = admin.firestore();
         const storage = (0, storage_1.getStorage)();
-        const quoteDoc = await db.collection('quotes').doc(quoteId).get();
-        if (!quoteDoc.exists)
+        const budgetDoc = await db.collection('budgets').doc(budgetId).get();
+        if (!budgetDoc.exists)
             throw new functions.https.HttpsError('not-found', 'Orçamento não encontrado');
-        const quote = quoteDoc.data();
+        const budget = budgetDoc.data();
         // Criar PDF
         const doc = new pdfkit_1.default({ margin: 50 });
         const chunks = [];
@@ -61,38 +61,38 @@ exports.createQuotePdf = functions.https.onCall({ region: 'southamerica-east1' }
         // Cabeçalho
         doc.fontSize(20).text('DDM EDITORA', 50, 50);
         doc.fontSize(14).text('Orçamento', 50, 80);
-        doc.text(`Número: ${quote.number}`, 400, 80);
+        doc.text(`Número: ${budget.number}`, 400, 80);
         // Dados do cliente
-        if (quote.client) {
-            doc.text(`Cliente: ${quote.client.name}`, 50, 120);
-            if (quote.client.email) {
-                doc.text(`Email: ${quote.client.email}`, 50, 140);
+        if (budget.client) {
+            doc.text(`Cliente: ${budget.client.name}`, 50, 120);
+            if (budget.client.email) {
+                doc.text(`Email: ${budget.client.email}`, 50, 140);
             }
         }
         // Título do projeto
-        if (quote.projectTitle) {
-            doc.text(`Projeto: ${quote.projectTitle}`, 50, 170);
+        if (budget.projectData?.title) {
+            doc.text(`Projeto: ${budget.projectData.title}`, 50, 170);
         }
         // Data de emissão
-        if (quote.issueDate) {
-            const date = quote.issueDate.toDate();
+        if (budget.issueDate) {
+            const date = budget.issueDate.toDate();
             doc.text(`Data: ${date.toLocaleDateString('pt-BR')}`, 50, 200);
         }
         // Itens
         let yPosition = 240;
-        if (quote.items && quote.items.length > 0) {
+        if (budget.items && budget.items.length > 0) {
             doc.text('Itens:', 50, yPosition);
             yPosition += 30;
-            quote.items.forEach((item, index) => {
+            budget.items.forEach((item, index) => {
                 doc.text(`${index + 1}. ${item.description}`, 50, yPosition);
-                doc.text(`R$ ${item.total?.toFixed(2) || '0,00'}`, 400, yPosition);
+                doc.text(`R$ ${item.totalPrice?.toFixed(2) || '0,00'}`, 400, yPosition);
                 yPosition += 30;
             });
         }
         // Total
-        if (quote.totals?.total) {
+        if (budget.total) {
             yPosition += 30;
-            doc.fontSize(16).text(`Total Geral: R$ ${quote.totals.total.toFixed(2)}`, 50, yPosition);
+            doc.fontSize(16).text(`Total Geral: R$ ${budget.total.toFixed(2)}`, 50, yPosition);
         }
         doc.end();
         // Aguardar conclusão do PDF
@@ -102,7 +102,7 @@ exports.createQuotePdf = functions.https.onCall({ region: 'southamerica-east1' }
             });
         });
         // Upload para o Storage
-        const fileName = `quotes/${quoteId}/quote-${quote.number}.pdf`;
+        const fileName = `budgets/${budgetId}/budget-${budget.number}.pdf`;
         const file = storage.bucket().file(fileName);
         await file.save(pdfBuffer, {
             metadata: { contentType: 'application/pdf' },
@@ -113,7 +113,7 @@ exports.createQuotePdf = functions.https.onCall({ region: 'southamerica-east1' }
             expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
         });
         // Atualizar orçamento
-        await quoteDoc.ref.update({
+        await budgetDoc.ref.update({
             pdfUrl: url,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });

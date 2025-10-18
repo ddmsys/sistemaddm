@@ -22,19 +22,20 @@ import {
   Timestamp,
   updateDoc,
   where,
-} from 'firebase/firestore';
+} from "firebase/firestore";
 
-import { db } from '@/lib/firebase';
-import { generateCatalogCode } from '@/lib/types/books';
-import { Budget } from '@/lib/types/budgets';
-import { Lead } from '@/lib/types/leads';
-import { createOrderFromBudget, generateOrderNumber } from '@/lib/types/orders';
+import { db } from "@/lib/firebase";
+import { generateCatalogCode } from "@/lib/types/books";
+import { Budget } from "@/lib/types/budgets";
+import { Lead } from "@/lib/types/leads";
+import { createOrderFromBudget, generateOrderNumber } from "@/lib/types/orders";
 import {
   generateProjectNumber,
   ProductionProjectStatus,
+  ProjectStage,
   ProjectStageType,
   StageStatus,
-} from '@/lib/types/production-projects';
+} from "@/lib/types/production-projects";
 
 // ==================== INTERFACES ====================
 
@@ -47,9 +48,9 @@ export interface ApproveBudgetResult {
 }
 
 export interface ApproveBudgetError {
-  step: 'validation' | 'client' | 'book' | 'order' | 'project' | 'budget_update';
+  step: "validation" | "client" | "book" | "order" | "project" | "budget_update";
   message: string;
-  originalError?: any;
+  originalError?: unknown;
 }
 
 // ==================== MAIN FUNCTION ====================
@@ -60,24 +61,24 @@ export async function approveBudget(
 ): Promise<ApproveBudgetResult> {
   try {
     // ===== STEP 1: LOAD & VALIDATE BUDGET =====
-    const budgetDoc = await getDoc(doc(db, 'budgets', budgetId));
+    const budgetDoc = await getDoc(doc(db, "budgets", budgetId));
     if (!budgetDoc.exists()) {
-      throw createError('validation', 'Budget not found');
+      throw createError("validation", "Budget not found");
     }
 
     const budget = { id: budgetDoc.id, ...budgetDoc.data() } as Budget;
 
     // Validações
-    if (budget.status !== 'sent') {
-      throw createError('validation', 'Budget must be in sent status to be approved');
+    if (budget.status !== "sent") {
+      throw createError("validation", "Budget must be in sent status to be approved");
     }
 
     if (!budget.leadId && !budget.clientId) {
-      throw createError('validation', 'Budget must have leadId or clientId');
+      throw createError("validation", "Budget must have leadId or clientId");
     }
 
     if (!budget.projectData?.title) {
-      throw createError('validation', 'Budget must have project data with title');
+      throw createError("validation", "Budget must have project data with title");
     }
 
     // ===== STEP 2: GET OR CREATE CLIENT =====
@@ -88,9 +89,9 @@ export async function approveBudget(
     if (budget.clientId) {
       // Cliente já existe (reimpressão)
       clientId = budget.clientId;
-      const clientDoc = await getDoc(doc(db, 'clients', clientId));
+      const clientDoc = await getDoc(doc(db, "clients", clientId));
       if (!clientDoc.exists()) {
-        throw createError('client', 'Client not found');
+        throw createError("client", "Client not found");
       }
       const clientData = clientDoc.data();
       clientNumber = clientData.catalogNumber;
@@ -102,7 +103,7 @@ export async function approveBudget(
       clientNumber = result.clientNumber;
       clientName = result.clientName;
     } else {
-      throw createError('validation', 'No leadId or clientId found');
+      throw createError("validation", "No leadId or clientId found");
     }
 
     // ===== STEP 3: CREATE BOOK =====
@@ -136,8 +137,8 @@ export async function approveBudget(
     );
 
     // ===== STEP 6: UPDATE BUDGET =====
-    await updateDoc(doc(db, 'budgets', budgetId), {
-      status: 'approved',
+    await updateDoc(doc(db, "budgets", budgetId), {
+      status: "approved",
       approvalDate: Timestamp.now(),
       clientId: clientId,
       bookId: bookResult.bookId,
@@ -152,15 +153,15 @@ export async function approveBudget(
       productionProjectId,
       catalogCode: bookResult.catalogCode,
     };
-  } catch (error: any) {
-    console.error('Error approving budget:', error);
+  } catch (error) {
+    console.error("Error approving budget:", error);
     throw error;
   }
 }
 
 // ==================== HELPER FUNCTIONS ====================
 
-function createError(step: ApproveBudgetError['step'], message: string, error?: any) {
+function createError(step: ApproveBudgetError["step"], message: string, error?: unknown) {
   return {
     step,
     message,
@@ -174,9 +175,9 @@ async function createClientFromLead(
   userId: string,
 ): Promise<{ clientId: string; clientNumber: number; clientName: string }> {
   try {
-    const leadDoc = await getDoc(doc(db, 'leads', leadId));
+    const leadDoc = await getDoc(doc(db, "leads", leadId));
     if (!leadDoc.exists()) {
-      throw createError('client', 'Lead not found');
+      throw createError("client", "Lead not found");
     }
 
     const lead = leadDoc.data() as Lead;
@@ -191,19 +192,19 @@ async function createClientFromLead(
       phone: lead.phone,
       company: lead.company,
       catalogNumber: clientNumber,
-      origin: 'lead_conversion',
+      origin: "lead_conversion",
       leadId: leadId,
-      status: 'active',
+      status: "active",
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       createdBy: userId,
     };
 
-    const clientRef = await addDoc(collection(db, 'clients'), clientData);
+    const clientRef = await addDoc(collection(db, "clients"), clientData);
 
     // Atualizar lead para status convertido
-    await updateDoc(doc(db, 'leads', leadId), {
-      status: 'convertido',
+    await updateDoc(doc(db, "leads", leadId), {
+      status: "convertido",
       clientId: clientRef.id,
       updatedAt: Timestamp.now(),
     });
@@ -214,15 +215,15 @@ async function createClientFromLead(
       clientName: lead.name,
     };
   } catch (error) {
-    throw createError('client', 'Failed to create client from lead', error);
+    throw createError("client", "Failed to create client from lead", error);
   }
 }
 
 // ===== GET NEXT CLIENT NUMBER =====
 async function getNextClientNumber(): Promise<number> {
   try {
-    const clientsRef = collection(db, 'clients');
-    const q = query(clientsRef, orderBy('catalogNumber', 'desc'));
+    const clientsRef = collection(db, "clients");
+    const q = query(clientsRef, orderBy("catalogNumber", "desc"));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
@@ -232,7 +233,7 @@ async function getNextClientNumber(): Promise<number> {
     const lastClient = snapshot.docs[0].data();
     return (lastClient.catalogNumber || 0) + 1;
   } catch (error) {
-    console.error('Error getting next client number:', error);
+    console.error("Error getting next client number:", error);
     return 1;
   }
 }
@@ -247,11 +248,11 @@ async function createBookFromBudget(
 ): Promise<{ bookId: string; catalogCode: string; bookTitle: string }> {
   try {
     if (!budget.projectType) {
-      throw createError('book', 'Budget must have projectType');
+      throw createError("book", "Budget must have projectType");
     }
 
     if (!budget.projectData?.title) {
-      throw createError('book', 'Budget must have project title');
+      throw createError("book", "Budget must have project title");
     }
 
     // Obter próximo workNumber para este cliente/tipo
@@ -265,7 +266,7 @@ async function createBookFromBudget(
       clientId: clientId,
       catalogCode: catalogCode,
       catalogMetadata: {
-        prefix: 'DDM' as const,
+        prefix: "DDM" as const,
         type: budget.projectType,
         clientNumber: clientNumber,
         workNumber: workNumber,
@@ -280,7 +281,7 @@ async function createBookFromBudget(
       createdBy: userId,
     };
 
-    const bookRef = await addDoc(collection(db, 'books'), bookData);
+    const bookRef = await addDoc(collection(db, "books"), bookData);
 
     return {
       bookId: bookRef.id,
@@ -288,19 +289,19 @@ async function createBookFromBudget(
       bookTitle: budget.projectData.title,
     };
   } catch (error) {
-    throw createError('book', 'Failed to create book', error);
+    throw createError("book", "Failed to create book", error);
   }
 }
 
 // ===== GET NEXT WORK NUMBER =====
 async function getNextWorkNumber(clientId: string, projectType: string): Promise<number> {
   try {
-    const booksRef = collection(db, 'books');
+    const booksRef = collection(db, "books");
     const q = query(
       booksRef,
-      where('clientId', '==', clientId),
-      where('catalogMetadata.type', '==', projectType),
-      orderBy('catalogMetadata.workNumber', 'desc'),
+      where("clientId", "==", clientId),
+      where("catalogMetadata.type", "==", projectType),
+      orderBy("catalogMetadata.workNumber", "desc"),
     );
 
     const snapshot = await getDocs(q);
@@ -312,7 +313,7 @@ async function getNextWorkNumber(clientId: string, projectType: string): Promise
     const lastBook = snapshot.docs[0].data();
     return (lastBook.catalogMetadata?.workNumber || 0) + 1;
   } catch (error) {
-    console.error('Error getting next work number:', error);
+    console.error("Error getting next work number:", error);
     return 1;
   }
 }
@@ -342,10 +343,10 @@ async function createOrderFromBudgetData(
       createdBy: userId,
     };
 
-    const orderRef = await addDoc(collection(db, 'orders'), completeOrderData);
+    const orderRef = await addDoc(collection(db, "orders"), completeOrderData);
     return orderRef.id;
   } catch (error) {
-    throw createError('order', 'Failed to create order', error);
+    throw createError("order", "Failed to create order", error);
   }
 }
 
@@ -363,46 +364,44 @@ async function createProductionProjectFromOrder(
     const projectNumber = await getNextProjectNumber();
 
     // Criar stages baseadas nos itens do orçamento
-    const stages = budget.items
-      .map((item, index) => {
-        let stageType = ProjectStageType.OTHER;
-        let stageName = item.description;
+    const stages: ProjectStage[] = budget.items.map((item, index) => {
+      let stageType: ProjectStageType = ProjectStageType.OTHER;
+      let stageName = item.description;
 
-        // Mapear tipo de item para tipo de stage
-        if (item.type === 'editorial_service') {
-          if ('service' in item) {
-            // Mapear serviços específicos
-            const service = item.service.toString();
-            if (service.includes('Revisão')) stageType = ProjectStageType.REVISION;
-            else if (service.includes('Diagramação')) stageType = ProjectStageType.LAYOUT;
-            else if (service.includes('Capa')) stageType = ProjectStageType.COVER_CREATION;
-            else if (service.includes('ISBN')) stageType = ProjectStageType.ISBN_CREATION;
-            else stageType = ProjectStageType.TEXT_PREPARATION;
+      // Mapear tipo de item para tipo de stage
+      if (item.type === "editorial_service") {
+        if ("service" in item) {
+          // Mapear serviços específicos
+          const service = item.service.toString();
+          if (service.includes("Revisão")) stageType = ProjectStageType.REVISION;
+          else if (service.includes("Diagramação")) stageType = ProjectStageType.LAYOUT;
+          else if (service.includes("Capa")) stageType = ProjectStageType.COVER_CREATION;
+          else if (service.includes("ISBN")) stageType = ProjectStageType.ISBN_CREATION;
+          else stageType = ProjectStageType.TEXT_PREPARATION;
 
-            stageName = item.service.toString();
-          }
-        } else if (item.type === 'printing') {
-          stageType = ProjectStageType.PRINTING;
-          stageName = 'Impressão';
+          stageName = item.service.toString();
         }
+      } else if (item.type === "printing") {
+        stageType = ProjectStageType.PRINTING;
+        stageName = "Impressão";
+      }
 
-        return {
-          id: `stage_${Date.now()}_${index}`,
-          type: stageType,
-          name: stageName,
-          description: item.notes,
-          status: StageStatus.PENDING,
-          orderItemId: item.id,
-        };
-      })
-      .filter((stage) => stage !== null);
+      return {
+        id: `stage_${Date.now()}_${index}`,
+        type: stageType,
+        name: stageName,
+        description: item.notes,
+        status: StageStatus.PENDING,
+        orderItemId: item.id,
+      };
+    });
 
     // Adicionar etapa final de entrega
     stages.push({
       id: `stage_${Date.now()}_delivery`,
       type: ProjectStageType.DELIVERY,
-      name: 'Entrega',
-      description: 'Entrega final ao cliente',
+      name: "Entrega",
+      description: "Entrega final ao cliente",
       status: StageStatus.PENDING,
     });
 
@@ -428,10 +427,10 @@ async function createProductionProjectFromOrder(
       createdBy: userId,
     };
 
-    const projectRef = await addDoc(collection(db, 'production_projects'), projectData);
+    const projectRef = await addDoc(collection(db, "production_projects"), projectData);
     return projectRef.id;
   } catch (error) {
-    throw createError('project', 'Failed to create production project', error);
+    throw createError("project", "Failed to create production project", error);
   }
 }
 
@@ -439,12 +438,12 @@ async function createProductionProjectFromOrder(
 async function getNextProjectNumber(): Promise<string> {
   try {
     const year = new Date().getFullYear();
-    const projectsRef = collection(db, 'production_projects');
+    const projectsRef = collection(db, "production_projects");
     const q = query(
       projectsRef,
-      where('number', '>=', `PROJ-${year}-000`),
-      where('number', '<=', `PROJ-${year}-999`),
-      orderBy('number', 'desc'),
+      where("number", ">=", `PROJ-${year}-000`),
+      where("number", "<=", `PROJ-${year}-999`),
+      orderBy("number", "desc"),
     );
 
     const snapshot = await getDocs(q);
@@ -454,10 +453,10 @@ async function getNextProjectNumber(): Promise<string> {
     }
 
     const lastNumber = snapshot.docs[0].data().number as string;
-    const lastSequential = parseInt(lastNumber.split('-')[2], 10);
+    const lastSequential = parseInt(lastNumber.split("-")[2], 10);
     return generateProjectNumber(year, lastSequential + 1);
   } catch (error) {
-    console.error('Error getting next project number:', error);
+    console.error("Error getting next project number:", error);
     return generateProjectNumber(new Date().getFullYear(), 1);
   }
 }

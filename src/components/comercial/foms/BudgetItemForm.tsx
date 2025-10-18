@@ -1,368 +1,283 @@
-'use client';
+import { X } from "lucide-react";
+import React, { useState } from "react";
 
-import { Plus, X } from 'lucide-react';
-import { useState } from 'react';
-
-import { BookSpecifications } from '@/lib/types/books';
-import {
-  BudgetItem,
-  EditorialServiceType,
-  ExtraType,
-  calculateItemTotal,
-} from '@/lib/types/budgets';
+import { BudgetItem, EditorialServiceType, ExtraType } from "@/lib/types/budgets";
 
 interface BudgetItemFormProps {
-  onAdd: (item: Omit<BudgetItem, 'id' | 'totalPrice'>) => void;
-  bookSpecs?: BookSpecifications;
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (item: Omit<BudgetItem, "id" | "totalPrice">) => void;
+  initialData?: Partial<BudgetItem>;
+  title?: string;
 }
 
-export function BudgetItemForm({ onAdd, bookSpecs }: BudgetItemFormProps) {
-  const [itemType, setItemType] = useState<'editorial_service' | 'printing' | 'extra'>(
-    'editorial_service',
+export default function BudgetItemForm({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData,
+  title = "Novo Item",
+}: BudgetItemFormProps) {
+  const [type, setType] = useState<"editorial_service" | "printing" | "extra">(
+    initialData?.type || "editorial_service",
   );
-  const [isOpen, setIsOpen] = useState(false);
 
-  // Editorial Service
-  const [service, setService] = useState<EditorialServiceType>(EditorialServiceType.REVISION);
-  const [customService, setCustomService] = useState('');
-  const [estimatedDays, setEstimatedDays] = useState<number>(0);
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [quantity, setQuantity] = useState(initialData?.quantity || 1);
+  const [unitPrice, setUnitPrice] = useState(initialData?.unitPrice || 0);
+  const [notes, setNotes] = useState(initialData?.notes || "");
 
-  // Printing
-  const [printRun, setPrintRun] = useState<number>(100);
-  const [useBookSpecs, setUseBookSpecs] = useState(true);
-  const [productionDays, setProductionDays] = useState<number>(0);
+  // Campos específicos para editorial_service
+  const [service, setService] = useState<EditorialServiceType>(
+    (initialData as any)?.service || EditorialServiceType.REVISION,
+  );
+  const [estimatedDays, setEstimatedDays] = useState((initialData as any)?.estimatedDays || 0);
 
-  // Extra
-  const [extraType, setExtraType] = useState<ExtraType>(ExtraType.PROOFS);
-  const [customExtra, setCustomExtra] = useState('');
+  // Campos específicos para printing
+  const [printRun, setPrintRun] = useState((initialData as any)?.printRun || 100);
+  const [productionDays, setProductionDays] = useState((initialData as any)?.productionDays || 0);
 
-  // Common
-  const [description, setDescription] = useState('');
-  const [quantity, setQuantity] = useState<number>(1);
-  const [unitPrice, setUnitPrice] = useState<number>(0);
-  const [notes, setNotes] = useState('');
+  // Campos específicos para extra
+  const [extraType, setExtraType] = useState<ExtraType>(
+    (initialData as any)?.extraType || ExtraType.PROOFS,
+  );
+
+  if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const baseItem = {
-      description: description || getDefaultDescription(),
-      quantity,
-      unitPrice,
-      notes: notes || undefined,
-    };
-
-    let item: Omit<BudgetItem, 'id' | 'totalPrice'>;
-
-    if (itemType === 'editorial_service') {
-      item = {
-        ...baseItem,
-        type: 'editorial_service',
-        service,
-        customService: service === EditorialServiceType.CUSTOM ? customService : undefined,
-        estimatedDays: estimatedDays > 0 ? estimatedDays : undefined,
+    // ✅ Criar item baseado no tipo usando union types corretos
+    if (type === "editorial_service") {
+      const item = {
+        type: "editorial_service" as const,
+        description,
+        quantity,
+        unitPrice,
+        notes,
+        service, // ✅ Campo correto para editorial_service
+        customService: service === EditorialServiceType.CUSTOM ? description : undefined,
+        estimatedDays,
       };
-    } else if (itemType === 'printing') {
-      item = {
-        ...baseItem,
-        type: 'printing',
-        printRun,
-        useBookSpecs,
-        customSpecs: useBookSpecs ? undefined : bookSpecs,
-        productionDays: productionDays > 0 ? productionDays : undefined,
+      onSubmit(item);
+    } else if (type === "printing") {
+      const item = {
+        type: "printing" as const,
+        description,
+        quantity,
+        unitPrice,
+        notes,
+        printRun, // ✅ Campo correto para printing
+        useBookSpecs: true,
+        productionDays,
       };
+      onSubmit(item);
     } else {
-      item = {
-        ...baseItem,
-        type: 'extra',
-        extraType,
-        customExtra: extraType === ExtraType.CUSTOM ? customExtra : undefined,
+      const item = {
+        type: "extra" as const,
+        description,
+        quantity,
+        unitPrice,
+        notes,
+        extraType, // ✅ Campo correto para extra
+        customExtra: extraType === ExtraType.CUSTOM ? description : undefined,
       };
+      onSubmit(item);
     }
-
-    onAdd(item);
-    resetForm();
-    setIsOpen(false);
   };
-
-  const getDefaultDescription = () => {
-    if (itemType === 'editorial_service') {
-      return service === EditorialServiceType.CUSTOM ? customService : service;
-    }
-    if (itemType === 'printing') {
-      return `Impressão - Tiragem ${printRun}`;
-    }
-    return extraType === ExtraType.CUSTOM ? customExtra : extraType;
-  };
-
-  const resetForm = () => {
-    setDescription('');
-    setQuantity(1);
-    setUnitPrice(0);
-    setNotes('');
-    setEstimatedDays(0);
-    setProductionDays(0);
-    setCustomService('');
-    setCustomExtra('');
-  };
-
-  if (!isOpen) {
-    return (
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 py-3 text-gray-600 transition-colors hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600"
-      >
-        <Plus className="h-5 w-5" />
-        Adicionar Item
-      </button>
-    );
-  }
 
   return (
-    <div className="rounded-lg border-2 border-blue-500 bg-white p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Novo Item</h3>
-        <button
-          type="button"
-          onClick={() => {
-            setIsOpen(false);
-            resetForm();
-          }}
-          className="rounded p-1 hover:bg-gray-100"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Tipo de Item */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">Tipo de Item</label>
-          <select
-            value={itemType}
-            onChange={(e) =>
-              setItemType(e.target.value as 'editorial_service' | 'printing' | 'extra')
-            }
-            className="w-full rounded-lg border px-3 py-2"
-          >
-            <option value="editorial_service">Serviço Editorial</option>
-            <option value="printing">Impressão</option>
-            <option value="extra">Extra</option>
-          </select>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white">
+        <div className="flex items-center justify-between border-b p-6">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="h-6 w-6" />
+          </button>
         </div>
 
-        {/* Editorial Service */}
-        {itemType === 'editorial_service' && (
-          <>
+        <form onSubmit={handleSubmit} className="space-y-4 p-6">
+          {/* Tipo */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Tipo *</label>
+            <select
+              required
+              className="w-full rounded-md border border-gray-300 p-2"
+              value={type}
+              onChange={(e) =>
+                setType(e.target.value as "editorial_service" | "printing" | "extra")
+              }
+            >
+              <option value="editorial_service">Serviço Editorial</option>
+              <option value="printing">Impressão</option>
+              <option value="extra">Extra</option>
+            </select>
+          </div>
+
+          {/* Campos específicos por tipo */}
+          {type === "editorial_service" && (
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Serviço</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Serviço *</label>
               <select
+                required
+                className="w-full rounded-md border border-gray-300 p-2"
                 value={service}
                 onChange={(e) => setService(e.target.value as EditorialServiceType)}
-                className="w-full rounded-lg border px-3 py-2"
               >
-                {Object.values(EditorialServiceType).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+                {Object.values(EditorialServiceType).map((serviceType) => (
+                  <option key={serviceType} value={serviceType}>
+                    {serviceType}
                   </option>
                 ))}
               </select>
             </div>
+          )}
 
-            {service === EditorialServiceType.CUSTOM && (
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Serviço Personalizado
-                </label>
-                <input
-                  type="text"
-                  value={customService}
-                  onChange={(e) => setCustomService(e.target.value)}
-                  className="w-full rounded-lg border px-3 py-2"
-                  required
-                />
-              </div>
-            )}
-
+          {type === "printing" && (
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Dias Estimados (opcional)
-              </label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Tiragem *</label>
               <input
                 type="number"
-                value={estimatedDays}
-                onChange={(e) => setEstimatedDays(Number(e.target.value))}
-                min="0"
-                className="w-full rounded-lg border px-3 py-2"
-              />
-            </div>
-          </>
-        )}
-
-        {/* Printing */}
-        {itemType === 'printing' && (
-          <>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Tiragem</label>
-              <input
-                type="number"
-                value={printRun}
-                onChange={(e) => setPrintRun(Number(e.target.value))}
-                min="1"
-                className="w-full rounded-lg border px-3 py-2"
                 required
+                min="1"
+                className="w-full rounded-md border border-gray-300 p-2"
+                value={printRun}
+                onChange={(e) => setPrintRun(parseInt(e.target.value))}
               />
             </div>
+          )}
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="useBookSpecs"
-                checked={useBookSpecs}
-                onChange={(e) => setUseBookSpecs(e.target.checked)}
-                className="h-4 w-4"
-              />
-              <label htmlFor="useBookSpecs" className="text-sm text-gray-700">
-                Usar especificações do livro
-              </label>
-            </div>
-
+          {type === "extra" && (
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Dias de Produção (opcional)
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Tipo de Extra *
               </label>
-              <input
-                type="number"
-                value={productionDays}
-                onChange={(e) => setProductionDays(Number(e.target.value))}
-                min="0"
-                className="w-full rounded-lg border px-3 py-2"
-              />
-            </div>
-          </>
-        )}
-
-        {/* Extra */}
-        {itemType === 'extra' && (
-          <>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Tipo de Extra</label>
               <select
+                required
+                className="w-full rounded-md border border-gray-300 p-2"
                 value={extraType}
                 onChange={(e) => setExtraType(e.target.value as ExtraType)}
-                className="w-full rounded-lg border px-3 py-2"
               >
-                {Object.values(ExtraType).map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                {Object.values(ExtraType).map((extra) => (
+                  <option key={extra} value={extra}>
+                    {extra}
                   </option>
                 ))}
               </select>
             </div>
+          )}
 
-            {extraType === ExtraType.CUSTOM && (
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Extra Personalizado
-                </label>
-                <input
-                  type="text"
-                  value={customExtra}
-                  onChange={(e) => setCustomExtra(e.target.value)}
-                  className="w-full rounded-lg border px-3 py-2"
-                  required
-                />
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Common Fields */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Descrição (opcional)
-          </label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={getDefaultDescription()}
-            className="w-full rounded-lg border px-3 py-2"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+          {/* Descrição */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Quantidade</label>
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              min="1"
-              className="w-full rounded-lg border px-3 py-2"
+            <label className="mb-1 block text-sm font-medium text-gray-700">Descrição *</label>
+            <textarea
               required
+              rows={2}
+              className="w-full rounded-md border border-gray-300 p-2"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
+          {/* Quantidade */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Valor Unitário (R$)
+            <label className="mb-1 block text-sm font-medium text-gray-700">Quantidade *</label>
+            <input
+              type="number"
+              required
+              min="1"
+              className="w-full rounded-md border border-gray-300 p-2"
+              value={quantity}
+              onChange={(e) => setQuantity(parseInt(e.target.value))}
+            />
+          </div>
+
+          {/* Preço unitário */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Preço Unitário (R$) *
             </label>
             <input
               type="number"
-              value={unitPrice}
-              onChange={(e) => setUnitPrice(Number(e.target.value))}
+              required
               min="0"
               step="0.01"
-              className="w-full rounded-lg border px-3 py-2"
-              required
+              className="w-full rounded-md border border-gray-300 p-2"
+              value={unitPrice}
+              onChange={(e) => setUnitPrice(parseFloat(e.target.value))}
             />
           </div>
-        </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Observações (opcional)
-          </label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={2}
-            className="w-full rounded-lg border px-3 py-2"
-          />
-        </div>
+          {/* Dias de produção (para serviços) */}
+          {type === "editorial_service" && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Dias Estimados</label>
+              <input
+                type="number"
+                min="0"
+                className="w-full rounded-md border border-gray-300 p-2"
+                value={estimatedDays}
+                onChange={(e) => setEstimatedDays(parseInt(e.target.value))}
+              />
+            </div>
+          )}
 
-        {/* Total Preview */}
-        <div className="rounded-lg bg-blue-50 p-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Total do Item:</span>
-            <span className="text-lg font-bold text-blue-600">
-              R$ {calculateItemTotal(quantity, unitPrice).toFixed(2)}
-            </span>
+          {type === "printing" && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Dias de Produção
+              </label>
+              <input
+                type="number"
+                min="0"
+                className="w-full rounded-md border border-gray-300 p-2"
+                value={productionDays}
+                onChange={(e) => setProductionDays(parseInt(e.target.value))}
+              />
+            </div>
+          )}
+
+          {/* Observações */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Observações</label>
+            <textarea
+              rows={2}
+              className="w-full rounded-md border border-gray-300 p-2"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
           </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
-            Adicionar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setIsOpen(false);
-              resetForm();
-            }}
-            className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-50"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
+          {/* Preview do valor total */}
+          <div className="rounded-md bg-gray-50 p-3">
+            <div className="text-sm text-gray-600">Valor Total:</div>
+            <div className="text-lg font-semibold">
+              R${" "}
+              {(quantity * unitPrice).toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </div>
+          </div>
+
+          {/* Botões */}
+          <div className="flex justify-end gap-3 border-t pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              Salvar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

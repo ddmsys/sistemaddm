@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-import { Lead } from '@/lib/types/comercial';
+import { Lead } from "@/lib/types/comercial";
 
 interface ConversionData {
   period: string;
   leadsCreated: number;
   leadsQualified: number;
-  quotesGenerated: number;
-  quotesSigned: number;
-  leadsToQuotesRate: number;
-  quotesToSignedRate: number;
+  BudgetsGenerated: number;
+  BudgetsSigned: number;
+  leadsToBudgetsRate: number;
+  BudgetsToSignedRate: number;
   overallConversionRate: number;
   averageDaysToConvert: number;
   totalValue: number;
@@ -21,14 +21,14 @@ interface ConversionRateFilters {
     start: Date;
     end: Date;
   };
-  source?: Lead['source'][];
+  source?: Lead["source"][];
   ownerId?: string[];
-  granularity?: 'daily' | 'weekly' | 'monthly';
+  granularity?: "daily" | "weekly" | "monthly";
 }
 
 // ✅ INTERFACE CORRIGIDA
 interface SourceStats {
-  source: Lead['source'];
+  source: Lead["source"];
   conversionRate: number;
   count: number;
   value: number;
@@ -47,8 +47,8 @@ interface ConversionRateStats {
   current: ConversionData;
   previous: ConversionData;
   growth: {
-    leadsToQuotes: number;
-    quotesToSigned: number;
+    leadsToBudgets: number;
+    BudgetsToSigned: number;
     overall: number;
     averageTicket: number;
   };
@@ -77,25 +77,25 @@ export function useConversionRate(filters?: ConversionRateFilters) {
   // Função para formatar período
   const formatPeriod = (
     date: Date,
-    granularity: 'daily' | 'weekly' | 'monthly' = 'monthly',
+    granularity: "daily" | "weekly" | "monthly" = "monthly",
   ): string => {
     switch (granularity) {
-      case 'daily':
-        return date.toLocaleDateString('pt-BR');
-      case 'weekly':
+      case "daily":
+        return date.toLocaleDateString("pt-BR");
+      case "weekly":
         const weekStart = new Date(date);
         weekStart.setDate(date.getDate() - date.getDay());
-        return `Sem ${weekStart.toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
+        return `Sem ${weekStart.toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
         })}`;
-      case 'monthly':
-        return date.toLocaleDateString('pt-BR', {
-          month: 'long',
-          year: 'numeric',
+      case "monthly":
+        return date.toLocaleDateString("pt-BR", {
+          month: "long",
+          year: "numeric",
         });
       default:
-        return date.toLocaleDateString('pt-BR');
+        return date.toLocaleDateString("pt-BR");
     }
   };
 
@@ -115,10 +115,10 @@ export function useConversionRate(filters?: ConversionRateFilters) {
           period: formatPeriod(currentMonth, filters?.granularity),
           leadsCreated: 150,
           leadsQualified: 95,
-          quotesGenerated: 68,
-          quotesSigned: 28,
-          leadsToQuotesRate: calculateConversionRate(68, 150),
-          quotesToSignedRate: calculateConversionRate(28, 68),
+          BudgetsGenerated: 68,
+          BudgetsSigned: 28,
+          leadsToBudgetsRate: calculateConversionRate(68, 150),
+          BudgetsToSignedRate: calculateConversionRate(28, 68),
           overallConversionRate: calculateConversionRate(28, 150),
           averageDaysToConvert: 21,
           totalValue: 168000,
@@ -130,10 +130,10 @@ export function useConversionRate(filters?: ConversionRateFilters) {
           period: formatPeriod(previousMonth, filters?.granularity),
           leadsCreated: 135,
           leadsQualified: 82,
-          quotesGenerated: 58,
-          quotesSigned: 22,
-          leadsToQuotesRate: calculateConversionRate(58, 135),
-          quotesToSignedRate: calculateConversionRate(22, 58),
+          BudgetsGenerated: 58,
+          BudgetsSigned: 22,
+          leadsToBudgetsRate: calculateConversionRate(58, 135),
+          BudgetsToSignedRate: calculateConversionRate(22, 58),
           overallConversionRate: calculateConversionRate(22, 135),
           averageDaysToConvert: 25,
           totalValue: 132000,
@@ -143,52 +143,52 @@ export function useConversionRate(filters?: ConversionRateFilters) {
         // Simular dados históricos (últimos 6 meses)
         const historicalData: ConversionData[] = [
           {
-            period: 'Abril 2024',
+            period: "Abril 2024",
             leadsCreated: 120,
             leadsQualified: 78,
-            quotesGenerated: 52,
-            quotesSigned: 18,
-            leadsToQuotesRate: calculateConversionRate(52, 120),
-            quotesToSignedRate: calculateConversionRate(18, 52),
+            BudgetsGenerated: 52,
+            BudgetsSigned: 18,
+            leadsToBudgetsRate: calculateConversionRate(52, 120),
+            BudgetsToSignedRate: calculateConversionRate(18, 52),
             overallConversionRate: calculateConversionRate(18, 120),
             averageDaysToConvert: 28,
             totalValue: 108000,
             averageTicket: 6000,
           },
           {
-            period: 'Maio 2024',
+            period: "Maio 2024",
             leadsCreated: 125,
             leadsQualified: 80,
-            quotesGenerated: 55,
-            quotesSigned: 20,
-            leadsToQuotesRate: calculateConversionRate(55, 125),
-            quotesToSignedRate: calculateConversionRate(20, 55),
+            BudgetsGenerated: 55,
+            BudgetsSigned: 20,
+            leadsToBudgetsRate: calculateConversionRate(55, 125),
+            BudgetsToSignedRate: calculateConversionRate(20, 55),
             overallConversionRate: calculateConversionRate(20, 125),
             averageDaysToConvert: 26,
             totalValue: 120000,
             averageTicket: 6000,
           },
           {
-            period: 'Junho 2024',
+            period: "Junho 2024",
             leadsCreated: 130,
             leadsQualified: 85,
-            quotesGenerated: 60,
-            quotesSigned: 25,
-            leadsToQuotesRate: calculateConversionRate(60, 130),
-            quotesToSignedRate: calculateConversionRate(25, 60),
+            BudgetsGenerated: 60,
+            BudgetsSigned: 25,
+            leadsToBudgetsRate: calculateConversionRate(60, 130),
+            BudgetsToSignedRate: calculateConversionRate(25, 60),
             overallConversionRate: calculateConversionRate(25, 130),
             averageDaysToConvert: 24,
             totalValue: 150000,
             averageTicket: 6000,
           },
           {
-            period: 'Julho 2024',
+            period: "Julho 2024",
             leadsCreated: 140,
             leadsQualified: 88,
-            quotesGenerated: 62,
-            quotesSigned: 24,
-            leadsToQuotesRate: calculateConversionRate(62, 140),
-            quotesToSignedRate: calculateConversionRate(24, 62),
+            BudgetsGenerated: 62,
+            BudgetsSigned: 24,
+            leadsToBudgetsRate: calculateConversionRate(62, 140),
+            BudgetsToSignedRate: calculateConversionRate(24, 62),
             overallConversionRate: calculateConversionRate(24, 140),
             averageDaysToConvert: 23,
             totalValue: 144000,
@@ -201,31 +201,31 @@ export function useConversionRate(filters?: ConversionRateFilters) {
         // ✅ ARRAYS CORRIGIDOS COM TIPAGEM ADEQUADA
         const topSources: SourceStats[] = [
           {
-            source: 'website' as Lead['source'],
+            source: "website" as Lead["source"],
             conversionRate: 22.5,
             count: 45,
             value: 270000,
           },
           {
-            source: 'referral' as Lead['source'],
+            source: "referral" as Lead["source"],
             conversionRate: 28.0,
             count: 35,
             value: 210000,
           },
           {
-            source: 'social-media' as Lead['source'],
+            source: "social-media" as Lead["source"],
             conversionRate: 18.2,
             count: 28,
             value: 168000,
           },
           {
-            source: 'advertising' as Lead['source'],
+            source: "advertising" as Lead["source"],
             conversionRate: 15.8,
             count: 25,
             value: 150000,
           },
           {
-            source: 'event' as Lead['source'],
+            source: "event" as Lead["source"],
             conversionRate: 35.0,
             count: 12,
             value: 72000,
@@ -234,29 +234,29 @@ export function useConversionRate(filters?: ConversionRateFilters) {
 
         const topOwners: OwnerStats[] = [
           {
-            ownerId: 'user1',
-            ownerName: 'Ana Silva',
+            ownerId: "user1",
+            ownerName: "Ana Silva",
             conversionRate: 32.5,
             count: 40,
             value: 240000,
           },
           {
-            ownerId: 'user2',
-            ownerName: 'Carlos Santos',
+            ownerId: "user2",
+            ownerName: "Carlos Santos",
             conversionRate: 28.0,
             count: 35,
             value: 210000,
           },
           {
-            ownerId: 'user3',
-            ownerName: 'Maria Costa',
+            ownerId: "user3",
+            ownerName: "Maria Costa",
             conversionRate: 25.5,
             count: 30,
             value: 180000,
           },
           {
-            ownerId: 'user4',
-            ownerName: 'João Oliveira',
+            ownerId: "user4",
+            ownerName: "João Oliveira",
             conversionRate: 22.0,
             count: 25,
             value: 150000,
@@ -268,13 +268,13 @@ export function useConversionRate(filters?: ConversionRateFilters) {
           current: currentData,
           previous: previousData,
           growth: {
-            leadsToQuotes: calculateGrowth(
-              currentData.leadsToQuotesRate,
-              previousData.leadsToQuotesRate,
+            leadsToBudgets: calculateGrowth(
+              currentData.leadsToBudgetsRate,
+              previousData.leadsToBudgetsRate,
             ),
-            quotesToSigned: calculateGrowth(
-              currentData.quotesToSignedRate,
-              previousData.quotesToSignedRate,
+            BudgetsToSigned: calculateGrowth(
+              currentData.BudgetsToSignedRate,
+              previousData.BudgetsToSignedRate,
             ),
             overall: calculateGrowth(
               currentData.overallConversionRate,
@@ -289,8 +289,8 @@ export function useConversionRate(filters?: ConversionRateFilters) {
         setData(historicalData);
         setStats(conversionStats);
       } catch (err) {
-        console.error('Erro ao buscar dados de conversão:', err);
-        setError('Erro ao carregar dados de conversão');
+        console.error("Erro ao buscar dados de conversão:", err);
+        setError("Erro ao carregar dados de conversão");
       } finally {
         setLoading(false);
       }
@@ -306,14 +306,14 @@ export function useConversionRate(filters?: ConversionRateFilters) {
       setTimeout(() => {
         resolve({
           period: `${startDate.toLocaleDateString(
-            'pt-BR',
-          )} - ${endDate.toLocaleDateString('pt-BR')}`,
+            "pt-BR",
+          )} - ${endDate.toLocaleDateString("pt-BR")}`,
           leadsCreated: 75,
           leadsQualified: 48,
-          quotesGenerated: 34,
-          quotesSigned: 14,
-          leadsToQuotesRate: calculateConversionRate(34, 75),
-          quotesToSignedRate: calculateConversionRate(14, 34),
+          BudgetsGenerated: 34,
+          BudgetsSigned: 14,
+          leadsToBudgetsRate: calculateConversionRate(34, 75),
+          BudgetsToSignedRate: calculateConversionRate(14, 34),
           overallConversionRate: calculateConversionRate(14, 75),
           averageDaysToConvert: 19,
           totalValue: 84000,
@@ -324,19 +324,19 @@ export function useConversionRate(filters?: ConversionRateFilters) {
   };
 
   // Função para exportar dados
-  const exportData = async (format: 'csv' | 'excel' = 'csv'): Promise<string> => {
+  const exportData = async (format: "csv" | "excel" = "csv"): Promise<string> => {
     return new Promise((resolve) => {
       // Simular exportação
       setTimeout(() => {
         const csvContent = [
-          'Período,Leads Criados,Leads Qualificados,Orçamentos Gerados,Orçamentos Assinados,Taxa Conversão Geral,Ticket Médio',
+          "Período,Leads Criados,Leads Qualificados,Orçamentos Gerados,Orçamentos Assinados,Taxa Conversão Geral,Ticket Médio",
           ...data.map(
             (d) =>
               `${d.period},${d.leadsCreated},${d.leadsQualified},${
-                d.quotesGenerated
-              },${d.quotesSigned},${d.overallConversionRate.toFixed(2)}%,R$ ${d.averageTicket}`,
+                d.BudgetsGenerated
+              },${d.BudgetsSigned},${d.overallConversionRate.toFixed(2)}%,R$ ${d.averageTicket}`,
           ),
-        ].join('\n');
+        ].join("\n");
 
         resolve(csvContent);
       }, 1000);
@@ -354,8 +354,8 @@ export function useConversionRate(filters?: ConversionRateFilters) {
     currentConversionRate: stats?.current.overallConversionRate || 0,
     previousConversionRate: stats?.previous.overallConversionRate || 0,
     conversionGrowth: stats?.growth.overall || 0,
-    bestSource: stats?.topSources[0]?.source || 'website',
-    bestOwner: stats?.topOwners[0]?.ownerName || 'N/A',
+    bestSource: stats?.topSources[0]?.source || "website",
+    bestOwner: stats?.topOwners[0]?.ownerName || "N/A",
   };
 }
 

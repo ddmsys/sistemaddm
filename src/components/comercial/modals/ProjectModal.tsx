@@ -1,8 +1,8 @@
 // src/components/comercial/modals/ProjectModal.tsx
-'use client';
+"use client";
 
-import { X } from 'lucide-react';
-import { useState } from 'react';
+import { X } from "lucide-react";
+import { useState } from "react";
 
 import {
   Client,
@@ -11,7 +11,7 @@ import {
   ProjectFormData,
   ProjectPriority,
   ProjectSpecifications,
-} from '@/lib/types/projects'; // CORRIGIDO: só importa de projects.ts
+} from "@/lib/types/projects"; // CORRIGIDO: só importa de projects.ts
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -23,23 +23,23 @@ interface ProjectModalProps {
 }
 
 const projectTypes = [
-  { value: 'L', label: 'Livro' },
-  { value: 'E', label: 'E-book' },
-  { value: 'K', label: 'Kindle' },
-  { value: 'C', label: 'CD' },
-  { value: 'D', label: 'DVD' }, // Corrigido de 'DVD' para 'D'
-  { value: 'G', label: 'Material Gráfico' },
-  { value: 'P', label: 'Plataforma Digital' },
-  { value: 'S', label: 'Single' },
-  { value: 'X', label: 'Livro Terceiros' },
-  { value: 'A', label: 'Arte' },
+  { value: "L", label: "Livro" },
+  { value: "E", label: "E-book" },
+  { value: "K", label: "Kindle" },
+  { value: "C", label: "CD" },
+  { value: "D", label: "DVD" }, // Corrigido de 'DVD' para 'D'
+  { value: "G", label: "Material Gráfico" },
+  { value: "P", label: "Plataforma Digital" },
+  { value: "S", label: "Single" },
+  { value: "X", label: "Livro Terceiros" },
+  { value: "A", label: "Arte" },
 ];
 
 const priorities: { value: ProjectPriority; label: string }[] = [
-  { value: 'low', label: 'Baixa' },
-  { value: 'medium', label: 'Média' },
-  { value: 'high', label: 'Alta' },
-  { value: 'urgent', label: 'Urgente' },
+  { value: "low", label: "Baixa" },
+  { value: "medium", label: "Média" },
+  { value: "high", label: "Alta" },
+  { value: "urgent", label: "Urgente" },
 ];
 
 export default function ProjectModal({
@@ -52,40 +52,40 @@ export default function ProjectModal({
 }: ProjectModalProps) {
   // ================ INICIALIZAÇÃO DO FORM ================
   const [formData, setFormData] = useState<ProjectFormData>(() => ({
-    clientId: project?.clientId || '',
-    clientName: project?.clientName || '',
-    quoteId: project?.quoteId || '',
-    title: project?.title || '',
-    description: project?.description || '',
-    product: project?.product || 'L', // Corrigido de ProductType
-    priority: project?.priority || 'medium',
-    projectManager: project?.projectManager || '', // OBRIGATÓRIO
-    assignedTo: project?.assignedTo || '',
+    clientId: project?.clientId || "",
+    clientName: project?.clientName || "",
+    budgetId: project?.budgetId || "",
+    title: project?.title || "",
+    description: project?.description || "",
+    product: project?.product || "L", // Corrigido de ProductType
+    priority: project?.priority || "medium",
+    projectManager: project?.projectManager || "", // OBRIGATÓRIO
+    assignedTo: project?.assignedTo || "",
     budget: project?.budget || 0,
-    notes: project?.notes || '',
+    notes: project?.notes || "",
 
     // Datas corrigidas
     dueDate: project?.dueDate
       ? project.dueDate instanceof Date
-        ? project.dueDate.toISOString().split('T')[0]
-        : new Date(project.dueDate.toDate()).toISOString().split('T')[0] // Timestamp
-      : '',
+        ? project.dueDate.toISOString().split("T")[0]
+        : new Date(project.dueDate.toDate()).toISOString().split("T")[0] // Timestamp
+      : "",
     startDate: project?.startDate
       ? project.startDate instanceof Date
-        ? project.startDate.toISOString().split('T')[0]
-        : new Date(project.startDate.toDate()).toISOString().split('T')[0] // Timestamp
-      : '',
+        ? project.startDate.toISOString().split("T")[0]
+        : new Date(project.startDate.toDate()).toISOString().split("T")[0] // Timestamp
+      : "",
 
     // Especificações inicializadas
     specifications: project?.specifications || {
-      format: '',
+      format: "",
       pages: 0,
       copies: 0,
-      paperType: '',
-      binding: '',
-      colors: '',
+      paperType: "",
+      binding: "",
+      colors: "",
       finishing: [],
-      specialRequirements: '',
+      specialRequirements: "",
     },
   }));
 
@@ -97,17 +97,17 @@ export default function ProjectModal({
 
     // Validação crítica
     if (!formData.title?.trim()) {
-      alert('Título é obrigatório');
+      alert("Título é obrigatório");
       return;
     }
 
     if (!formData.clientId) {
-      alert('Cliente é obrigatório');
+      alert("Cliente é obrigatório");
       return;
     }
 
     if (!formData.projectManager) {
-      alert('Gerente do projeto é obrigatório');
+      alert("Gerente do projeto é obrigatório");
       return;
     }
 
@@ -123,7 +123,7 @@ export default function ProjectModal({
       await onSubmit(submitData);
       onClose();
     } catch (error) {
-      console.error('Erro ao enviar formulário:', error);
+      console.error("Erro ao enviar formulário:", error);
     } finally {
       setLoading(false);
     }
@@ -154,7 +154,7 @@ export default function ProjectModal({
       <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white">
         <div className="flex items-center justify-between border-b p-6">
           <h2 className="text-2xl font-bold text-gray-800">
-            {project ? 'Editar Projeto' : 'Novo Projeto'}
+            {project ? "Editar Projeto" : "Novo Projeto"}
           </h2>
           <button onClick={onClose} className="text-gray-500 transition-colors hover:text-gray-700">
             <X className="h-6 w-6" />
@@ -171,15 +171,15 @@ export default function ProjectModal({
                 value={formData.clientId}
                 onChange={(e) => {
                   const selectedClient = clients.find((c) => c.id === e.target.value);
-                  handleInputChange('clientId', e.target.value);
-                  handleInputChange('clientName', selectedClient?.name || '');
+                  handleInputChange("clientId", e.target.value);
+                  handleInputChange("clientName", selectedClient?.name || "");
                 }}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 required
               >
                 <option value="">Selecione um cliente</option>
                 {clients
-                  .filter((client) => client.status === 'active')
+                  .filter((client) => client.status === "active")
                   .map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.name}
@@ -195,7 +195,7 @@ export default function ProjectModal({
               </label>
               <select
                 value={formData.product}
-                onChange={(e) => handleInputChange('product', e.target.value as ProductType)}
+                onChange={(e) => handleInputChange("product", e.target.value as ProductType)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 required
               >
@@ -215,7 +215,7 @@ export default function ProjectModal({
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
+                onChange={(e) => handleInputChange("title", e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 placeholder="Digite o título do projeto"
                 required
@@ -227,7 +227,7 @@ export default function ProjectModal({
               <label className="mb-2 block text-sm font-medium text-gray-700">Descrição</label>
               <textarea
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) => handleInputChange("description", e.target.value)}
                 rows={3}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 placeholder="Descreva o projeto..."
@@ -241,7 +241,7 @@ export default function ProjectModal({
               </label>
               <select
                 value={formData.projectManager}
-                onChange={(e) => handleInputChange('projectManager', e.target.value)}
+                onChange={(e) => handleInputChange("projectManager", e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 required
               >
@@ -259,7 +259,7 @@ export default function ProjectModal({
               <label className="mb-2 block text-sm font-medium text-gray-700">Prioridade</label>
               <select
                 value={formData.priority}
-                onChange={(e) => handleInputChange('priority', e.target.value as ProjectPriority)}
+                onChange={(e) => handleInputChange("priority", e.target.value as ProjectPriority)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
               >
                 {priorities.map((priority) => (
@@ -275,8 +275,8 @@ export default function ProjectModal({
               <label className="mb-2 block text-sm font-medium text-gray-700">Data de Início</label>
               <input
                 type="date"
-                value={typeof formData.startDate === 'string' ? formData.startDate : ''}
-                onChange={(e) => handleInputChange('startDate', e.target.value)}
+                value={typeof formData.startDate === "string" ? formData.startDate : ""}
+                onChange={(e) => handleInputChange("startDate", e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -288,8 +288,8 @@ export default function ProjectModal({
               </label>
               <input
                 type="date"
-                value={typeof formData.dueDate === 'string' ? formData.dueDate : ''}
-                onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                value={typeof formData.dueDate === "string" ? formData.dueDate : ""}
+                onChange={(e) => handleInputChange("dueDate", e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -302,7 +302,7 @@ export default function ProjectModal({
                 step="0.01"
                 min="0"
                 value={formData.budget}
-                onChange={(e) => handleInputChange('budget', parseFloat(e.target.value) || 0)}
+                onChange={(e) => handleInputChange("budget", parseFloat(e.target.value) || 0)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
@@ -318,8 +318,8 @@ export default function ProjectModal({
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">Formato</label>
                 <select
-                  value={formData.specifications?.format || ''}
-                  onChange={(e) => handleSpecificationChange('format', e.target.value)}
+                  value={formData.specifications?.format || ""}
+                  onChange={(e) => handleSpecificationChange("format", e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Selecione</option>
@@ -337,9 +337,9 @@ export default function ProjectModal({
                 <input
                   type="number"
                   min="1"
-                  value={formData.specifications?.pages || ''}
+                  value={formData.specifications?.pages || ""}
                   onChange={(e) =>
-                    handleSpecificationChange('pages', parseInt(e.target.value) || 0)
+                    handleSpecificationChange("pages", parseInt(e.target.value) || 0)
                   }
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   placeholder="Ex: 200"
@@ -352,9 +352,9 @@ export default function ProjectModal({
                 <input
                   type="number"
                   min="1"
-                  value={formData.specifications?.copies || ''}
+                  value={formData.specifications?.copies || ""}
                   onChange={(e) =>
-                    handleSpecificationChange('copies', parseInt(e.target.value) || 0)
+                    handleSpecificationChange("copies", parseInt(e.target.value) || 0)
                   }
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   placeholder="Ex: 1000"
@@ -365,8 +365,8 @@ export default function ProjectModal({
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">Papel</label>
                 <select
-                  value={formData.specifications?.paperType || ''}
-                  onChange={(e) => handleSpecificationChange('paperType', e.target.value)}
+                  value={formData.specifications?.paperType || ""}
+                  onChange={(e) => handleSpecificationChange("paperType", e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Selecione</option>
@@ -382,8 +382,8 @@ export default function ProjectModal({
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">Cores</label>
                 <select
-                  value={formData.specifications?.colors || ''}
-                  onChange={(e) => handleSpecificationChange('colors', e.target.value)}
+                  value={formData.specifications?.colors || ""}
+                  onChange={(e) => handleSpecificationChange("colors", e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Selecione</option>
@@ -398,8 +398,8 @@ export default function ProjectModal({
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">Acabamento</label>
                 <select
-                  value={formData.specifications?.binding || ''}
-                  onChange={(e) => handleSpecificationChange('binding', e.target.value)}
+                  value={formData.specifications?.binding || ""}
+                  onChange={(e) => handleSpecificationChange("binding", e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Selecione</option>
@@ -418,8 +418,8 @@ export default function ProjectModal({
                 Requisitos Especiais
               </label>
               <textarea
-                value={formData.specifications?.specialRequirements || ''}
-                onChange={(e) => handleSpecificationChange('specialRequirements', e.target.value)}
+                value={formData.specifications?.specialRequirements || ""}
+                onChange={(e) => handleSpecificationChange("specialRequirements", e.target.value)}
                 rows={3}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 placeholder="Descreva requisitos especiais, acabamentos adicionais, etc."
@@ -432,7 +432,7 @@ export default function ProjectModal({
             <label className="mb-2 block text-sm font-medium text-gray-700">Observações</label>
             <textarea
               value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
+              onChange={(e) => handleInputChange("notes", e.target.value)}
               rows={3}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
               placeholder="Observações gerais sobre o projeto..."
@@ -454,7 +454,7 @@ export default function ProjectModal({
               className="rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={loading}
             >
-              {loading ? 'Salvando...' : project ? 'Atualizar' : 'Criar Projeto'}
+              {loading ? "Salvando..." : project ? "Atualizar" : "Criar Projeto"}
             </button>
           </div>
         </form>

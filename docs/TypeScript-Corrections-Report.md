@@ -39,20 +39,20 @@
 
 ```
 🔥 CRÍTICOS (>5 erros):
-├── /app/(authenticated)/crm/quotes/[id]/page.tsx (11 erros)
-├── /app/(authenticated)/crm/quotes/page.tsx (7 erros)
+├── /app/(authenticated)/crm/budgets/[id]/page.tsx (11 erros)
+├── /app/(authenticated)/crm/budgets/page.tsx (7 erros)
 ├── /app/(authenticated)/crm/projects/[id]/page.tsx (7 erros)
 
 ⚠️  MÉDIOS (2-5 erros):
 ├── /components/comercial/cards/ProjectCard.tsx (5 erros)
-├── /components/comercial/cards/QuoteCard.tsx (3 erros)
+├── /components/comercial/cards/BudgetCard.tsx (3 erros)
 ├── /app/(authenticated)/crm/leads/page.tsx (3 erros)
 
 ✅ BAIXOS (1-2 erros):
-├── /components/comercial/modals/QuoteModal.tsx (2 erros)
-├── /components/comercial/tables/QuotesTable.tsx (2 erros)
+├── /components/comercial/modals/BudgetModal.tsx (2 erros)
+├── /components/comercial/tables/BudgetsTable.tsx (2 erros)
 ├── /hooks/comercial/useLeads.ts (1 erro)
-├── /hooks/comercial/useQuotes.ts (1 erro)
+├── /hooks/comercial/useBudgets.ts (1 erro)
 ```
 
 ---
@@ -74,10 +74,10 @@ Acessos diretos a propriedades que podem ser `undefined`, causando crashes em ru
 #### **Arquivos Corrigidos:**
 
 - `/app/(authenticated)/crm/projects/[id]/page.tsx`
-- `/app/(authenticated)/crm/quotes/[id]/page.tsx`
-- `/app/(authenticated)/crm/quotes/page.tsx`
+- `/app/(authenticated)/crm/budgets/[id]/page.tsx`
+- `/app/(authenticated)/crm/budgets/page.tsx`
 - `/components/comercial/cards/ProjectCard.tsx`
-- `/components/comercial/cards/QuoteCard.tsx`
+- `/components/comercial/cards/BudgetCard.tsx`
 
 #### **Exemplos de Correções:**
 
@@ -85,14 +85,14 @@ Acessos diretos a propriedades que podem ser `undefined`, causando crashes em ru
 // ❌ ANTES - Perigoso
 const success = await updateProjectStatus(project.id, newStatus);
 {project.clientApprovalTasks.length > 0 && (
-const isExpired = quote.validUntil.toDate() < new Date();
-{formatCurrency(quote.grandTotal)}
+const isExpired = budget.validUntil.toDate() < new Date();
+{formatCurrency(budget.grandTotal)}
 
 // ✅ DEPOIS - Seguro
 const success = await updateProjectStatus(project.id ?? "", newStatus);
 {project.clientApprovalTasks && project.clientApprovalTasks.length > 0 && (
-const isExpired = quote.validUntil ? quote.validUntil.toDate() < new Date() : false;
-{formatCurrency(quote.totals?.total ?? 0)}
+const isExpired = budget.validUntil ? budget.validUntil.toDate() < new Date() : false;
+{formatCurrency(budget.totals?.total ?? 0)}
 ```
 
 #### **Benefícios:**
@@ -122,7 +122,7 @@ Uso de constantes, tipos e funções não importadas, causando erros de compila�
 import { PRODUCT_TYPE_LABELS } from '@/lib/types/shared';
 import { ProjectCardProps } from '@/lib/types/comercial';
 
-// ✅ Função formatDate criada localmente em QuoteCard.tsx
+// ✅ Função formatDate criada localmente em BudgetCard.tsx
 const formatDate = (date: any) => {
   if (!date) return 'Data não definida';
   try {
@@ -146,7 +146,7 @@ const formatDate = (date: any) => {
 
 #### **Problema:**
 
-Diferenças significativas entre interfaces `Quote` em `quotes.ts` e `comercial.ts`, causando incompatibilidades.
+Diferenças significativas entre interfaces `Budget` em `budgets.ts` e `comercial.ts`, causando incompatibilidades.
 
 #### **Solução Implementada:**
 
@@ -154,18 +154,18 @@ Diferenças significativas entre interfaces `Quote` em `quotes.ts` e `comercial.
 - Adição de campos de compatibilidade
 - Tipos union para flexibilidade máxima
 
-#### **Quote Interface - Antes vs Depois:**
+#### **Budget Interface - Antes vs Depois:**
 
 ```typescript
-// ❌ ANTES - quotes.ts (Incompleto)
-export interface Quote {
+// ❌ ANTES - budgets.ts (Incompleto)
+export interface Budget {
   id?: string;
   clientId?: string;
   // Faltavam campos críticos
 }
 
-// ✅ DEPOIS - quotes.ts (Compatível)
-export interface Quote {
+// ✅ DEPOIS - budgets.ts (Compatível)
+export interface Budget {
   id?: string;
   clientName: string; // ✅ Obrigatório para compatibilidade
   description?: string; // ✅ Opcional para futuro
@@ -191,11 +191,11 @@ export interface Quote {
 }
 ```
 
-#### **QuoteItem Interface - Flexibilizada:**
+#### **BudgetItem Interface - Flexibilizada:**
 
 ```typescript
 // ✅ Campos opcionais para máxima compatibilidade
-export interface QuoteItem {
+export interface BudgetItem {
   id?: string; // Era obrigatório, agora opcional
   description: string;
   kind: 'etapa' | 'impressao';
@@ -240,8 +240,8 @@ export type LeadStatus =
   | 'fechado_ganho' // era "fechado-ganho"
   | 'fechado_perdido'; // era "fechado-perdido"
 
-// ✅ QuoteStatus - Harmonizado
-export type QuoteStatus =
+// ✅ BudgetStatus - Harmonizado
+export type BudgetStatus =
   | 'draft'
   | 'sent'
   | 'viewed' // ✅ Adicionado
@@ -292,11 +292,11 @@ export interface ProjectCardProps {
   onDelete?: (id: string) => void;
 }
 
-// ✅ QuoteCardProps - Completa
-export interface QuoteCardProps {
-  quote: Quote;
-  onEdit?: (quote: Quote) => void;
-  onView?: (quote: Quote) => void; // ✅ Adicionada
+// ✅ BudgetCardProps - Completa
+export interface BudgetCardProps {
+  budget: Budget;
+  onEdit?: (budget: Budget) => void;
+  onView?: (budget: Budget) => void; // ✅ Adicionada
   onDelete?: (id: string) => void;
   onSign?: (id: string) => void; // ✅ Corrigida assinatura
 }
@@ -306,12 +306,12 @@ export interface QuoteCardProps {
 
 ```typescript
 // ❌ ANTES - Assinatura inconsistente
-onSign?: (quote: Quote) => void;
-onClick={() => onSign(quote)}
+onSign?: (budget: Budget) => void;
+onClick={() => onSign(budget)}
 
 // ✅ DEPOIS - Assinatura padronizada
 onSign?: (id: string) => void;
-onClick={() => onSign?.(quote.id ?? "")}
+onClick={() => onSign?.(budget.id ?? "")}
 
 // ✅ Verificações de existência
 onClick={() => onView?.(project)}
@@ -362,17 +362,17 @@ const leadData: Omit<Lead, 'id'> = {
 };
 ```
 
-#### **useQuotes.ts - Correções:**
+#### **useBudgets.ts - Correções:**
 
 ```typescript
 // ✅ Campo clientName adicionado (era obrigatório mas faltava)
-const quoteData: Omit<Quote, 'id' | 'number'> = {
+const budgetData: Omit<Budget, 'id' | 'number'> = {
   leadId: data.leadId,
   clientId: data.clientId,
   clientName: data.client?.name || 'Cliente', // ✅ Obrigatório
   client: data.client,
   projectTitle: data.title,
-  quoteType: 'producao',
+  budgetType: 'producao',
   issueDate: new Date().toISOString(),
   validityDays: 30,
   // ... resto dos campos
@@ -442,13 +442,13 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 ```typescript
 // ✅ Comentado temporariamente até implementação completa
 {
-  /* quote.description && (
+  /* budget.description && (
   <div className="sm:col-span-2">
     <dt className="text-sm font-medium text-gray-500">
       Descrição
     </dt>
     <dd className="text-sm text-gray-900 mt-1">
-      {quote.description}
+      {budget.description}
     </dd>
   </div>
 ) */
@@ -470,13 +470,13 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 #### `src/lib/types/comercial.ts`
 
 ```diff
-+ Harmonização completa com quotes.ts
++ Harmonização completa com budgets.ts
 + Campos opcionais para compatibilidade
 + Tipos union para Date/Timestamp
 + Props de componentes atualizadas
 ```
 
-#### `src/lib/types/quotes.ts`
+#### `src/lib/types/budgets.ts`
 
 ```diff
 + clientName obrigatório
@@ -502,7 +502,7 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 + Enum primeiro_contato corrigido
 ```
 
-#### `src/hooks/comercial/useQuotes.ts`
+#### `src/hooks/comercial/useBudgets.ts`
 
 ```diff
 + Campo clientName obrigatório adicionado
@@ -519,7 +519,7 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 + Status labels atualizados
 ```
 
-#### `src/app/(authenticated)/crm/quotes/[id]/page.tsx`
+#### `src/app/(authenticated)/crm/budgets/[id]/page.tsx`
 
 ```diff
 + Fallbacks para propriedades undefined
@@ -527,7 +527,7 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 + formatCurrency com valores seguros
 ```
 
-#### `src/app/(authenticated)/crm/quotes/page.tsx`
+#### `src/app/(authenticated)/crm/budgets/page.tsx`
 
 ```diff
 + handleSign com assinatura correta
@@ -554,7 +554,7 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 + Task type annotation
 ```
 
-#### `src/components/comercial/cards/QuoteCard.tsx`
+#### `src/components/comercial/cards/BudgetCard.tsx`
 
 ```diff
 + formatDate function local
@@ -563,14 +563,14 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 + onView callback opcional
 ```
 
-#### `src/components/comercial/tables/QuotesTable.tsx`
+#### `src/components/comercial/tables/BudgetsTable.tsx`
 
 ```diff
 + onSign callback signature
-+ Call with quote.id
++ Call with budget.id
 ```
 
-#### `src/components/comercial/modals/QuoteModal.tsx`
+#### `src/components/comercial/modals/BudgetModal.tsx`
 
 ```diff
 + Temporary any types
@@ -583,7 +583,7 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 
 ```diff
 + Status "viewed" adicionado
-+ QuoteStatusBadge atualizado
++ BudgetStatusBadge atualizado
 ```
 
 #### `src/lib/constants.ts`
@@ -615,12 +615,12 @@ Tentativas de acesso a propriedades que não existem na interface atual.
 
 ### **🔄 Compatibility Improvements**
 
-| Módulo                  | Issue               | Solução      | Resultado       |
-| ----------------------- | ------------------- | ------------ | --------------- |
-| **quotes ↔ comercial** | Tipos incompatíveis | Harmonização | 100% Compatible |
-| **Date Handling**       | Date vs Timestamp   | Union types  | Flexível        |
-| **Status Enums**        | Hífen vs Underscore | Padronização | Consistente     |
-| **Props Interface**     | Faltantes           | Completas    | Total           |
+| Módulo                   | Issue               | Solução      | Resultado       |
+| ------------------------ | ------------------- | ------------ | --------------- |
+| **budgets ↔ comercial** | Tipos incompatíveis | Harmonização | 100% Compatible |
+| **Date Handling**        | Date vs Timestamp   | Union types  | Flexível        |
+| **Status Enums**         | Hífen vs Underscore | Padronização | Consistente     |
+| **Props Interface**      | Faltantes           | Completas    | Total           |
 
 ### **📈 Developer Experience**
 

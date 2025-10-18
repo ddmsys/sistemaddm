@@ -122,15 +122,15 @@ interface Project {
 }
 ```
 
-### Quote
+### Budget
 
 ```typescript
-interface Quote {
-  quoteNumber: string;
+interface Budget {
+  budgetNumber: string;
   clientId: string;
-  items: QuoteItem[];
+  items: BudgetItem[];
   total: number;
-  status: QuoteStatus;  // 'draft' | 'sent' | 'approved' | ...
+  status: BudgetStatus;  // 'draft' | 'sent' | 'approved' | ...
 }
 ```
 
@@ -143,7 +143,7 @@ interface Quote {
 - `LeadModal` ← Named export ⚠️
 - `ClientModal` ← Default export
 - `ProjectModal` ← Default export
-- `QuoteModal` ← Default export
+- `BudgetModal` ← Default export
 
 ### Charts
 
@@ -156,7 +156,7 @@ interface Quote {
 - `LeadCard` - Card de lead
 - `ClientList` - Lista de clientes
 - `ProjectList` - Lista de projetos
-- `QuoteList` - Lista de orçamentos
+- `BudgetList` - Lista de orçamentos
 
 ---
 
@@ -192,13 +192,13 @@ const {
 
 // CRUD de Orçamentos
 const {
-  quotes,
-  createQuote,
-  updateQuote,
-  updateQuoteStatus,
-  deleteQuote,
+  budgets,
+  createBudget,
+  updateBudget,
+  updateBudgetStatus,
+  deleteBudget,
   generatePDF,
-} = useQuotes();
+} = useBudgets();
 
 // Métricas
 const { metrics, loading } = useCommercialMetrics();

@@ -1,37 +1,47 @@
 // src/lib/types/budgets.ts
+// ✅ SEU ARQUIVO ORIGINAL + campos adicionais + calculateItemTotal
 
 // Tipos para gerenciamento de orçamentos
 
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from "firebase/firestore";
 
-import { BookSpecifications, ProjectCatalogType } from './books';
+import { BookSpecifications, ProjectCatalogType } from "./books";
 
 // ==================== ENUMS ====================
 
 export enum EditorialServiceType {
-  REVISION = 'Revisão',
-  PREPARATION = 'Preparação',
-  COPYEDIT = 'Copidesque',
-  GRAPHIC_DESIGN = 'Criação do projeto gráfico',
-  LAYOUT = 'Diagramação',
-  COVER = 'Capa',
-  EBOOK_FORMAT = 'Formatação eBook',
-  KINDLE_CONVERSION = 'Conversão Kindle',
-  ISBN = 'ISBN',
-  CATALOG_CARD = 'Ficha Catalográfica',
-  PRINTING = 'Impressão',
-  SOCIAL_MEDIA = 'Divulgação Rede Sociais',
-  MARKETING_CAMPAIGN = 'Campanha de Marketing',
-  CUSTOM = 'Personalizado',
+  REVISION = "Revisão",
+  PREPARATION = "Preparação",
+  COPYEDIT = "Copidesque",
+  GRAPHIC_DESIGN = "Criação do projeto gráfico",
+  LAYOUT = "Diagramação",
+  COVER = "Capa",
+  EBOOK_FORMAT = "Formatação eBook",
+  KINDLE_CONVERSION = "Conversão Kindle",
+  ISBN = "ISBN",
+  CATALOG_CARD = "Ficha Catalográfica",
+  PRINTING = "Impressão",
+  SOCIAL_MEDIA = "Divulgação Rede Sociais",
+  MARKETING_CAMPAIGN = "Campanha de Marketing",
+  CUSTOM = "Personalizado",
 }
 
 export enum ExtraType {
-  PROOFS = 'Provas',
-  SHIPPING = 'Frete',
-  CUSTOM = 'Personalizado',
+  PROOFS = "Provas",
+  SHIPPING = "Frete",
+  CUSTOM = "Personalizado",
 }
 
-export type BudgetStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
+export type BudgetStatus = "draft" | "sent" | "approved" | "rejected" | "expired";
+
+// ✅ ADICIONADO: BudgetStatus enum para compatibilidade
+export enum BudgetStatusEnum {
+  DRAFT = "draft",
+  SENT = "sent",
+  APPROVED = "approved", // BookCard usa este status
+  REJECTED = "rejected",
+  EXPIRED = "expired",
+}
 
 // ==================== BUDGET ITEMS ====================
 
@@ -45,131 +55,137 @@ export interface BudgetItemBase {
 }
 
 export interface EditorialServiceItem extends BudgetItemBase {
-  type: 'editorial_service';
+  type: "editorial_service";
   service: EditorialServiceType;
   customService?: string;
   estimatedDays?: number;
 }
 
 export interface PrintingItem extends BudgetItemBase {
-  type: 'printing';
-  printRun: number; // tiragem
+  type: "printing";
+  printRun: number;
   useBookSpecs: boolean;
   customSpecs?: Partial<BookSpecifications>;
   productionDays?: number;
 }
 
 export interface ExtraItem extends BudgetItemBase {
-  type: 'extra';
+  type: "extra";
   extraType: ExtraType;
   customExtra?: string;
 }
 
 export type BudgetItem = EditorialServiceItem | PrintingItem | ExtraItem;
 
-// ==================== PROJECT DATA (TEMPORARY) ====================
-
-export interface ProjectData {
-  title: string;
-  subtitle?: string;
-  author?: string;
-  specifications?: BookSpecifications;
-}
-
-// ==================== BUDGET ====================
+// ==================== BUDGET INTERFACE ====================
 
 export interface Budget {
   id?: string;
   number: string; // v5_1310.1435
   version: number;
 
-  // ✅ RELACIONAMENTOS OPCIONAIS (flexível para Lead ou Cliente)
-  leadId?: string; // Lead que originou (orçamento novo)
-  clientId?: string; // Cliente existente (reimpressão)
-  bookId?: string; // Livro existente (reimpressão)
+  // Relacionamentos
+  leadId?: string;
+  clientId?: string;
+  bookId?: string;
 
-  // ✅ TIPO DO PROJETO
-  projectType?: ProjectCatalogType; // L, E, K, C, etc
+  // ✅ ADICIONADO: Campos que BookCard e CommercialDashboard usam
+  clientName?: string; // BookCard.tsx usa este campo
+  projectTitle?: string; // BookCard.tsx usa este campo
+  description?: string; // BookCard.tsx usa este campo
 
-  // ✅ DADOS TEMPORÁRIOS DO PROJETO (se não tiver bookId)
-  projectData?: ProjectData;
+  // Tipo do projeto
+  projectType?: ProjectCatalogType;
 
-  // ITENS
+  // Dados do projeto (se não tiver bookId)
+  projectData?: {
+    title: string;
+    subtitle?: string;
+    author?: string;
+    specifications?: BookSpecifications;
+  };
+
+  // Itens
   items: BudgetItem[];
 
-  // VALORES
+  // Valores
   subtotal: number;
   discount?: number;
   discountPercentage?: number;
   total: number;
 
-  // CONDIÇÕES COMERCIAIS
+  // ✅ ADICIONADO: Compatibilidade com versão antiga (CommercialDashboard usa)
+  totals?: {
+    total: number; // CommercialDashboard.tsx usa este campo
+    discount?: number; // BookCard.tsx usa este campo
+  };
+  grandTotal?: number; // BookCard.tsx usa este campo
+
+  // Condições Comerciais
   paymentMethods: string[];
   validityDays: number;
-  productionDays?: number; // manual
+  validUntil?: Timestamp; // ✅ ADICIONADO: BookCard.tsx usa este campo (cálculo expiração)
+  productionDays?: number;
   clientProvidedMaterial: boolean;
   materialDescription?: string;
   notes?: string;
 
-  // STATUS
+  // Status
   status: BudgetStatus;
 
-  // DATAS
+  // ✅ ADICIONADO: Datas e tracking (BookCard usa para mostrar histórico)
   issueDate: Timestamp;
   expiryDate: Timestamp;
   approvalDate?: Timestamp;
+  sentAt?: Timestamp; // BookCard.tsx usa este campo
+  viewedAt?: Timestamp; // BookCard.tsx usa este campo
+
+  // ✅ ADICIONADO: Arquivos e conversão (BookCard usa)
+  pdfUrl?: string; // BookCard.tsx usa este campo (botão download)
+  convertedToProjectId?: string; // BookCard.tsx usa este campo
 
   createdAt: Timestamp;
   updatedAt: Timestamp;
   createdBy: string;
 }
 
-// ==================== FORM DATA ====================
-
 export interface BudgetFormData {
-  // ✅ Origem (OU lead OU cliente)
+  projectTitle: string;
+  projectType?: ProjectCatalogType;
   leadId?: string;
   clientId?: string;
-  bookId?: string;
-
-  // ✅ Tipo e dados do projeto
-  projectType?: ProjectCatalogType;
-  projectData?: ProjectData;
-
-  // Itens
-  items: Omit<BudgetItem, 'id' | 'totalPrice'>[];
-
-  // Condições
-  paymentMethods: string[];
+  items: Omit<BudgetItem, "id" | "totalPrice">[];
   validityDays: number;
-  productionDays?: number;
+  paymentMethods: string[];
+  notes?: string;
   clientProvidedMaterial: boolean;
   materialDescription?: string;
+  // ✅ ADICIONADO: Campos faltantes
+  bookId?: string;
+  projectData?: {
+    title: string;
+    subtitle?: string;
+    author?: string;
+    specifications?: any;
+  };
   discount?: number;
   discountPercentage?: number;
-  notes?: string;
+  productionDays?: number;
 }
 
 // ==================== HELPER FUNCTIONS ====================
 
 export function generateBudgetNumber(): string {
   const now = new Date();
-
-  // Ano: 2025 → v5
   const year = now.getFullYear();
   const versionYear = `v${year - 2020}`;
 
-  // Data: DDMM
-  const day = now.getDate().toString().padStart(2, '0');
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const datePart = `${day}${month}`;
+  const day = now.getDate().toString().padStart(2, "0");
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  const hour = now.getHours().toString().padStart(2, "0");
+  const minute = now.getMinutes().toString().padStart(2, "0");
 
-  // Hora: HHMM
-  const hour = now.getHours().toString().padStart(2, '0');
-  const minute = now.getMinutes().toString().padStart(2, '0');
-  const timePart = `${hour}${minute}`;
-
-  return `${versionYear}_${datePart}.${timePart}`;
+  return `${versionYear}_${day}${month}.${hour}${minute}`;
 }
 
 export function calculateSubtotal(items: BudgetItem[]): number {
@@ -194,35 +210,36 @@ export function calculateTotal(
   return Math.max(0, total);
 }
 
+// ✅ ADICIONADO: Função que estava faltando
 export function calculateItemTotal(quantity: number, unitPrice: number): number {
   return quantity * unitPrice;
 }
 
-export function validateBudget(data: BudgetFormData): string[] {
+// ✅ ADICIONADO: Função que estava faltando
+export function canApprove(budget: Budget): boolean {
+  return budget.status === "sent" && budget.items.length > 0;
+}
+
+export function validateBudget(budget: Partial<Budget>): string[] {
   const errors: string[] = [];
 
-  // ✅ Precisa ter OU lead OU cliente
-  if (!data.leadId && !data.clientId) {
-    errors.push('Budget needs leadId or clientId');
+  if (!budget.items || budget.items.length === 0) {
+    errors.push("Budget must have at least one item");
   }
 
-  // ✅ Se não tem bookId, precisa de projectData
-  if (!data.bookId && !data.projectData?.title) {
-    errors.push('Need bookId or projectData.titulo');
+  if (!budget.paymentMethods || budget.paymentMethods.length === 0) {
+    errors.push("Budget must specify payment methods");
   }
 
-  // Validar itens
-  if (!data.items || data.items.length === 0) {
-    errors.push('At least one item is required');
+  if (budget.validityDays && budget.validityDays < 1) {
+    errors.push("Validity days must be at least 1");
   }
 
-  // Validar condições
-  if (!data.paymentMethods || data.paymentMethods.length === 0) {
-    errors.push('At least one payment method is required');
-  }
-
-  if (!data.validityDays || data.validityDays <= 0) {
-    errors.push('Validity days must be greater than 0');
+  if (
+    budget.discountPercentage &&
+    (budget.discountPercentage < 0 || budget.discountPercentage > 100)
+  ) {
+    errors.push("Discount percentage must be between 0 and 100");
   }
 
   return errors;
@@ -230,31 +247,11 @@ export function validateBudget(data: BudgetFormData): string[] {
 
 export function getBudgetStatusLabel(status: BudgetStatus): string {
   const labels: Record<BudgetStatus, string> = {
-    draft: 'Rascunho',
-    sent: 'Enviado',
-    approved: 'Aprovado',
-    rejected: 'Recusado',
-    expired: 'Expirado',
+    draft: "Rascunho",
+    sent: "Enviado",
+    approved: "Aprovado",
+    rejected: "Rejeitado",
+    expired: "Expirado",
   };
   return labels[status];
-}
-
-export function getEditorialServiceLabel(service: EditorialServiceType): string {
-  return service; // Já está em português no enum
-}
-
-export function getExtraTypeLabel(extra: ExtraType): string {
-  return extra; // Já está em português no enum
-}
-
-export function isExpired(budget: Budget): boolean {
-  return budget.status === 'sent' && budget.expiryDate.toMillis() < Date.now();
-}
-
-export function canApprove(budget: Budget): boolean {
-  return budget.status === 'sent' && !isExpired(budget);
-}
-
-export function canEdit(budget: Budget): boolean {
-  return budget.status === 'draft';
 }

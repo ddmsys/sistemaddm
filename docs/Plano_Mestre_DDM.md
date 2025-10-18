@@ -1,7 +1,7 @@
 # 📘 Plano Mestre — DDM Sistema (Versão Completa)
 
 > **📅 Última Atualização:** 14 de outubro de 2025  
-> **⚠️ MIGRAÇÃO IMPORTANTE:** Quote → Budget (Orçamentos)  
+> **⚠️ MIGRAÇÃO IMPORTANTE:** Budget → Budget (Orçamentos)  
 > **📖 Ver:** [Documento 08 - Migração](Progress/08-DOCUMENTO%20DE%20MIGRAÇÃO%20E%20PADRONIZAÇÃO.md)
 
 ## 🏗️ Estrutura Final Definitiva
@@ -18,7 +18,7 @@ sistemaddm/
 │   │   ├── clients/                  # Functions de clientes
 │   │   │   ├── assignClientNumber.ts
 │   │   │   └── createClient.ts
-│   │   ├── budgets/                  # ✅ Functions de orçamentos (era quotes/)
+│   │   ├── budgets/                  # ✅ Functions de orçamentos (era budgets/)
 │   │   │   ├── createBudgetPdf.ts
 │   │   │   ├── onBudgetApproved.ts
 │   │   │   └── assignBudgetNumber.ts
@@ -50,7 +50,7 @@ sistemaddm/
 │   │   │   │   └── clients/          # Base de clientes
 │   │   │   │       ├── page.tsx
 │   │   │   │       └── [id]/page.tsx
-│   │   │   ├── budgets/              # ✅ Orçamentos (era /crm/quotes)
+│   │   │   ├── budgets/              # ✅ Orçamentos (era /crm/budgets)
 │   │   │   │   ├── page.tsx
 │   │   │   │   └── [id]/page.tsx
 │   │   │   │       └── [id]/page.tsx
@@ -113,12 +113,12 @@ sistemaddm/
 │   │   ├── comercial/                # 📈 MÓDULO COMERCIAL COMPLETO
 │   │   │   ├── modals/               # 🔧 Modais de edição
 │   │   │   │   ├── LeadModal.tsx
-│   │   │   │   ├── QuoteModal.tsx
+│   │   │   │   ├── BudgetModal.tsx
 │   │   │   │   ├── ProjectModal.tsx
 │   │   │   │   └── ClientModal.tsx
 │   │   │   ├── cards/                # 📋 Cards para listagens
 │   │   │   │   ├── LeadCard.tsx
-│   │   │   │   ├── QuoteCard.tsx
+│   │   │   │   ├── BudgetCard.tsx
 │   │   │   │   ├── ProjectCard.tsx
 │   │   │   │   └── ClientCard.tsx
 │   │   │   ├── charts/               # 📊 Gráficos específicos
@@ -128,12 +128,12 @@ sistemaddm/
 │   │   │   │   └── ConversionChart.tsx
 │   │   │   ├── tables/               # 📋 Tabelas e listas
 │   │   │   │   ├── LeadsTable.tsx
-│   │   │   │   ├── QuotesTable.tsx
+│   │   │   │   ├── BudgetsTable.tsx
 │   │   │   │   ├── ProjectsTable.tsx
 │   │   │   │   └── ClientsTable.tsx
 │   │   │   ├── forms/                # 📝 Formulários específicos
 │   │   │   │   ├── LeadForm.tsx
-│   │   │   │   ├── QuoteForm.tsx
+│   │   │   │   ├── BudgetForm.tsx
 │   │   │   │   ├── ProjectForm.tsx
 │   │   │   │   └── ClientForm.tsx
 │   │   │   ├── dashboards/           # 📊 Dashboards
@@ -143,7 +143,7 @@ sistemaddm/
 │   │   │   │   └── QuickActions.tsx
 │   │   │   └── filters/              # 🔍 Filtros e buscas
 │   │   │       ├── LeadFilters.tsx
-│   │   │       ├── QuoteFilters.tsx
+│   │   │       ├── BudgetFilters.tsx
 │   │   │       ├── ProjectFilters.tsx
 │   │   │       └── DateRangePicker.tsx
 │   │   ├── production/               # 🎨 Componentes produção
@@ -176,7 +176,7 @@ sistemaddm/
 │   ├── 📁 hooks/                     # 🎣 Custom hooks organizados
 │   │   ├── comercial/                # 🎣 Hooks do comercial
 │   │   │   ├── useLeads.ts           # CRUD e queries leads
-│   │   │   ├── useQuotes.ts          # CRUD e queries orçamentos
+│   │   │   ├── useBudgets.ts          # CRUD e queries orçamentos
 │   │   │   ├── useProjects.ts        # CRUD e queries projetos
 │   │   │   ├── useClients.ts         # CRUD e queries clientes
 │   │   │   ├── useFunnelData.ts      # Dados para funil
@@ -273,10 +273,10 @@ sistemaddm/
 **Métricas Principais:**
 
 - Funil por `leads.stage` (em negociação ordenado por `lastActivityAt` asc)
-- Receita ganha vs perdida (soma `quotes.grandTotal`)
+- Receita ganha vs perdida (soma `budgets.grandTotal`)
 - Taxa de conversão por fonte (`leads.source`)
 - Performance por vendedor (`ownerId`)
-- Orçamentos pendentes de assinatura (`quotes.status = 'sent'`)
+- Orçamentos pendentes de assinatura (`budgets.status = 'sent'`)
 - Projetos em andamento (`projects.status = 'open'`)
 - SLA de aprovações (`clientApprovalTasks.status = 'pending'`)
 - Projetos críticos (próximos do `dueDate`)
@@ -510,7 +510,7 @@ Tela/Dashboard:
 
 - Interessados em publicar.
 - Fluxo: **Lead → Orçamento → Cliente**.
-- **Automação:** `onQuoteSigned` cria cliente + projeto + pedido.
+- **Automação:** `onBudgetSigned` cria cliente + projeto + pedido.
 
 Campos principais:
 
@@ -521,7 +521,7 @@ Campos principais:
 | email/phone | string | N | máscaras |
 | indication | string | N | origem/indicação |
 | stage/status | enum | S | funil: contato → qualificação → negociação → orçamento → ganho/perdido |
-| quoteId | string | N | vínculo com `quotes` |
+| budgetId | string | N | vínculo com `budgets` |
 source: 'website'|'referral'|'social_media'|'cold_call'|'event'|'advertising'|'other'
 tags?: string[]
 notes?: string
@@ -557,7 +557,7 @@ Tela/Dashboard:
 
 ### 3.3 Orçamentos (`budgets`)
 
-> ✅ **ATUALIZADO** - Era `quotes`, agora é `budgets`
+> ✅ **ATUALIZADO** - Era `budgets`, agora é `budgets`
 
 - Proposta formal enviada ao autor.
 - **Automação:** `createBudgetPdf`, `onBudgetApproved`.
@@ -688,12 +688,12 @@ Tela/Dashboard:
 ### 3.6 Pedidos (`orders`)
 
 - Contrato financeiro gerado quando orçamento é assinado.
-- **Automação:** `onQuoteSigned`.
+- **Automação:** `onBudgetSigned`.
 
 Campos principais:
 
 ```ts
-quoteId: string, clientId: string, projectId: string
+budgetId: string, clientId: string, projectId: string
 total: number
 paymentSchedule: Array<{ value, dueDate, status: 'pending'|'paid'|'canceled', invoiceId? }>
 status: 'aberto'|'fechado'
@@ -742,7 +742,7 @@ Campos principais:
 orderId?: string, projectId: string
 vendorName: string, category?: string
 status: 'cotação_em_andamento'|'negociação'|'contratada'|'paga'|'concluída'
-quoteValue?: number, orderValue?: number, invoiceId?: string
+budgetValue?: number, orderValue?: number, invoiceId?: string
 createdAt, updatedAt
 ```
 
@@ -838,7 +838,7 @@ Tela/Dashboard:
 - `ownerId?: string`, `lastActivityAt?: Timestamp`
 - Índices: `stage asc + updatedAt desc`
 
-**Quotes**
+**Budgets**
 
 - `number: string` (ex.: `v5_0821.2221` - v(final do ano 2025 MMDD.HRMM)), `subtotal`, `discountTotal?`, `freight?`, `surcharge?`, `grandTotal`
 - Índices: `status + updatedAt desc`, `number asc`
@@ -856,7 +856,7 @@ Tela/Dashboard:
 
 **Purchases**
 
-- `vendorName`, `category? ('Impressão'|'Design'|'Frete'|'ISBN'|...)`, `quoteValue?`, `orderValue?`, `invoiceId?`
+- `vendorName`, `category? ('Impressão'|'Design'|'Frete'|'ISBN'|...)`, `budgetValue?`, `orderValue?`, `invoiceId?`
 - Índices: `projectId + status`, `category + updatedAt desc`
 
 **Invoices**
@@ -941,7 +941,7 @@ Tela/Dashboard:
 ## 3.16 PDFs (orçamentos e faturas)
 
 - Templates com PDFKit em `functions/src/pdfs/*`.
-- Nomes: `quotes/{quoteId}/quote-{number}.pdf`, `invoices/{invoiceId}/invoice-{number|id}.pdf`.
+- Nomes: `budgets/{budgetId}/budget-{number}.pdf`, `invoices/{invoiceId}/invoice-{number|id}.pdf`.
 - Ação "Regerar PDF" após editar itens/valores (chama CF).
 
 ---
@@ -951,7 +951,7 @@ Tela/Dashboard:
 Crie apenas quando solicitado pelo console ou conforme abaixo:
 
 - `leads`: `stage asc, updatedAt desc`
-- `quotes`: `status asc, updatedAt desc`
+- `budgets`: `status asc, updatedAt desc`
 - `projects`: `status asc, updatedAt desc`
 - `proofs`: `projectId asc, proofNumber asc`
 - `invoices`: `status asc, dueDate asc`
@@ -1101,7 +1101,7 @@ export const APP_REGION = 'southamerica-east1';
 export const COLLECTIONS = {
   clients: 'clients',
   leads: 'leads',
-  quotes: 'quotes',
+  budgets: 'budgets',
   projects: 'projects',
   proofs: 'proofs',
   orders: 'orders',
@@ -1123,8 +1123,8 @@ export const STORAGE_PATHS = {
 
 ```ts
 // functions/src/contracts.ts
-export interface QuoteSignedEvent {
-  quoteId: string;
+export interface BudgetSignedEvent {
+  budgetId: string;
   client: { id?: string | null; name: string; email?: string | null };
   totals: { grandTotal: number };
   signedAt: FirebaseFirestore.Timestamp;
@@ -1332,7 +1332,7 @@ export const exportCsv = onRequest(async (_req, res) => {
 
 - **Invoice vencendo** → destinatário: cliente (financeiro) | quando: `dueDate-3d`.
 - **Prova disponível** → cliente + produção | quando: upload aprovado para revisão.
-- **Quote assinado** → comercial + financeiro | quando: `quotes.status → signed`.
+- **Budget assinado** → comercial + financeiro | quando: `budgets.status → signed`.
 
 ---
 
@@ -1358,7 +1358,7 @@ export const demoProject = {
 
 \- **\*\*Leads.stage/status:\*\*** \`contato\`, \`qualificação\`, \`negociação\`, \`orçamento\`, \`ganho\`, \`perdido\`.
 
-\- **\*\*Quotes.status:\*\*** \`draft\`, \`sent\`, \`signed\`, \`refused\`.
+\- **\*\*Budgets.status:\*\*** \`draft\`, \`sent\`, \`signed\`, \`refused\`.
 
 \- **\*\*Invoices.status:\*\*** \`draft\`, \`pending\`, \`paid\`, \`canceled\`.
 

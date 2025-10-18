@@ -1,5 +1,5 @@
 // src/lib/types/projects.ts
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from "firebase/firestore";
 
 // ================ INTERFACES PRINCIPAIS ================
 export interface Project {
@@ -10,7 +10,7 @@ export interface Project {
   // Relacionamentos OBRIGATÓRIOS
   clientId: string;
   clientName?: string;
-  quoteId?: string;
+  budgetId?: string;
 
   // Dados básicos OBRIGATÓRIOS
   title: string;
@@ -61,7 +61,7 @@ export interface ProjectFile {
   size: number;
   uploadedBy: string;
   uploadedAt: Timestamp;
-  category: 'brief' | 'proof' | 'final' | 'reference' | 'other';
+  category: "brief" | "proof" | "final" | "reference" | "other";
 }
 
 export interface ProjectTask {
@@ -69,7 +69,7 @@ export interface ProjectTask {
   title: string;
   description?: string;
   assignedTo: string;
-  status: 'todo' | 'in_progress' | 'review' | 'done';
+  status: "todo" | "in_progress" | "review" | "done";
   dueDate?: Timestamp;
   completedDate?: Timestamp;
   dependencies: string[]; // Task IDs
@@ -84,7 +84,7 @@ export interface ProjectTimeline {
   date: Timestamp;
   userId: string;
   userName: string;
-  type: 'milestone' | 'update' | 'issue' | 'approval';
+  type: "milestone" | "update" | "issue" | "approval";
 }
 
 export interface ProjectSpecifications {
@@ -100,36 +100,36 @@ export interface ProjectSpecifications {
 
 // ================ ENUMS E TYPES ================
 export type ProjectStatus =
-  | 'open'
-  | 'design'
-  | 'review'
-  | 'production'
-  | 'clientApproval'
-  | 'approved'
-  | 'printing'
-  | 'delivering'
-  | 'shipped'
-  | 'done'
-  | 'cancelled';
+  | "open"
+  | "design"
+  | "review"
+  | "production"
+  | "clientApproval"
+  | "approved"
+  | "printing"
+  | "delivering"
+  | "shipped"
+  | "done"
+  | "cancelled";
 
-export type ProjectPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type ProjectPriority = "low" | "medium" | "high" | "urgent";
 
 export type ProductType =
-  | 'L' // Livro
-  | 'E' // E-book
-  | 'K' // kindle
-  | 'C' // CD
-  | 'D' // DVD
-  | 'G' // Gráfica
-  | 'P' // PlatafDigital
-  | 'S' // Single
-  | 'X' // LivroTerc
-  | 'A'; // Arte
+  | "L" // Livro
+  | "E" // E-book
+  | "K" // kindle
+  | "C" // CD
+  | "D" // DVD
+  | "G" // Gráfica
+  | "P" // PlatafDigital
+  | "S" // Single
+  | "X" // LivroTerc
+  | "A"; // Arte
 
 export interface ApprovalTask {
   id: string;
   description: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   dueDate?: Timestamp;
   createdAt: Timestamp;
   resolvedAt?: Timestamp;
@@ -140,7 +140,7 @@ export interface ApprovalTask {
 export interface ProjectFormData {
   clientId: string;
   clientName?: string;
-  quoteId?: string;
+  budgetId?: string;
   title: string;
   description?: string;
   product: ProductType; // Mudança: era category
@@ -159,7 +159,7 @@ export interface ProjectModalProps {
   onClose: () => void;
   project?: Project;
   clientId?: string;
-  quoteId?: string;
+  budgetId?: string;
   onSave: (project: Project) => Promise<void>;
   loading?: boolean;
 }
@@ -194,14 +194,14 @@ export interface Client {
   id: string;
   name: string;
   email?: string;
-  status: 'active' | 'inactive' | 'blocked';
+  status: "active" | "inactive" | "blocked";
 }
 
 export interface ProjectFormData {
   // Relacionamentos
   clientId: string;
   clientName?: string;
-  quoteId?: string;
+  budgetId?: string;
 
   // Dados básicos OBRIGATÓRIOS
   title: string;
@@ -228,7 +228,7 @@ export interface ProjectFormData {
 export interface ProjectSpecifications {
   // Formato e estrutura
   format?: string; // 'A4', 'A5', 'Custom'
-  orientation?: 'portrait' | 'landscape';
+  orientation?: "portrait" | "landscape";
   pages?: number;
 
   // Produção física

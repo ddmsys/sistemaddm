@@ -1,7 +1,7 @@
 # Sistema DDM - Firebase e Hooks
 
 > **📅 Última Atualização:** 14 de outubro de 2025  
-> **⚠️ MIGRAÇÃO:** useQuotes foi renomeado para useBudgets. Ver [Documento 08](Progress/08-DOCUMENTO%20DE%20MIGRAÇÃO%20E%20PADRONIZAÇÃO.md)
+> **⚠️ MIGRAÇÃO:** useBudgets foi renomeado para useBudgets. Ver [Documento 08](Progress/08-DOCUMENTO%20DE%20MIGRAÇÃO%20E%20PADRONIZAÇÃO.md)
 
 ## 🔥 Configuração Firebase
 
@@ -67,7 +67,7 @@ firestore/
 │       ├── (campos do tipo Client)
 │       └── clientNumber: number (único)
 │
-├── budgets/                          ← ✅ ATUALIZADO (era quotes)
+├── budgets/                          ← ✅ ATUALIZADO (era budgets)
 │   └── {budgetId}/
 │       ├── (campos do tipo Budget)
 │       ├── number: string (único)
@@ -500,7 +500,7 @@ export function useProjects() {
 
 ## 💰 Hook Especializado: useBudgets
 
-> ✅ **ATUALIZADO** - Substitui useQuotes desde 14/10/2025
+> ✅ **ATUALIZADO** - Substitui useBudgets desde 14/10/2025
 
 ### Implementação
 
@@ -753,11 +753,11 @@ export function useCommercialMetrics() {
       ];
 
       // Orçamentos por status
-      const quotesByStatus: StatusData[] = [
+      const budgetsByStatus: StatusData[] = [
         {
           status: 'draft',
-          count: quotes.filter(q => q.status === 'draft').length,
-          value: quotes.filter(q => q.status === 'draft').reduce((s, q) => s + q.total, 0),
+          count: budgets.filter(q => q.status === 'draft').length,
+          value: budgets.filter(q => q.status === 'draft').reduce((s, q) => s + q.total, 0),
           percentage: 0,
           label: 'Rascunho',
         },
@@ -772,12 +772,12 @@ export function useCommercialMetrics() {
       setMetrics({
         monthlyRevenue,
         activeLeads,
-        totalQuotes,
+        totalBudgets,
         conversionRate,
         revenueData,
         funnelData,
         leadsBySource,
-        quotesByStatus,
+        budgetsByStatus,
         criticalProjects,
       });
 
@@ -785,7 +785,7 @@ export function useCommercialMetrics() {
     };
 
     calculateMetrics();
-  }, [leads, projects, quotes]);
+  }, [leads, projects, budgets]);
 
   return { metrics, loading };
 }

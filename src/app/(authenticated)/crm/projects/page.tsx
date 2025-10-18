@@ -1,7 +1,7 @@
 // src/app/(authenticated)/crm/projects/page.tsx
-'use client';
+"use client";
 
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from "firebase/firestore";
 import {
   AlertCircle,
   Briefcase,
@@ -11,46 +11,46 @@ import {
   Plus,
   Search,
   User,
-} from 'lucide-react';
-import { useState } from 'react';
+} from "lucide-react";
+import { useState } from "react";
 
-import ProjectModal from '@/components/comercial/modals/ProjectModal'; // Corrigido import
-import { useFirestore } from '@/hooks/useFirestore'; // Voltando para o hook original
+import ProjectModal from "@/components/comercial/modals/ProjectModal"; // Corrigido import
+import { useFirestore } from "@/hooks/useFirestore"; // Voltando para o hook original
 import {
   Client,
   Project,
   ProjectFormData,
   ProjectPriority,
   ProjectStatus,
-} from '@/lib/types/projects'; // Usando types separados
-import { formatCurrency, formatDate } from '@/lib/utils';
+} from "@/lib/types/projects"; // Usando types separados
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 interface FilterState {
-  status: ProjectStatus | '';
-  priority: ProjectPriority | '';
+  status: ProjectStatus | "";
+  priority: ProjectPriority | "";
   search: string;
 }
 
 export default function ProjectsPage() {
   // ================ HOOKS ================
-  const { data: projects, loading, create, update, remove } = useFirestore<Project>('projects'); // Usando hook original
+  const { data: projects, loading, create, update, remove } = useFirestore<Project>("projects"); // Usando hook original
 
-  const { data: clientsData } = useFirestore<Client>('clients');
+  const { data: clientsData } = useFirestore<Client>("clients");
   const clients = clientsData || [];
 
   const [showModal, setShowModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [filters, setFilters] = useState<FilterState>({
-    status: '',
-    priority: '',
-    search: '',
+    status: "",
+    priority: "",
+    search: "",
   });
 
   // Mock users - substituir por dados reais do contexto de usuários
   const users = [
-    { id: '1', name: 'João Silva' },
-    { id: '2', name: 'Maria Santos' },
-    { id: '3', name: 'Pedro Costa' },
+    { id: "1", name: "João Silva" },
+    { id: "2", name: "Maria Santos" },
+    { id: "3", name: "Pedro Costa" },
   ];
 
   // ================ HANDLERS ================
@@ -79,18 +79,18 @@ export default function ProjectsPage() {
         });
       } else {
         // Criando novo projeto - garantir todos campos obrigatórios
-        const projectData: Omit<Project, 'id'> = {
+        const projectData: Omit<Project, "id"> = {
           // Relacionamentos
           clientId: data.clientId,
-          clientName: data.clientName || '',
-          quoteId: data.quoteId,
+          clientName: data.clientName || "",
+          budgetId: data.budgetId,
 
           // Dados básicos OBRIGATÓRIOS
           title: data.title,
-          description: data.description || '',
+          description: data.description || "",
           product: data.product,
-          status: data.status || 'open',
-          priority: data.priority || 'medium',
+          status: data.status || "open",
+          priority: data.priority || "medium",
 
           // Datas OBRIGATÓRIAS
           startDate: data.startDate
@@ -118,8 +118,8 @@ export default function ProjectsPage() {
           assignedTo: data.assignedTo,
           clientApprovalTasks: [],
           tags: [],
-          notes: data.notes || '',
-          createdBy: 'user-id', // Pegar do contexto de auth
+          notes: data.notes || "",
+          createdBy: "user-id", // Pegar do contexto de auth
 
           // Timestamps OBRIGATÓRIOS
           createdAt: Timestamp.now(),
@@ -132,7 +132,7 @@ export default function ProjectsPage() {
       setShowModal(false);
       setSelectedProject(null);
     } catch (error) {
-      console.error('Erro ao salvar projeto:', error);
+      console.error("Erro ao salvar projeto:", error);
       throw error;
     }
   };
@@ -143,90 +143,90 @@ export default function ProjectsPage() {
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
+    if (window.confirm("Tem certeza que deseja excluir este projeto?")) {
       try {
         await remove(projectId);
       } catch (error) {
-        console.error('Erro ao excluir projeto:', error);
+        console.error("Erro ao excluir projeto:", error);
       }
     }
   };
 
   // ================ CONFIGURAÇÕES ================
   const statusOptions = [
-    { value: '', label: 'Todos os status' },
-    { value: 'open', label: 'Aberto' },
-    { value: 'design', label: 'Design' },
-    { value: 'review', label: 'Revisão' },
-    { value: 'production', label: 'Produção' },
-    { value: 'clientApproval', label: 'Aprovação Cliente' },
-    { value: 'approved', label: 'Aprovado' },
-    { value: 'printing', label: 'Impressão' },
-    { value: 'delivering', label: 'Entregando' },
-    { value: 'shipped', label: 'Enviado' },
-    { value: 'done', label: 'Concluído' },
-    { value: 'cancelled', label: 'Cancelado' },
+    { value: "", label: "Todos os status" },
+    { value: "open", label: "Aberto" },
+    { value: "design", label: "Design" },
+    { value: "review", label: "Revisão" },
+    { value: "production", label: "Produção" },
+    { value: "clientApproval", label: "Aprovação Cliente" },
+    { value: "approved", label: "Aprovado" },
+    { value: "printing", label: "Impressão" },
+    { value: "delivering", label: "Entregando" },
+    { value: "shipped", label: "Enviado" },
+    { value: "done", label: "Concluído" },
+    { value: "cancelled", label: "Cancelado" },
   ];
 
   const priorityOptions = [
-    { value: '', label: 'Todas as prioridades' },
-    { value: 'low', label: 'Baixa' },
-    { value: 'medium', label: 'Média' },
-    { value: 'high', label: 'Alta' },
-    { value: 'urgent', label: 'Urgente' },
+    { value: "", label: "Todas as prioridades" },
+    { value: "low", label: "Baixa" },
+    { value: "medium", label: "Média" },
+    { value: "high", label: "Alta" },
+    { value: "urgent", label: "Urgente" },
   ];
 
   // ================ FUNÇÕES AUXILIARES ================
   const getStatusColor = (status: ProjectStatus) => {
     const colors = {
-      open: 'bg-gray-50 text-gray-700 border-gray-200',
-      design: 'bg-blue-50 text-blue-700 border-blue-200',
-      review: 'bg-purple-50 text-purple-700 border-purple-200',
-      production: 'bg-amber-50 text-amber-700 border-amber-200',
-      clientApproval: 'bg-orange-50 text-orange-700 border-orange-200',
-      approved: 'bg-green-50 text-green-700 border-green-200',
-      printing: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      delivering: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-      shipped: 'bg-teal-50 text-teal-700 border-teal-200',
-      done: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      cancelled: 'bg-red-50 text-red-700 border-red-200',
+      open: "bg-gray-50 text-gray-700 border-gray-200",
+      design: "bg-blue-50 text-blue-700 border-blue-200",
+      review: "bg-purple-50 text-purple-700 border-purple-200",
+      production: "bg-amber-50 text-amber-700 border-amber-200",
+      clientApproval: "bg-orange-50 text-orange-700 border-orange-200",
+      approved: "bg-green-50 text-green-700 border-green-200",
+      printing: "bg-indigo-50 text-indigo-700 border-indigo-200",
+      delivering: "bg-cyan-50 text-cyan-700 border-cyan-200",
+      shipped: "bg-teal-50 text-teal-700 border-teal-200",
+      done: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      cancelled: "bg-red-50 text-red-700 border-red-200",
     };
     return colors[status] || colors.open;
   };
 
   const getStatusLabel = (status: ProjectStatus) => {
     const labels = {
-      open: 'Aberto',
-      design: 'Design',
-      review: 'Revisão',
-      production: 'Produção',
-      clientApproval: 'Aprovação Cliente',
-      approved: 'Aprovado',
-      printing: 'Impressão',
-      delivering: 'Entregando',
-      shipped: 'Enviado',
-      done: 'Concluído',
-      cancelled: 'Cancelado',
+      open: "Aberto",
+      design: "Design",
+      review: "Revisão",
+      production: "Produção",
+      clientApproval: "Aprovação Cliente",
+      approved: "Aprovado",
+      printing: "Impressão",
+      delivering: "Entregando",
+      shipped: "Enviado",
+      done: "Concluído",
+      cancelled: "Cancelado",
     };
     return labels[status] || status;
   };
 
   const getPriorityColor = (priority: ProjectPriority) => {
     const colors = {
-      low: 'text-green-600',
-      medium: 'text-yellow-600',
-      high: 'text-orange-600',
-      urgent: 'text-red-600',
+      low: "text-green-600",
+      medium: "text-yellow-600",
+      high: "text-orange-600",
+      urgent: "text-red-600",
     };
     return colors[priority];
   };
 
   const getPriorityLabel = (priority: ProjectPriority) => {
     const labels = {
-      low: 'Baixa',
-      medium: 'Média',
-      high: 'Alta',
-      urgent: 'Urgente',
+      low: "Baixa",
+      medium: "Média",
+      high: "Alta",
+      urgent: "Urgente",
     };
     return labels[priority];
   };
@@ -251,7 +251,7 @@ export default function ProjectsPage() {
 
     const dueDate = project.dueDate instanceof Date ? project.dueDate : project.dueDate.toDate();
 
-    return dueDate < new Date() && project.status !== 'done' && project.status !== 'cancelled';
+    return dueDate < new Date() && project.status !== "done" && project.status !== "cancelled";
   };
 
   return (
@@ -298,7 +298,7 @@ export default function ProjectsPage() {
             onChange={(e) =>
               setFilters({
                 ...filters,
-                status: e.target.value as ProjectStatus | '',
+                status: e.target.value as ProjectStatus | "",
               })
             }
           >
@@ -318,7 +318,7 @@ export default function ProjectsPage() {
             onChange={(e) =>
               setFilters({
                 ...filters,
-                priority: e.target.value as ProjectPriority | '',
+                priority: e.target.value as ProjectPriority | "",
               })
             }
           >
@@ -341,14 +341,14 @@ export default function ProjectsPage() {
       {/* Results */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600">
-          {loading ? 'Carregando...' : `${displayProjects.length} projetos encontrados`}
+          {loading ? "Carregando..." : `${displayProjects.length} projetos encontrados`}
         </div>
         <div className="flex items-center space-x-4 text-sm text-gray-600">
           <span>
-            Em andamento:{' '}
+            Em andamento:{" "}
             {
               (projects || []).filter(
-                (p: Project) => p.status === 'design' || p.status === 'production',
+                (p: Project) => p.status === "design" || p.status === "production",
               ).length
             }
           </span>
@@ -395,7 +395,7 @@ export default function ProjectsPage() {
               <div className="mb-4">
                 <h3 className="truncate text-lg font-semibold text-gray-900">{project.title}</h3>
                 <p className="text-xs text-primary-500">
-                  {project.catalogCode || 'Código em processamento...'}
+                  {project.catalogCode || "Código em processamento..."}
                 </p>
               </div>
 
@@ -421,7 +421,7 @@ export default function ProjectsPage() {
                 <div className="mb-3 text-sm text-gray-600">
                   <div className="flex items-center">
                     <Calendar className="mr-2 h-4 w-4" />
-                    Entrega:{' '}
+                    Entrega:{" "}
                     {formatDate(
                       project.dueDate instanceof Date ? project.dueDate : project.dueDate.toDate(),
                     )}
@@ -463,7 +463,7 @@ export default function ProjectsPage() {
 
               {/* Created date */}
               <div className="text-xs text-gray-500">
-                Criado em:{' '}
+                Criado em:{" "}
                 {project.createdAt &&
                   formatDate(
                     project.createdAt instanceof Date

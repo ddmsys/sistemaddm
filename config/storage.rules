@@ -91,7 +91,7 @@ service firebase.storage {
     
     // ========== QUOTE FILES ==========
     
-    match /quotes/{quoteId}/pdf/{fileName} {
+    match /budgets/{budgetId}/pdf/{fileName} {
       allow read: if isActive() && hasAnyRole(['admin', 'comercial', 'financeiro']);
       
       allow write: if isActive() && 

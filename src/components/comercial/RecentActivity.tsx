@@ -1,41 +1,41 @@
-'use client';
+"use client";
 
-import { CheckCircle, FileText, User } from 'lucide-react';
+import { CheckCircle, FileText, User } from "lucide-react";
 
-import { Lead } from '@/lib/types/leads';
-import { Quote } from '@/lib/types/quotes';
+import { Budget } from "@/lib/types/budgets";
+import { Lead } from "@/lib/types/leads";
 
 interface RecentActivitiesProps {
   leads: Lead[];
-  quotes: Quote[];
+  budgets: Budget[];
   onViewLead: (lead: Lead) => void;
 }
 
-export function RecentActivities({ leads, quotes, onViewLead }: RecentActivitiesProps) {
+export function RecentActivities({ leads, budgets, onViewLead }: RecentActivitiesProps) {
   const activities = [
     {
-      type: 'lead',
+      type: "lead",
       icon: User,
-      title: 'Novo lead:',
-      subtitle: 'João Mendes',
-      time: 'há 2 horas',
-      color: 'text-teal-600',
+      title: "Novo lead:",
+      subtitle: "João Mendes",
+      time: "há 2 horas",
+      color: "text-teal-600",
     },
     {
-      type: 'quote',
+      type: "budget",
       icon: FileText,
-      title: 'Orçamento aprovado:',
-      subtitle: 'Manual de Marketing Digital',
-      time: 'há 1 dia',
-      color: 'text-blue-600',
+      title: "Orçamento aprovado:",
+      subtitle: "Manual de Marketing Digital",
+      time: "há 1 dia",
+      color: "text-blue-600",
     },
     {
-      type: 'project',
+      type: "project",
       icon: CheckCircle,
-      title: 'Projeto finalizado:',
-      subtitle: 'Receitas da Vovó',
-      time: 'há 3 dias',
-      color: 'text-green-600',
+      title: "Projeto finalizado:",
+      subtitle: "Receitas da Vovó",
+      time: "há 3 dias",
+      color: "text-green-600",
     },
   ];
 

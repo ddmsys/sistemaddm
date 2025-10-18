@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 
 interface Activity {
   id: string;
-  type: 'lead_created' | 'quote_sent' | 'project_approved' | 'payment_received';
+  type: "lead_created" | "budget_sent" | "project_approved" | "payment_received";
   title: string;
   description: string;
   timestamp: Date;
@@ -21,44 +21,44 @@ export function ActivityFeed() {
   useEffect(() => {
     const mockActivities: Activity[] = [
       {
-        id: '1',
-        type: 'lead_created',
-        title: 'Novo lead criado',
-        description: 'Maria Silva - Editora ABC',
+        id: "1",
+        type: "lead_created",
+        title: "Novo lead criado",
+        description: "Maria Silva - Editora ABC",
         timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 min atrás
-        user: 'João Santos',
-        icon: '👤',
-        color: 'text-blue-600',
+        user: "João Santos",
+        icon: "👤",
+        color: "text-blue-600",
       },
       {
-        id: '2',
-        type: 'quote_sent',
-        title: 'Orçamento enviado',
-        description: 'ORC-2024-001 - R$ 15.000',
+        id: "2",
+        type: "budget_sent",
+        title: "Orçamento enviado",
+        description: "ORC-2024-001 - R$ 15.000",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2h atrás
-        user: 'Ana Costa',
-        icon: '📧',
-        color: 'text-emerald-600',
+        user: "Ana Costa",
+        icon: "📧",
+        color: "text-emerald-600",
       },
       {
-        id: '3',
-        type: 'project_approved',
-        title: 'Projeto aprovado',
+        id: "3",
+        type: "project_approved",
+        title: "Projeto aprovado",
         description: 'Livro "História do Brasil"',
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4h atrás
-        user: 'Carlos Lima',
-        icon: '✅',
-        color: 'text-purple-600',
+        user: "Carlos Lima",
+        icon: "✅",
+        color: "text-purple-600",
       },
       {
-        id: '4',
-        type: 'payment_received',
-        title: 'Pagamento recebido',
-        description: 'R$ 7.500 - Primeira parcela',
+        id: "4",
+        type: "payment_received",
+        title: "Pagamento recebido",
+        description: "R$ 7.500 - Primeira parcela",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6h atrás
-        user: 'Sistema',
-        icon: '💰',
-        color: 'text-amber-600',
+        user: "Sistema",
+        icon: "💰",
+        color: "text-amber-600",
       },
     ];
 
@@ -80,7 +80,7 @@ export function ActivityFeed() {
     if (days > 0) return `${days}d atrás`;
     if (hours > 0) return `${hours}h atrás`;
     if (minutes > 0) return `${minutes}min atrás`;
-    return 'Agora';
+    return "Agora";
   };
 
   if (loading) {

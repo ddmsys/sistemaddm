@@ -64,9 +64,9 @@ config/          # Firestore rules
 | `createOrUpdateLead`       | Callable onCall    | ✅ Funcional | `functions/src/index.ts:446`  |
 | `deleteClient`             | Callable onCall    | ✅ Funcional | `functions/src/index.ts:181`  |
 | `deleteProject`            | Callable onCall    | ✅ Funcional | `functions/src/index.ts:211`  |
-| `createQuotePdf`           | Callable onCall    | ✅ Funcional | `functions/src/index.ts:611`  |
+| `createBudgetPdf`          | Callable onCall    | ✅ Funcional | `functions/src/index.ts:611`  |
 | `createInvoicePdf`         | Callable onCall    | ✅ Funcional | `functions/src/index.ts:700+` |
-| `onQuoteSigned`            | Firestore onUpdate | ✅ Funcional | `functions/src/index.ts:991`  |
+| `onBudgetSigned`           | Firestore onUpdate | ✅ Funcional | `functions/src/index.ts:991`  |
 | `onProjectReadyForPrint`   | Firestore onUpdate | ✅ Funcional | `functions/src/index.ts:1027` |
 | `registerFontsOrFallback`  | Exported function  | ✅ Funcional | `functions/src/index.ts:140`  |
 
@@ -186,7 +186,7 @@ import { collection, addDoc } from 'firebase/firestore'
 // Leads: português com underscore
 'primeiro_contato' | 'proposta_enviada' | 'negociacao' | 'fechado_ganho'
 
-// Quotes: inglês
+// Budgets: inglês
 'draft' | 'sent' | 'signed' | 'refused'
 
 // Invoices: inglês
@@ -234,8 +234,8 @@ export default function LogoutButton() { }
   - `functions/src/pdfs`
 - **Recursos:**
   - Numeração automática (clientNumber, catalogCode)
-  - Geração de PDFs (quotes, invoices)
-  - Triggers (onQuoteSigned, onProjectReadyForPrint)
+  - Geração de PDFs (budgets, invoices)
+  - Triggers (onBudgetSigned, onProjectReadyForPrint)
   - Validação de unicidade (email, phone, CPF, CNPJ, RG, IE)
 - **Problemas:** Tipos inline, sem compartilhamento com frontend
 
@@ -270,16 +270,16 @@ export default function LogoutButton() { }
   - ⚠️ `Task` com campos `name/description` no frontend
   - ⚠️ Tarefas do backend usam `title` (inconsistência)
 
-#### **CRM (Leads & Quotes)**
+#### **CRM (Leads & Budgets)**
 
 - **Status:** 🚧 Backend completo, frontend ausente
 - **Backend:**
   - ✅ `createOrUpdateLead:446` (Callable)
-  - ✅ `createQuotePdf:611`
-  - ✅ `onQuoteSigned:991` (cria Client + Project + Order)
+  - ✅ `createBudgetPdf:611`
+  - ✅ `onBudgetSigned:991` (cria Client + Project + Order)
   - ✅ Normalização de stages (`normalizeStage:474`)
 - **Frontend:**
-  - ❌ Não há componentes para Leads ou Quotes no `src/components`
+  - ❌ Não há componentes para Leads ou Budgets no `src/components`
   - ❌ Páginas `/crm/*` não verificadas
 - **Tipos:**
   - ❌ `LeadInput` apenas inline (functions/src/index.ts:480)
@@ -310,7 +310,7 @@ export default function LogoutButton() { }
 - **Evidência:**
   - `functions/src/index.ts:0` usa `firebase-functions/v2` (Gen2)
   - `functions/src/index.ts:0` também usa Gen2
-  - Ambos exportam funções com mesmos nomes (`onQuoteApproved`, `onLeadConverted`)
+  - Ambos exportam funções com mesmos nomes (`onBudgetApproved`, `onLeadConverted`)
 
 **Ação:** Deletar `functions/src/index.ts` ou consolidar.
 
@@ -349,7 +349,7 @@ Cloud Functions
 ├── Firestore Triggers
 └── HTTP/Callable APIs
 
-Quote Signed Trigger
+Budget Signed Trigger
 ├── Client Created
 ├── Project Created
 ├── Order Created
@@ -390,7 +390,7 @@ interface Task { name: string }
 ```typescript
 // Strings mágicas espalhadas por todo código:
 if (status === 'primeiro_contato') { }     // Leads
-if (status === 'draft') { }                 // Quotes
+if (status === 'draft') { }                 // Budgets
 if (status === 'pending') { }               // Invoices
 if (status === 'aberto') { }                // Projects (português!)
 
@@ -403,7 +403,7 @@ if (status === 'aberto') { }                // Projects (português!)
 
 ```typescript
 // functions/src/index.ts depende de:
-// - functions/src/pdfs/quoteTemplate.js
+// - functions/src/pdfs/budgetTemplate.js
 // - functions/src/pdfs/invoiceTemplate.js
 // - Fonts em fonts/ (Inter-*.ttf)
 // - Storage bucket configurado
@@ -456,10 +456,10 @@ type LeadStage =
 
 📍 `functions/src/index.ts:446`
 
-#### **Quotes (Inglês):**
+#### **Budgets (Inglês):**
 
 ```typescript
-type QuoteStatus = 'draft' | 'sent' | 'signed' | 'refused';
+type BudgetStatus = 'draft' | 'sent' | 'signed' | 'refused';
 ```
 
 📍 `docs/Plano_Mestre_DDM.md:608`
@@ -501,7 +501,7 @@ type InvoiceStatus = 'draft' | 'pending' | 'paid' | 'canceled';
 | **Firestore Doc ID** | Auto-gerado                     | `a1b2c3d4e5f6`           | Firestore                       |
 | **Client Number**    | Sequencial numérico             | `459`                    | `assignClientNumber:1027`       |
 | **Catalog Code**     | Prefixo + clientNumber + sufixo | `DDML0459`, `DDML0459.1` | `assignProjectCatalogCode:1093` |
-| **Quote Number**     | String customizado              | `Q-0001`                 | Manual (docs)                   |
+| **Budget Number**    | String customizado              | `Q-0001`                 | Manual (docs)                   |
 | **Invoice Number**   | String customizado              | `NF-2025-0001`           | Manual (docs)                   |
 
 **Problema:** Confusão entre `clientId` (doc ID) e `clientNumber` (sequencial).
@@ -650,7 +650,7 @@ export interface Lead {
   phone?: string;
   indication?: string;
   stage: LeadStage;
-  quoteId?: string;
+  budgetId?: string;
   ownerId?: string;
   ownerName?: string;
   ownerEmail?: string;
@@ -669,11 +669,11 @@ export type LeadStage =
   | 'fechado_ganho'
   | 'fechado_perdido';
 
-export interface Quote {
+export interface Budget {
   id: string;
   number: string;          // ex: "Q-0001"
-  status: QuoteStatus;
-  quoteType: 'producao' | 'impressao' | 'misto';
+  status: BudgetStatus;
+  budgetType: 'producao' | 'impressao' | 'misto';
   currency: 'BRL' | 'USD' | 'EUR';
   clientId?: string;
   clientName: string;
@@ -684,7 +684,7 @@ export interface Quote {
   validityDays?: number;
   productionTime?: string;
   material?: Material;
-  items: QuoteItem[];
+  items: BudgetItem[];
   totals: Totals;
   paymentPlan?: PaymentPlan;
   terms?: string;
@@ -696,9 +696,9 @@ export interface Quote {
   updatedAt: Timestamp;
 }
 
-export type QuoteStatus = 'draft' | 'sent' | 'signed' | 'refused';
+export type BudgetStatus = 'draft' | 'sent' | 'signed' | 'refused';
 
-export interface QuoteItem {
+export interface BudgetItem {
   kind: 'etapa' | 'impressao';
   group?: 'pre_texto' | 'processo_editorial' | 'impressao';
   description: string;
@@ -738,7 +738,7 @@ export interface Signature {
 ```typescript
 export interface Order {
   id: string;
-  quoteId: string;
+  budgetId: string;
   clientId: string;
   projectId: string;
   total: number;
@@ -788,7 +788,7 @@ export interface Purchase {
   category?: PurchaseCategory;
   items: PurchaseItem[];
   status: PurchaseStatus;
-  quoteValue?: number;
+  budgetValue?: number;
   orderValue?: number;
   invoiceId?: string;
   createdAt: Timestamp;
@@ -827,7 +827,7 @@ export const LeadStage = {
   FECHADO_PERDIDO: 'fechado_perdido',
 } as const;
 
-export const QuoteStatus = {
+export const BudgetStatus = {
   DRAFT: 'draft',
   SENT: 'sent',
   SIGNED: 'signed',
@@ -870,7 +870,7 @@ export * from './financial';
 export * from './enums';
 
 // Import usage:
-// import { Client, Project, Quote, LeadStage } from '@/types';
+// import { Client, Project, Budget, LeadStage } from '@/types';
 ```
 
 ### 📊 **Campos Obrigatórios vs Opcionais (Análise)**
@@ -1110,7 +1110,7 @@ export * from './financial';
 export * from './enums';
 
 // Importar tudo de uma vez:
-import { Client, Project, Quote, LeadStage } from '@/types';
+import { Client, Project, Budget, LeadStage } from '@/types';
 ```
 
 ---
@@ -1176,8 +1176,8 @@ import { Client, Project, Quote, LeadStage } from '@/types';
 ### Sprint 4 (1 semana) - FRONTEND MVP-2
 
 - [ ] Implementar páginas `/crm/leads`
-- [ ] Implementar páginas `/crm/quotes`
-- [ ] Implementar componentes de Leads/Quotes
+- [ ] Implementar páginas `/crm/budgets`
+- [ ] Implementar componentes de Leads/Budgets
 - [ ] Integrar com Cloud Functions existentes
 
 ---
@@ -1232,13 +1232,13 @@ import { Client, Project, Quote, LeadStage } from '@/types';
 ❌ src/app/(app)/clients/page.tsx (não verificado)
 ❌ src/app/(app)/projects/page.tsx (não verificado)
 ❌ src/app/(app)/crm/leads/page.tsx
-❌ src/app/(app)/crm/quotes/page.tsx
+❌ src/app/(app)/crm/budgets/page.tsx
 ❌ src/app/(app)/finance/orders/page.tsx
 ❌ src/app/(app)/finance/invoices/page.tsx
 ❌ src/components/ClientForm.tsx (não verificado)
 ❌ src/components/ProjectForm.tsx (não verificado)
 ❌ src/components/LeadForm.tsx
-❌ src/components/QuoteForm.tsx
+❌ src/components/BudgetForm.tsx
 ```
 
 ### B) Comandos Úteis

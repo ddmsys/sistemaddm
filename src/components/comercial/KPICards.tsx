@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { DollarSign, FileText, Target, TrendingUp, Users } from 'lucide-react';
+import { DollarSign, FileText, Target, TrendingUp, Users } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface KPICardsProps {
   kpis: {
     totalClients: number;
     activeLeads: number;
-    totalQuotes: number;
+    totalBudgets: number;
     conversionRate: number;
-    quotesWon: number;
+    budgetsWon: number;
     totalRevenue: number;
     avgTicket: number;
   };
@@ -18,9 +18,9 @@ interface KPICardsProps {
 
 export function KPICards({ kpis }: KPICardsProps) {
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
     }).format(value);
   };
 
@@ -30,52 +30,52 @@ export function KPICards({ kpis }: KPICardsProps) {
 
   const cards = [
     {
-      title: 'Clientes Ativos',
+      title: "Clientes Ativos",
       value: kpis.totalClients,
       icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      description: 'Base de clientes',
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      description: "Base de clientes",
     },
     {
-      title: 'Leads Ativos',
+      title: "Leads Ativos",
       value: kpis.activeLeads,
       icon: Target,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      description: 'Em negociação',
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      description: "Em negociação",
     },
     {
-      title: 'Taxa de Conversão',
+      title: "Taxa de Conversão",
       value: formatPercentage(kpis.conversionRate),
       icon: TrendingUp,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      description: 'Leads → Vendas',
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      description: "Leads → Vendas",
     },
     {
-      title: 'Orçamentos',
-      value: `${kpis.quotesWon}/${kpis.totalQuotes}`,
+      title: "Orçamentos",
+      value: `${kpis.budgetsWon}/${kpis.totalBudgets}`,
       icon: FileText,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      description: 'Assinados/Total',
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      description: "Assinados/Total",
     },
     {
-      title: 'Receita Total',
+      title: "Receita Total",
       value: formatCurrency(kpis.totalRevenue),
       icon: DollarSign,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-      description: 'Orçamentos assinados',
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50",
+      description: "Orçamentos assinados",
     },
     {
-      title: 'Ticket Médio',
+      title: "Ticket Médio",
       value: formatCurrency(kpis.avgTicket),
       icon: TrendingUp,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-      description: 'Valor médio por lead',
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50",
+      description: "Valor médio por lead",
     },
   ];
 

@@ -1,89 +1,81 @@
 // src/components/comercial/cards/BudgetCard.tsx
-'use client';
+"use client";
 
-import { Calendar, Download, Eye, FileText, MoreHorizontal, Send, User } from 'lucide-react';
-import { useState } from 'react';
+import { Calendar, FileText, MoreHorizontal, Send, User } from "lucide-react";
+import { useState } from "react";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Modal } from '@/components/ui/Modal';
-import { Budget, BudgetStatus } from '@/lib/types/budgets';
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Modal } from "@/components/ui/Modal";
+import { Budget, BudgetStatus } from "@/lib/types/budgets";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 
 interface BudgetCardProps {
   budget: Budget;
   onStatusChange?: (budgetId: string, status: BudgetStatus) => void;
   onEdit?: (budget: Budget) => void;
   onDelete?: (budgetId: string) => void;
-  onConvert?: (budgetId: string) => void;
-  onDownload?: (budgetId: string) => void;
   onSend?: (budgetId: string) => void;
 }
 
-const statusConfig = {
+const statusConfig: Record<
+  BudgetStatus,
+  {
+    label: string;
+    color: string;
+    class: string;
+    icon: typeof FileText;
+  }
+> = {
   draft: {
-    label: 'Rascunho',
-    color: 'secondary',
-    class: 'bg-gray-50 text-gray-700 border-gray-200',
+    label: "Rascunho",
+    color: "secondary",
+    class: "bg-gray-50 text-gray-700 border-gray-200",
     icon: FileText,
   },
   sent: {
-    label: 'Enviado',
-    color: 'info',
-    class: 'bg-blue-50 text-blue-700 border-blue-200',
+    label: "Enviado",
+    color: "info",
+    class: "bg-blue-50 text-blue-700 border-blue-200",
     icon: Send,
   },
-  viewed: {
-    label: 'Visualizado',
-    color: 'warning',
-    class: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    icon: Eye,
-  },
-  signed: {
-    label: 'Assinado',
-    color: 'success',
-    class: 'bg-green-50 text-green-700 border-green-200',
+  approved: {
+    label: "Aprovado",
+    color: "success",
+    class: "bg-green-50 text-green-700 border-green-200",
     icon: FileText,
   },
   rejected: {
-    label: 'Rejeitado',
-    color: 'destructive',
-    class: 'bg-red-50 text-red-700 border-red-200',
+    label: "Rejeitado",
+    color: "destructive",
+    class: "bg-red-50 text-red-700 border-red-200",
     icon: FileText,
   },
   expired: {
-    label: 'Expirado',
-    color: 'destructive',
-    class: 'bg-gray-50 text-gray-500 border-gray-200',
+    label: "Expirado",
+    color: "destructive",
+    class: "bg-gray-50 text-gray-500 border-gray-200",
     icon: Calendar,
   },
 };
 
-export function BudgetCard({
-  budget,
-  onStatusChange,
-  onEdit,
-  onDelete,
-  onConvert,
-  onDownload,
-  onSend,
-}: BudgetCardProps) {
+export function BudgetCard({ budget, onStatusChange, onEdit, onDelete, onSend }: BudgetCardProps) {
   const [showActions, setShowActions] = useState(false);
 
   const status = statusConfig[budget.status];
   const StatusIcon = status.icon;
 
-  const isExpired = budget.validUntil
-    ? (budget.validUntil instanceof Date ? budget.validUntil : budget.validUntil.toDate()) <
+  const isExpired = budget.expiryDate
+    ? (budget.expiryDate instanceof Date ? budget.expiryDate : budget.expiryDate.toDate()) <
       new Date()
     : false;
 
-  const daysUntilExpiry = budget.validUntil
+  const daysUntilExpiry = budget.expiryDate
     ? Math.ceil(
-        ((budget.validUntil instanceof Date
-          ? budget.validUntil
-          : budget.validUntil.toDate()
+        ((budget.expiryDate instanceof Date
+          ? budget.expiryDate
+          : budget.expiryDate.toDate()
         ).getTime() -
           new Date().getTime()) /
           (1000 * 3600 * 24),
@@ -95,11 +87,13 @@ export function BudgetCard({
       <Card className="relative overflow-hidden transition-shadow hover:shadow-lg">
         <div className="flex items-start justify-between p-6 pb-4">
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-lg font-semibold text-gray-900">{budget.projectTitle}</h3>
+            <h3 className="truncate text-lg font-semibold text-gray-900">
+              {budget.projectData?.title || "Sem título"}
+            </h3>
             <p className="text-xs text-primary-500">{budget.number}</p>
             <p className="mt-1 truncate text-sm text-gray-600">
               <User className="mr-1 inline h-4 w-4" />
-              {budget.clientName}
+              {budget.leadId ? "Lead" : budget.clientId ? "Cliente" : "N/A"}
             </p>
           </div>
 
@@ -120,17 +114,15 @@ export function BudgetCard({
         </div>
 
         <div className="space-y-4 px-6 pb-6">
-          {budget.description && (
-            <p className="line-clamp-2 text-sm text-gray-600">{budget.description}</p>
-          )}
+          {budget.notes && <p className="line-clamp-2 text-sm text-gray-600">{budget.notes}</p>}
 
           <div className="space-y-2">
             <div className="text-lg font-bold text-primary-900">
-              {formatCurrency(budget.totals?.total || budget.grandTotal || 0)}
+              {formatCurrency(budget.total || 0)}
             </div>
-            {(budget.totals?.discount || budget.discount || 0) > 0 && (
+            {(budget.discount || 0) > 0 && (
               <p className="text-sm text-gray-600">
-                Desconto: {formatCurrency(budget.totals?.discount || budget.discount || 0)}
+                Desconto: {formatCurrency(budget.discount || 0)}
               </p>
             )}
           </div>
@@ -150,13 +142,13 @@ export function BudgetCard({
             <div>
               <span className="text-gray-600">Válido até:</span>
               <div className="block">
-                {budget.validUntil
+                {budget.expiryDate
                   ? formatDate(
-                      budget.validUntil instanceof Date
-                        ? budget.validUntil
-                        : budget.validUntil.toDate(),
+                      budget.expiryDate instanceof Date
+                        ? budget.expiryDate
+                        : budget.expiryDate.toDate(),
                     )
-                  : 'N/A'}
+                  : "N/A"}
                 {daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && (
                   <span className="ml-1 text-xs text-amber-600">({daysUntilExpiry}d)</span>
                 )}
@@ -165,35 +157,22 @@ export function BudgetCard({
             </div>
           </div>
 
-          {/* Corrigido: Campos opcionais com verificação */}
-          {budget.sentAt && (
+          {/* Datas opcionais */}
+          {budget.approvalDate && (
             <div className="text-sm text-gray-600">
-              <span>Enviado: </span>
+              <span>Aprovado em: </span>
               <span>
                 {formatDateTime(
-                  budget.sentAt instanceof Date
-                    ? budget.sentAt
-                    : (budget.sentAt as any)?.toDate?.() || new Date(),
-                )}
-              </span>
-            </div>
-          )}
-
-          {budget.viewedAt && (
-            <div className="text-sm text-gray-600">
-              <span>Visualizado: </span>
-              <span>
-                {formatDateTime(
-                  budget.viewedAt instanceof Date
-                    ? budget.viewedAt
-                    : (budget.viewedAt as any)?.toDate?.() || new Date(),
+                  budget.approvalDate instanceof Date
+                    ? budget.approvalDate
+                    : budget.approvalDate.toDate(),
                 )}
               </span>
             </div>
           )}
 
           <div className="flex space-x-2 pt-2">
-            {budget.status === 'draft' && (
+            {budget.status === "draft" && (
               <Button
                 variant="outline"
                 size="sm"
@@ -204,27 +183,14 @@ export function BudgetCard({
               </Button>
             )}
 
-            {budget.pdfUrl && (
-              <Button variant="outline" size="sm" onClick={() => onDownload?.(budget.id!)}>
-                <Download className="mr-1 h-4 w-4" />
-                PDF
-              </Button>
-            )}
-
             <Button variant="outline" size="sm" onClick={() => onEdit?.(budget)}>
               Editar
             </Button>
           </div>
 
-          {budget.status === 'signed' && !budget.convertedToProjectId && (
-            <Button className="w-full" onClick={() => onConvert?.(budget.id!)}>
-              Converter em Projeto
-            </Button>
-          )}
-
-          {budget.convertedToProjectId && (
+          {budget.status === "approved" && (
             <div className="text-center text-sm font-medium text-green-600">
-              ✓ Convertido em Projeto
+              ✓ Orçamento Aprovado
             </div>
           )}
         </div>
@@ -243,7 +209,7 @@ export function BudgetCard({
         size="sm"
       >
         <div className="space-y-2">
-          {budget.status === 'draft' && (
+          {budget.status === "draft" && (
             <Button
               variant="ghost"
               className="w-full justify-start"
@@ -255,20 +221,6 @@ export function BudgetCard({
               Enviar Orçamento
             </Button>
           )}
-
-          {budget.pdfUrl && (
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => {
-                onDownload?.(budget.id!);
-                setShowActions(false);
-              }}
-            >
-              Download PDF
-            </Button>
-          )}
-
           <Button
             variant="ghost"
             className="w-full justify-start"
@@ -279,7 +231,6 @@ export function BudgetCard({
           >
             Editar Orçamento
           </Button>
-
           {Object.entries(statusConfig).map(([key, config]) => (
             <Button
               key={key}
@@ -293,7 +244,6 @@ export function BudgetCard({
               Alterar para {config.label}
             </Button>
           ))}
-
           <Button
             variant="ghost"
             className="w-full justify-start text-red-600"
@@ -304,6 +254,7 @@ export function BudgetCard({
           >
             Excluir Orçamento
           </Button>
+          export default BookCard;
         </div>
       </Modal>
     </>

@@ -1,18 +1,19 @@
 // src/components/budgets/BudgetsList.tsx
 
-'use client';
+"use client";
+import { Filter, Plus, Search } from "lucide-react";
+import { useState } from "react";
 
-import { Filter, Plus, Search } from 'lucide-react';
-import { useState } from 'react';
-
-import { BudgetCard } from '@/components/comercial/cards/BudgetCard';
-import { BudgetModal } from '@/components/comercial/modals/BudgetModal';
-import { Lead } from '@/lib/types';
-import { Budget, BudgetFormData, BudgetStatus } from '@/lib/types/budgets';
+import { BudgetCard } from "@/components/comercial/cards/BudgetCard";
+import { BudgetModal } from "@/components/comercial/modals/BudgetModal";
+import { Budget, BudgetFormData, BudgetStatus } from "@/lib/types/budgets";
+import { Client } from "@/lib/types/clients";
+import { Lead } from "@/lib/types/leads";
 
 interface BudgetsListProps {
   budgets: Budget[];
   leads?: Lead[];
+  clients?: Client[];
   loading?: boolean;
   onCreate: (data: BudgetFormData) => Promise<void>;
   onUpdate: (id: string, data: Partial<Budget>) => Promise<void>;
@@ -23,7 +24,6 @@ interface BudgetsListProps {
 
 export function BudgetsList({
   budgets,
-  leads = [],
   loading = false,
   onCreate,
   onUpdate,
@@ -33,20 +33,20 @@ export function BudgetsList({
 }: BudgetsListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
 
   // Filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<BudgetStatus | 'all'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<BudgetStatus | "all">("all");
 
   // Filtered budgets
   const filteredBudgets = budgets.filter((budget) => {
     const matchesSearch =
-      searchTerm === '' ||
+      searchTerm === "" ||
       budget.projectData?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       budget.number.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || budget.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || budget.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -54,19 +54,19 @@ export function BudgetsList({
   // Stats
   const stats = {
     total: budgets.length,
-    draft: budgets.filter((b) => b.status === 'draft').length,
-    sent: budgets.filter((b) => b.status === 'sent').length,
-    approved: budgets.filter((b) => b.status === 'approved').length,
-    rejected: budgets.filter((b) => b.status === 'rejected').length,
+    draft: budgets.filter((b) => b.status === "draft").length,
+    sent: budgets.filter((b) => b.status === "sent").length,
+    approved: budgets.filter((b) => b.status === "approved").length,
+    rejected: budgets.filter((b) => b.status === "rejected").length,
     totalValue: budgets.reduce((sum, b) => sum + b.total, 0),
     approvedValue: budgets
-      .filter((b) => b.status === 'approved')
+      .filter((b) => b.status === "approved")
       .reduce((sum, b) => sum + b.total, 0),
   };
 
   const handleOpenCreateModal = () => {
     setSelectedBudget(null);
-    setModalMode('create');
+    setModalMode("create");
     setIsModalOpen(true);
   };
 
@@ -74,17 +74,19 @@ export function BudgetsList({
     const budget = budgets.find((b) => b.id === budgetId);
     if (budget) {
       setSelectedBudget(budget);
-      setModalMode('edit');
+      setModalMode("edit");
       setIsModalOpen(true);
     }
   };
 
   const handleSave = async (data: BudgetFormData) => {
-    if (modalMode === 'create') {
+    if (modalMode === "create") {
       await onCreate(data);
     } else if (selectedBudget) {
-      await onUpdate(selectedBudget.id!, data as any);
+      await onUpdate(selectedBudget.id!, data as Partial<Budget>);
     }
+    setIsModalOpen(false);
+    setSelectedBudget(null);
   };
 
   if (loading) {
@@ -117,7 +119,7 @@ export function BudgetsList({
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-600">Valor Aprovado</p>
           <p className="text-2xl font-bold text-gray-900">
-            R$ {stats.approvedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            R$ {stats.approvedValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
       </div>
@@ -142,7 +144,7 @@ export function BudgetsList({
             <Filter className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as BudgetStatus | 'all')}
+              onChange={(e) => setStatusFilter(e.target.value as BudgetStatus | "all")}
               className="appearance-none rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-8 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">Todos os Status</option>
@@ -171,7 +173,7 @@ export function BudgetsList({
           <p className="text-gray-500">Nenhum orçamento encontrado</p>
           {searchTerm && (
             <button
-              onClick={() => setSearchTerm('')}
+              onClick={() => setSearchTerm("")}
               className="mt-2 text-sm text-blue-600 hover:text-blue-700"
             >
               Limpar busca
@@ -193,13 +195,11 @@ export function BudgetsList({
         </div>
       )}
 
-      {/* Modal */}
       <BudgetModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         budget={selectedBudget}
-        leads={leads}
         mode={modalMode}
       />
     </div>

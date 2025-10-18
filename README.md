@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📘 Sistema DDM
 
-## Getting Started
+**Sistema de gestão comercial e produção editorial.**  
+Gerencie leads, clientes, orçamentos, projetos e produção editorial em um único lugar.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🚀 Funcionalidades Principais
+
+- **Comercial:**
+  - Gestão de leads, clientes e orçamentos.
+  - Dashboards com métricas de conversão e receita.
+
+- **Produção:**
+  - Fila de produção e controle de qualidade.
+  - Provas e revisões.
+
+- **Financeiro:**
+  - Controle de faturas e métricas financeiras.
+
+---
+
+## 📂 Estrutura do Projeto
+
+```plaintext
+sistemaddm/
+├── docs/                  # Documentação
+├── functions/             # Cloud Functions (Firebase)
+├── src/                   # Frontend (Next.js)
+├── config/                # Configurações Firebase
+├── .env.local             # Variáveis de ambiente
+├── firebase.json          # Config Firebase
+├── package.json           # Dependências
+└── tsconfig.json          # Config TypeScript
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Como Rodar o Projeto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Clone o repositório:**
 
-## Learn More
+   ```bash
+   git clone https://github.com/ddmsys/sistemaddm.git
+   cd sistemaddm
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Instale as dependências:**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   npm install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Configure as variáveis de ambiente:**
+   - Crie um arquivo `.env.local` com as seguintes variáveis:
+     ```env
+     NEXT_PUBLIC_API_URL=https://sua-api.com
+     FIREBASE_API_KEY=...
+     ```
 
-## Deploy on Vercel
+4. **Inicie o servidor de desenvolvimento:**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. **Acesse no navegador:**
+   - [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 🚀 Deploy
+
+1. **Deploy do Frontend:**
+   - Use o [Vercel](https://vercel.com) para deploy contínuo.
+
+2. **Deploy das Cloud Functions:**
+   - Certifique-se de estar na região `southamerica-east1`:
+     ```bash
+     firebase deploy --only functions
+     ```
+
+---
+
+## 🤝 Contribuição
+
+1. Faça um fork do repositório.
+2. Crie uma branch para sua feature:
+   ```bash
+   git checkout -b minha-feature
+   ```
+3. Envie um pull request.
+
+---
+
+## 📚 Links Úteis
+
+- [Documentação do Sistema](docs/README.md)
+- [Guia de Deploy](docs/Progress/GUIA-DEPLOY-BUDGETS.md)
+- [Auditoria de Tipos](docs/Progress/AUDITORIA-TYPES-2025-10-14.md)
+
+---
+
+**Desenvolvido por:** [Sua Equipe/Empresa]  
+**Licença:** MIT

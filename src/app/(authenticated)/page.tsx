@@ -1,79 +1,79 @@
-'use client';
+"use client";
 
-import { AlertCircle, Briefcase, DollarSign, FileText, TrendingUp, Users } from 'lucide-react';
-import { useState } from 'react';
+import { AlertCircle, Briefcase, DollarSign, FileText, TrendingUp, Users } from "lucide-react";
+import { useState } from "react";
 
 interface KPIData {
   title: string;
   value: string | number;
   change: number;
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
   icon: React.ComponentType<{ className?: string }>;
   color: string;
 }
 
 export default function DashboardPage() {
-  const [timeRange, setTimeRange] = useState('30d');
+  const [timeRange, setTimeRange] = useState("30d");
 
   // Mock data - substituir por dados reais
   const kpis: KPIData[] = [
     {
-      title: 'Leads Ativos',
+      title: "Leads Ativos",
       value: 42,
       change: 12.5,
-      trend: 'up',
+      trend: "up",
       icon: Users,
-      color: 'bg-blue-50 text-blue-700 border-blue-200',
+      color: "bg-blue-50 text-blue-700 border-blue-200",
     },
     {
-      title: 'Projetos em Andamento',
+      title: "Projetos em Andamento",
       value: 18,
       change: -2.1,
-      trend: 'down',
+      trend: "down",
       icon: Briefcase,
-      color: 'bg-purple-50 text-purple-700 border-purple-200',
+      color: "bg-purple-50 text-purple-700 border-purple-200",
     },
     {
-      title: 'Receita do Mês',
-      value: 'R$ 125.400',
+      title: "Receita do Mês",
+      value: "R$ 125.400",
       change: 8.7,
-      trend: 'up',
+      trend: "up",
       icon: DollarSign,
-      color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      color: "bg-emerald-50 text-emerald-700 border-emerald-200",
     },
     {
-      title: 'Orçamentos Pendentes',
+      title: "Orçamentos Pendentes",
       value: 7,
       change: 0,
-      trend: 'stable',
+      trend: "stable",
       icon: FileText,
-      color: 'bg-amber-50 text-amber-700 border-amber-200',
+      color: "bg-amber-50 text-amber-700 border-amber-200",
     },
   ];
 
   const recentActivities = [
     {
       id: 1,
-      type: 'lead',
-      title: 'Novo lead cadastrado',
-      description: 'Maria Silva - Livro de receitas',
-      time: '5 min atrás',
+      type: "lead",
+      title: "Novo lead cadastrado",
+      description: "Maria Silva - Livro de receitas",
+      time: "5 min atrás",
       icon: Users,
     },
     {
       id: 2,
-      type: 'project',
-      title: 'Projeto atualizado',
-      description: 'Romance do João - Revisão concluída',
-      time: '1h atrás',
+      type: "project",
+      title: "Projeto atualizado",
+      description: "Romance do João - Revisão concluída",
+      time: "1h atrás",
       icon: Briefcase,
     },
     {
       id: 3,
-      type: 'quote',
-      title: 'Orçamento aprovado',
-      description: 'Biografia corporativa - R$ 15.000',
-      time: '2h atrás',
+      type: "budget",
+      title: "Orçamento aprovado",
+      description: "Biografia corporativa - R$ 15.000",
+      time: "2h atrás",
       icon: FileText,
     },
   ];
@@ -90,31 +90,31 @@ export default function DashboardPage() {
 
           <div className="mt-4 flex items-center space-x-3 sm:mt-0">
             <button
-              onClick={() => setTimeRange('7d')}
+              onClick={() => setTimeRange("7d")}
               className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                timeRange === '7d'
-                  ? 'bg-blue-600 text-white'
-                  : 'border border-primary-300 bg-white text-primary-700 hover:bg-primary-50'
+                timeRange === "7d"
+                  ? "bg-blue-600 text-white"
+                  : "border border-primary-300 bg-white text-primary-700 hover:bg-primary-50"
               }`}
             >
               7 dias
             </button>
             <button
-              onClick={() => setTimeRange('30d')}
+              onClick={() => setTimeRange("30d")}
               className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                timeRange === '30d'
-                  ? 'bg-blue-600 text-white'
-                  : 'border border-primary-300 bg-white text-primary-700 hover:bg-primary-50'
+                timeRange === "30d"
+                  ? "bg-blue-600 text-white"
+                  : "border border-primary-300 bg-white text-primary-700 hover:bg-primary-50"
               }`}
             >
               30 dias
             </button>
             <button
-              onClick={() => setTimeRange('90d')}
+              onClick={() => setTimeRange("90d")}
               className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                timeRange === '90d'
-                  ? 'bg-blue-600 text-white'
-                  : 'border border-primary-300 bg-white text-primary-700 hover:bg-primary-50'
+                timeRange === "90d"
+                  ? "bg-blue-600 text-white"
+                  : "border border-primary-300 bg-white text-primary-700 hover:bg-primary-50"
               }`}
             >
               90 dias
@@ -141,27 +141,27 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="mt-4 flex items-center">
-                {kpi.trend === 'up' && <TrendingUp className="mr-1 h-4 w-4 text-emerald-600" />}
-                {kpi.trend === 'down' && (
+                {kpi.trend === "up" && <TrendingUp className="mr-1 h-4 w-4 text-emerald-600" />}
+                {kpi.trend === "down" && (
                   <TrendingUp className="mr-1 h-4 w-4 rotate-180 text-red-600" />
                 )}
                 <span
                   className={`text-sm font-medium ${
-                    kpi.trend === 'up'
-                      ? 'text-emerald-600'
-                      : kpi.trend === 'down'
-                        ? 'text-red-600'
-                        : 'text-primary-600'
+                    kpi.trend === "up"
+                      ? "text-emerald-600"
+                      : kpi.trend === "down"
+                        ? "text-red-600"
+                        : "text-primary-600"
                   }`}
                 >
-                  {kpi.trend === 'stable' ? 'Estável' : `${Math.abs(kpi.change)}%`}
+                  {kpi.trend === "stable" ? "Estável" : `${Math.abs(kpi.change)}%`}
                 </span>
                 <span className="ml-1 text-xs text-primary-500">
-                  {timeRange === '7d'
-                    ? 'vs semana anterior'
-                    : timeRange === '30d'
-                      ? 'vs mês anterior'
-                      : 'vs trimestre anterior'}
+                  {timeRange === "7d"
+                    ? "vs semana anterior"
+                    : timeRange === "30d"
+                      ? "vs mês anterior"
+                      : "vs trimestre anterior"}
                 </span>
               </div>
             </div>

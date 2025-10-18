@@ -42,8 +42,12 @@ if (!admin.apps.length) {
     admin.initializeApp();
 }
 // Exporte SOMENTE as funções corretas
+// ❌ COMENTADO: Arquivos ainda não criados
+// export { approveBudget } from "./budgets/approveBudget";
+// export { createBudgetPdf } from "./budgets/createBudgetPdf";
+// export { sendBudgetEmail } from "./budgets/sendBudgetEmail";
+// export * from "./projects/onProjectApproval";
+// ✅ MANTIDO: Arquivos que existem
+__exportStar(require("./budgets/assignBudgetNumber"), exports);
 __exportStar(require("./clients/assignClientNumber"), exports);
 __exportStar(require("./projects/assignProjectCatalogCode"), exports);
-__exportStar(require("./projects/onProjectApproval"), exports);
-__exportStar(require("./quotes/createQuotePdf"), exports);
-__exportStar(require("./quotes/onQuoteSigned"), exports);

@@ -17,7 +17,7 @@ Esta documentação consolida **TODAS** as conclusões das conversas anteriores,
 ### 📋 **Estrutura Corrigida - Projetos no CRM**
 
 - **❌ Problema:** Projetos separados do comercial quebrava o fluxo real
-- **✅ Solução:** Projetos dentro do CRM (Lead → Quote → Project)
+- **✅ Solução:** Projetos dentro do CRM (Lead → Budget → Project)
 - **🎯 Impacto:** Reflete o processo real da DDM Editora
 
 ### 📊 **Dashboards Especializados**
@@ -54,14 +54,14 @@ sistemaddm/
 │   │   ├── clients/                  # Functions de clientes
 │   │   │   ├── assignClientNumber.ts
 │   │   │   └── createClient.ts
-│   │   ├── quotes/                   # Functions de orçamentos
-│   │   │   ├── createQuotePdf.ts
-│   │   │   └── onQuoteSigned.ts
+│   │   ├── budgets/                   # Functions de orçamentos
+│   │   │   ├── createBudgetPdf.ts
+│   │   │   └── onBudgetSigned.ts
 │   │   ├── projects/                 # Functions de projetos
 │   │   │   ├── assignProjectCatalogCode.ts
 │   │   │   └── updateProjectStatus.ts
 │   │   ├── pdfs/                     # Geração de PDFs
-│   │   │   ├── generateQuote.ts
+│   │   │   ├── generateBudget.ts
 │   │   │   └── generateInvoice.ts
 │   │   ├── notifications/            # Sistema de notificações
 │   │   │   ├── emailNotification.ts
@@ -80,7 +80,7 @@ sistemaddm/
 │   │   │   │   ├── leads/            # Prospecção e qualificação
 │   │   │   │   │   ├── page.tsx
 │   │   │   │   │   └── [id]/page.tsx
-│   │   │   │   ├── quotes/           # Orçamentos e propostas
+│   │   │   │   ├── budgets/           # Orçamentos e propostas
 │   │   │   │   │   ├── page.tsx
 │   │   │   │   │   └── [id]/page.tsx
 │   │   │   │   ├── projects/         # 🎯 PROJETOS (pós-venda)
@@ -148,12 +148,12 @@ sistemaddm/
 │   │   ├── comercial/                # 📈 MÓDULO COMERCIAL COMPLETO
 │   │   │   ├── modals/               # 🔧 Modais de edição
 │   │   │   │   ├── LeadModal.tsx
-│   │   │   │   ├── QuoteModal.tsx
+│   │   │   │   ├── BudgetModal.tsx
 │   │   │   │   ├── ProjectModal.tsx
 │   │   │   │   └── ClientModal.tsx
 │   │   │   ├── cards/                # 📋 Cards para listagens
 │   │   │   │   ├── LeadCard.tsx
-│   │   │   │   ├── QuoteCard.tsx
+│   │   │   │   ├── BudgetCard.tsx
 │   │   │   │   ├── ProjectCard.tsx
 │   │   │   │   └── ClientCard.tsx
 │   │   │   ├── charts/               # 📊 Gráficos específicos
@@ -163,12 +163,12 @@ sistemaddm/
 │   │   │   │   └── ConversionChart.tsx
 │   │   │   ├── tables/               # 📋 Tabelas e listas
 │   │   │   │   ├── LeadsTable.tsx
-│   │   │   │   ├── QuotesTable.tsx
+│   │   │   │   ├── BudgetsTable.tsx
 │   │   │   │   ├── ProjectsTable.tsx
 │   │   │   │   └── ClientsTable.tsx
 │   │   │   ├── forms/                # 📝 Formulários específicos
 │   │   │   │   ├── LeadForm.tsx
-│   │   │   │   ├── QuoteForm.tsx
+│   │   │   │   ├── BudgetForm.tsx
 │   │   │   │   ├── ProjectForm.tsx
 │   │   │   │   └── ClientForm.tsx
 │   │   │   ├── dashboards/           # 📊 Dashboards
@@ -178,7 +178,7 @@ sistemaddm/
 │   │   │   │   └── QuickActions.tsx
 │   │   │   └── filters/              # 🔍 Filtros e buscas
 │   │   │       ├── LeadFilters.tsx
-│   │   │       ├── QuoteFilters.tsx
+│   │   │       ├── BudgetFilters.tsx
 │   │   │       ├── ProjectFilters.tsx
 │   │   │       └── DateRangePicker.tsx
 │   │   ├── production/               # 🎨 Componentes produção
@@ -211,7 +211,7 @@ sistemaddm/
 │   ├── 📁 hooks/                     # 🎣 Custom hooks organizados
 │   │   ├── comercial/                # 🎣 Hooks do comercial
 │   │   │   ├── useLeads.ts           # CRUD e queries leads
-│   │   │   ├── useQuotes.ts          # CRUD e queries orçamentos
+│   │   │   ├── useBudgets.ts          # CRUD e queries orçamentos
 │   │   │   ├── useProjects.ts        # CRUD e queries projetos
 │   │   │   ├── useClients.ts         # CRUD e queries clientes
 │   │   │   ├── useFunnelData.ts      # Dados para funil
@@ -322,10 +322,10 @@ ProductType =
 **Métricas Principais:**
 
 - Funil por `leads.stage` (em negociação ordenado por `lastActivityAt` asc)
-- Receita ganha vs perdida (soma `quotes.grandTotal`)
+- Receita ganha vs perdida (soma `budgets.grandTotal`)
 - Taxa de conversão por fonte (`leads.source`)
 - Performance por vendedor (`ownerId`)
-- Orçamentos pendentes de assinatura (`quotes.status = 'sent'`)
+- Orçamentos pendentes de assinatura (`budgets.status = 'sent'`)
 - Projetos em andamento (`projects.status = 'open'`)
 - SLA de aprovações (`clientApprovalTasks.status = 'pending'`)
 - Projetos críticos (próximos do `dueDate`)
@@ -496,7 +496,7 @@ ProductType =
 - marketing.ts
 - projects.ts
 - purchases.ts
-- quotes.ts
+- budgets.ts
 - shared.ts
 
 ```typescript
@@ -536,7 +536,7 @@ export type LeadStatus =
   | 'fechado_ganho'
   | 'fechado_perdido';
 
-export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'rejected' | 'expired';
+export type BudgetStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'rejected' | 'expired';
 
 export type ProjectStatus =
   | 'open'
@@ -587,7 +587,7 @@ export interface ApprovalTask {
   notes?: string;
 }
 
-export interface QuoteItem {
+export interface BudgetItem {
   id?: string; // Opcional para compatibilidade
   description: string;
   kind: 'etapa' | 'impressao';
@@ -616,7 +616,7 @@ export interface Lead {
   ownerName: string;
   notes?: string;
   tags?: string[];
-  quoteId?: string;
+  budgetId?: string;
   priority?: Priority;
   expectedValue?: number;
   expectedCloseDate?: Timestamp;
@@ -661,7 +661,7 @@ export interface Client {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
-export interface Quote {
+export interface Budget {
   id?: string;
   number: string;
   leadId?: string;
@@ -671,7 +671,7 @@ export interface Quote {
   // ✅ Campos do projeto
   title?: string; // Para compatibilidade
   projectTitle: string;
-  quoteType: 'producao' | 'impressao' | 'misto';
+  budgetType: 'producao' | 'impressao' | 'misto';
 
   // ✅ Datas e validade
   issueDate: string; // Alterado para string para compatibilidade
@@ -680,7 +680,7 @@ export interface Quote {
   validUntil?: Timestamp; // Alias para compatibilidade
 
   // ✅ Status e aprovação
-  status: QuoteStatus;
+  status: BudgetStatus;
   signedAt?: Date | Timestamp; // Compatibilidade para Date e Timestamp
   signedBy?: string;
   refusedAt?: Date | Timestamp; // Compatibilidade para Date e Timestamp
@@ -689,7 +689,7 @@ export interface Quote {
   viewedAt?: Date | Timestamp; // Compatibilidade para Date e Timestamp
 
   // ✅ Itens e totais
-  items: QuoteItem[];
+  items: BudgetItem[];
   totals: {
     subtotal: number;
     discount: number;
@@ -724,7 +724,7 @@ export interface Project {
   catalogCode?: string;
   clientId: string;
   clientName: string;
-  quoteId?: string;
+  budgetId?: string;
   title: string;
   description?: string;
   category: ProductType;
@@ -776,13 +776,13 @@ export interface ClientFormData {
   address?: Address;
 }
 
-export interface QuoteFormData {
+export interface BudgetFormData {
   leadId: string;
   clientId?: string;
   projectTitle: string;
-  quoteType: 'producao' | 'impressao' | 'misto';
+  budgetType: 'producao' | 'impressao' | 'misto';
   validityDays: number;
-  items: Omit<QuoteItem, 'id' | 'totalPrice'>[];
+  items: Omit<BudgetItem, 'id' | 'totalPrice'>[];
   discount: number;
   discountType: 'percentage' | 'fixed';
   productionTime?: string;
@@ -792,7 +792,7 @@ export interface QuoteFormData {
 export interface ProjectFormData {
   clientId: string;
   clientName?: string;
-  quoteId?: string;
+  budgetId?: string;
   title: string;
   description?: string;
   category: ProductType;
@@ -821,10 +821,10 @@ export interface ClientModalProps {
   loading?: boolean;
 }
 
-export interface QuoteModalProps {
+export interface BudgetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  quote?: Quote | null;
+  budget?: Budget | null;
   leadId?: string;
 }
 
@@ -832,7 +832,7 @@ export interface ProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
   project?: Project | null;
-  quoteId?: string;
+  budgetId?: string;
 }
 
 // ================ CARD PROPS ================
@@ -844,10 +844,10 @@ export interface ProjectCardProps {
   onDelete?: (id: string) => void;
 }
 
-export interface QuoteCardProps {
-  quote: Quote;
-  onEdit?: (quote: Quote) => void;
-  onView?: (quote: Quote) => void;
+export interface BudgetCardProps {
+  budget: Budget;
+  onEdit?: (budget: Budget) => void;
+  onView?: (budget: Budget) => void;
   onDelete?: (id: string) => void;
   onSign?: (id: string) => void;
 }
@@ -936,7 +936,7 @@ export interface LeadStats {
 3. **🔄 Integração Completa**
    - Conectar todos os módulos (CRM → Projetos)
    - Implementar automações via Cloud Functions
-   - Testar fluxo completo Lead → Quote → Project
+   - Testar fluxo completo Lead → Budget → Project
 
 ### **Fase 4: Refinamentos e Deploy**
 
@@ -976,13 +976,13 @@ export interface LeadStats {
 ### **Módulo Comercial**
 
 - [ ] Todos os componentes modulares implementados
-- [ ] CRUD completo para Leads, Quotes, Projects, Clients
+- [ ] CRUD completo para Leads, Budgets, Projects, Clients
 - [ ] Hooks personalizados funcionais
 - [ ] Dashboard comercial com todas as métricas
 
 ### **Integração**
 
-- [ ] Fluxo Lead → Quote → Project funcionando
+- [ ] Fluxo Lead → Budget → Project funcionando
 - [ ] Cloud Functions automáticas operacionais
 - [ ] Sistema RBAC respeitado em todas as telas
 - [ ] Performance otimizada (< 3s carregamento inicial)

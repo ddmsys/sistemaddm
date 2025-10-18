@@ -1,338 +1,343 @@
-'use client';
+"use client";
 
-import { doc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, CheckCircle, Edit, Trash2, XCircle } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { ArrowLeft, CheckCircle, Download, Edit, FileText, Loader2, XCircle } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 
-import { BudgetModal } from '@/components/comercial/modals/BudgetModal';
-import { useBudgets } from '@/hooks/comercial/useBudgets';
-import { useAuth } from '@/hooks/useAuth';
-import { db } from '@/lib/firebase';
-import { approveBudget } from '@/lib/firebase/budgets/approveBudget';
-import { Budget, BudgetItem } from '@/lib/types/budgets';
-import { Client } from '@/lib/types/clients';
-import { Lead } from '@/lib/types/leads';
+import { BudgetItemsList } from "@/components/comercial/budgets/BudgetItemsList";
+import { BudgetSummary } from "@/components/comercial/budgets/BudgetSummary";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useBudgets } from "@/hooks/comercial/useBudgets";
+import { useClients } from "@/hooks/comercial/useClients";
+import { useLeads } from "@/hooks/comercial/useLeads";
 
-export default function BudgetDetailsPage() {
+export default function BudgetDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
-  const { updateBudget, deleteBudget } = useBudgets();
+  const budgetId = (params?.id || "") as string;
 
-  const [budget, setBudget] = useState<Budget | null>(null);
-  const [clientOrLead, setClientOrLead] = useState<Client | Lead | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { budgets, loading, error, approveBudget, rejectBudget } = useBudgets();
+  const { leads } = useLeads();
+  const { clients } = useClients();
+
+  const [actionLoading, setActionLoading] = useState(false);
+  const budget = budgets.find((b) => b.id === budgetId);
+  const clientName = useMemo(() => {
+    if (budget?.clientId) {
+      const client = clients.find((c) => c.id === budget.clientId);
+      return client?.name;
+    }
+    if (budget?.leadId) {
+      const lead = leads.find((l) => l.id === budget.leadId);
+      return lead?.name;
+    }
+    return null;
+  }, [budget, clients, leads]);
 
   useEffect(() => {
-    if (params?.id) {
-      loadBudget();
+    if (!budgetId) {
+      router.push("/budgets");
     }
-  }, [params?.id]);
+  }, [budgetId, router]);
 
-  const loadBudget = async () => {
-    if (!params?.id) return;
+  // Status badge color
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      draft: "bg-gray-100 text-gray-800",
+      sent: "bg-blue-100 text-blue-800",
+      approved: "bg-green-100 text-green-800",
+      rejected: "bg-red-100 text-red-800",
+      expired: "bg-orange-100 text-orange-800",
+    };
+    return colors[status] || "bg-gray-100 text-gray-800";
+  };
 
+  // Status label
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      draft: "Rascunho",
+      sent: "Enviado",
+      approved: "Aprovado",
+      rejected: "Recusado",
+      expired: "Expirado",
+    };
+    return labels[status] || status;
+  };
+
+  // Handle approve
+  const handleApprove = async () => {
+    if (!budget?.id) return;
+
+    setActionLoading(true);
     try {
-      const budgetDoc = await getDoc(doc(db, 'budgets', params.id as string));
-
-      if (!budgetDoc.exists()) {
-        toast.error('Orçamento não encontrado');
-        router.push('/budgets');
-        return;
-      }
-
-      const budgetData = { id: budgetDoc.id, ...budgetDoc.data() } as Budget;
-      setBudget(budgetData);
-
-      // Buscar Lead ou Client
-      if (budgetData.leadId) {
-        const leadDoc = await getDoc(doc(db, 'leads', budgetData.leadId));
-        if (leadDoc.exists()) {
-          setClientOrLead({ id: leadDoc.id, ...leadDoc.data() } as Lead);
-        }
-      } else if (budgetData.clientId) {
-        const clientDoc = await getDoc(doc(db, 'clients', budgetData.clientId));
-        if (clientDoc.exists()) {
-          setClientOrLead({ id: clientDoc.id, ...clientDoc.data() } as Client);
-        }
-      }
-    } catch (error: any) {
-      toast.error('Erro ao carregar orçamento');
+      await approveBudget(budget.id);
+      toast.success("Orçamento aprovado com sucesso!");
+      router.push("/budgets");
+    } catch (error) {
+      toast.error("Erro ao aprovar orçamento");
       console.error(error);
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
-  const handleApprove = async () => {
-    if (!user?.id || !budget?.id) return;
-
-    try {
-      const result = await approveBudget(budget.id, user.id);
-      toast.success(`Aprovado! Código: ${result.catalogCode}`);
-      loadBudget();
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
+  // Handle reject
   const handleReject = async () => {
     if (!budget?.id) return;
 
+    setActionLoading(true);
     try {
-      await updateBudget(budget.id, { status: 'rejected' });
-      toast.success('Orçamento recusado');
-      loadBudget();
-    } catch (error: any) {
-      toast.error(error.message);
+      await rejectBudget(budget.id);
+      toast.success("Orçamento recusado");
+      router.push("/budgets");
+    } catch (error) {
+      toast.error("Erro ao recusar orçamento");
+      console.error(error);
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!budget?.id) return;
-    if (!confirm('Deseja realmente excluir este orçamento?')) return;
-
-    try {
-      await deleteBudget(budget.id);
-      toast.success('Orçamento excluído');
-      router.push('/budgets');
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+  // Handle edit
+  const handleEdit = () => {
+    router.push(`/budgets/${budgetId}/edit`);
   };
 
+  // Handle download PDF
+  const handleDownloadPDF = async () => {
+    toast("Download de PDF em desenvolvimento", {
+      icon: "📄",
+      duration: 3000,
+    });
+  };
+
+  // Loading state
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+  // Error state
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <XCircle className="h-16 w-16 text-red-500" />
+        <p className="text-red-600">Erro: {error}</p>
+        <Button onClick={() => router.back()}>Voltar</Button>
       </div>
     );
   }
 
+  // Not found
   if (!budget) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Orçamento não encontrado</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <FileText className="h-16 w-16 text-gray-400" />
+        <h2 className="text-2xl font-bold text-gray-900">Orçamento não encontrado</h2>
+        <p className="text-gray-600">O orçamento solicitado não existe ou foi removido.</p>
+        <Button onClick={() => router.push("/budgets")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar para Orçamentos
+        </Button>
       </div>
     );
   }
 
-  const statusColors = {
-    draft: 'bg-gray-100 text-gray-800',
-    sent: 'bg-blue-100 text-blue-800',
-    approved: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
-    expired: 'bg-orange-100 text-orange-800',
-  };
-
-  const statusLabels = {
-    draft: 'Rascunho',
-    sent: 'Enviado',
-    approved: 'Aprovado',
-    rejected: 'Recusado',
-    expired: 'Expirado',
-  };
-
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.push('/budgets')}
-            className="rounded-lg p-2 hover:bg-gray-100"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+    <div className="container mx-auto max-w-7xl p-6">
+      {/* ... Header ... */}
+      <div className="mb-6">
+        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+
+        <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Orçamento #{budget.number}</h1>
-            <p className="text-gray-600">{budget.projectData?.title || 'Sem título'}</p>
+            <h1 className="text-3xl font-bold text-gray-900">Orçamento #{budget.number}</h1>
+            <p className="mt-1 text-gray-600">{budget.projectData?.title || "Sem título"}</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span
+              className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(budget.status)}`}
+            >
+              {getStatusLabel(budget.status)}
+            </span>
           </div>
         </div>
-
-        <span
-          className={`rounded-full px-3 py-1 text-sm font-medium ${statusColors[budget.status]}`}
-        >
-          {statusLabels[budget.status]}
-        </span>
       </div>
 
-      {/* Actions */}
-      {budget.status === 'sent' && (
-        <div className="mb-6 flex items-center justify-between rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-          <p className="text-yellow-800">Aguardando aprovação do cliente</p>
-          <div className="flex gap-2">
-            <button
-              onClick={handleApprove}
-              className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-            >
-              <CheckCircle className="h-4 w-4" />
-              Aprovar
-            </button>
-            <button
-              onClick={handleReject}
-              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-            >
-              <XCircle className="h-4 w-4" />
-              Recusar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {budget.status === 'draft' && (
-        <div className="mb-6 flex gap-2">
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
-            <Edit className="h-4 w-4" />
-            Editar
-          </button>
-          <button
-            onClick={handleDelete}
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-          >
-            <Trash2 className="h-4 w-4" />
-            Excluir
-          </button>
-        </div>
-      )}
-
-      {/* Cliente/Lead */}
-      {clientOrLead && (
-        <div className="mb-6 rounded-lg border bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold">Cliente</h2>
-          <div className="space-y-2">
-            <p>
-              <span className="font-medium">Nome:</span> {clientOrLead.name}
-            </p>
-            <p>
-              <span className="font-medium">Email:</span> {clientOrLead.email}
-            </p>
-            <p>
-              <span className="font-medium">Telefone:</span> {clientOrLead.phone}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Dados do Projeto */}
-      {budget.projectData && (
-        <div className="mb-6 rounded-lg border bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold">Dados do Projeto</h2>
-          <div className="space-y-2">
-            <p>
-              <span className="font-medium">Tipo:</span> {budget.projectType || 'N/A'}
-            </p>
-            <p>
-              <span className="font-medium">Título:</span> {budget.projectData.title}
-            </p>
-            {budget.projectData.subtitle && (
-              <p>
-                <span className="font-medium">Subtítulo:</span> {budget.projectData.subtitle}
-              </p>
-            )}
-            {budget.projectData.author && (
-              <p>
-                <span className="font-medium">Autor:</span> {budget.projectData.author}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Itens */}
-      <div className="mb-6 rounded-lg border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Itens do Orçamento</h2>
-        <div className="space-y-3">
-          {budget.items.map((item: BudgetItem, index: number) => (
-            <div key={index} className="flex items-center justify-between rounded bg-gray-50 p-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          {/* Client Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Informações do Cliente</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div>
-                <p className="font-medium">{item.description}</p>
-                <p className="text-sm text-gray-600">
-                  {item.quantity} x R$ {item.unitPrice.toFixed(2)}
+                <p className="text-sm text-gray-600">Cliente</p>
+                {/* ✅ USAR clientName calculado */}
+                <p className="font-medium">{clientName || "N/A"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Lead/Cliente</p>
+                <p className="font-medium">
+                  {budget.leadId ? "Lead" : budget.clientId ? "Cliente" : "N/A"}
                 </p>
               </div>
-              <p className="font-semibold">R$ {item.totalPrice.toFixed(2)}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+              {budget.projectData?.subtitle && (
+                <div>
+                  <p className="text-sm text-gray-600">Subtítulo</p>
+                  <p className="font-medium">{budget.projectData.subtitle}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Totais */}
-      <div className="mb-6 rounded-lg border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Resumo Financeiro</h2>
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span>Subtotal:</span>
-            <span>R$ {budget.subtotal.toFixed(2)}</span>
-          </div>
-          {(budget.discount || budget.discountPercentage) && (
-            <div className="flex justify-between text-green-600">
-              <span>
-                Desconto {budget.discountPercentage && `(${budget.discountPercentage}%)`}:
-              </span>
-              <span>
-                - R${' '}
-                {(
-                  (budget.discountPercentage
-                    ? (budget.subtotal * budget.discountPercentage) / 100
-                    : 0) + (budget.discount || 0)
-                ).toFixed(2)}
-              </span>
-            </div>
-          )}
-          <div className="flex justify-between border-t pt-2 text-xl font-bold">
-            <span>Total:</span>
-            <span>R$ {budget.total.toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
+          {/* Items */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Itens do Orçamento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BudgetItemsList items={budget.items} readOnly={true} showActions={false} />
+            </CardContent>
+          </Card>
 
-      {/* Condições */}
-      <div className="rounded-lg border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Condições Comerciais</h2>
-        <div className="space-y-2">
-          <p>
-            <span className="font-medium">Formas de pagamento:</span>
-          </p>
-          <ul className="ml-4 list-inside list-disc">
-            {budget.paymentMethods.map((method, index) => (
-              <li key={index}>{method}</li>
-            ))}
-          </ul>
-          {budget.productionDays && (
-            <p>
-              <span className="font-medium">Prazo de entrega:</span> {budget.productionDays} dias
-            </p>
-          )}
-          <p>
-            <span className="font-medium">Validade:</span> {budget.validityDays} dias
-          </p>
-          {budget.clientProvidedMaterial && (
-            <p className="text-green-600">✓ Material fornecido pelo cliente</p>
+          {/* Notes */}
+          {budget.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Observações</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700">{budget.notes}</p>
+              </CardContent>
+            </Card>
           )}
         </div>
-      </div>
 
-      {/* Edit Modal */}
-      {isEditModalOpen && budget.id && (
-        <BudgetModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          onSave={async (data) => {
-            await updateBudget(budget.id!, data);
-            setIsEditModalOpen(false);
-            loadBudget();
-          }}
-          budget={budget}
-          mode="edit"
-        />
-      )}
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Resumo Financeiro</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BudgetSummary
+                subtotal={budget.subtotal}
+                discount={budget.discount}
+                total={budget.total}
+                paymentMethods={budget.paymentMethods}
+                validityDays={budget.validityDays}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Ações</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {budget.status === "draft" && (
+                <Button onClick={handleEdit} className="w-full" variant="outline">
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar
+                </Button>
+              )}
+
+              {budget.status === "sent" && (
+                <>
+                  <Button
+                    onClick={handleApprove}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                    )}
+                    Aprovar
+                  </Button>
+
+                  <Button
+                    onClick={handleReject}
+                    className="w-full"
+                    variant="destructive"
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <XCircle className="mr-2 h-4 w-4" />
+                    )}
+                    Recusar
+                  </Button>
+                </>
+              )}
+
+              <Button onClick={handleDownloadPDF} className="w-full" variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Baixar PDF
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Timeline */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Linha do Tempo</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {/* ✅ USAR issueDate ao invés de sentAt */}
+              {budget.issueDate && (
+                <div>
+                  <p className="text-gray-600">Emitido em</p>
+                  <p className="font-medium">
+                    {new Date(budget.issueDate.toDate()).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+              )}
+
+              {budget.updatedAt && (
+                <div>
+                  <p className="text-gray-600">Atualizado em</p>
+                  <p className="font-medium">
+                    {new Date(budget.updatedAt.toDate()).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+              )}
+
+              {budget.issueDate && (
+                <div>
+                  <p className="text-gray-600">Emitido em</p>
+                  <p className="font-medium">
+                    {new Date(budget.issueDate.toDate()).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+              )}
+
+              {budget.approvalDate && (
+                <div>
+                  <p className="text-gray-600">Aprovado em</p>
+                  <p className="font-medium text-green-600">
+                    {new Date(budget.approvalDate.toDate()).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

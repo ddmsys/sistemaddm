@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, Transition } from "@headlessui/react";
 import {
   BarChart3,
   Briefcase,
@@ -15,13 +15,13 @@ import {
   Truck,
   Users,
   X,
-} from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Fragment } from 'react';
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Fragment } from "react";
 
-import { UserRole } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { UserRole } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface NavigationItem {
   name: string;
@@ -34,231 +34,231 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
   {
-    name: 'Dashboard',
-    href: '/',
+    name: "Dashboard",
+    href: "/",
     icon: BarChart3,
-    roles: ['admin', 'comercial', 'producao', 'financeiro', 'compras', 'logistica', 'marketing'],
+    roles: ["admin", "comercial", "producao", "financeiro", "compras", "logistica", "marketing"],
   },
   {
-    name: 'CRM/Comercial',
-    href: '/crm',
+    name: "CRM/Comercial",
+    href: "/crm",
     icon: Users,
-    roles: ['admin', 'comercial'],
+    roles: ["admin", "comercial"],
     children: [
       {
-        name: 'Dashboard',
-        href: '/crm',
+        name: "Dashboard",
+        href: "/crm",
         icon: BarChart3,
-        roles: ['admin', 'comercial'],
+        roles: ["admin", "comercial"],
       },
       {
-        name: 'Leads',
-        href: '/crm/leads',
+        name: "Leads",
+        href: "/crm/leads",
         icon: Users,
-        roles: ['admin', 'comercial'],
+        roles: ["admin", "comercial"],
       },
       {
-        name: 'Orçamentos',
-        href: '/crm/quotes',
+        name: "Orçamentos",
+        href: "/crm/budgets",
         icon: FileText,
-        roles: ['admin', 'comercial'],
+        roles: ["admin", "comercial"],
       },
       {
-        name: 'Projetos',
-        href: '/crm/projects',
+        name: "Projetos",
+        href: "/crm/projects",
         icon: Briefcase,
-        roles: ['admin', 'comercial'],
+        roles: ["admin", "comercial"],
       },
       {
-        name: 'Clientes',
-        href: '/crm/clients',
+        name: "Clientes",
+        href: "/crm/clients",
         icon: Users,
-        roles: ['admin', 'comercial'],
+        roles: ["admin", "comercial"],
       }, // ✅ FECHAR O OBJETO ANTERIOR
       {
-        name: 'Produtos',
-        href: '/products',
+        name: "Produtos",
+        href: "/products",
         icon: Package,
-        roles: ['admin', 'comercial'], // ✅ ADICIONAR roles
+        roles: ["admin", "comercial"], // ✅ ADICIONAR roles
       },
     ],
   },
   {
-    name: 'Produção',
-    href: '/production',
+    name: "Produção",
+    href: "/production",
     icon: Briefcase,
-    roles: ['admin', 'producao'],
+    roles: ["admin", "producao"],
     children: [
       {
-        name: 'Dashboard',
-        href: '/production',
+        name: "Dashboard",
+        href: "/production",
         icon: BarChart3,
-        roles: ['admin', 'producao'],
+        roles: ["admin", "producao"],
       },
       {
-        name: 'Fila de Produção',
-        href: '/production/queue',
+        name: "Fila de Produção",
+        href: "/production/queue",
         icon: Briefcase,
-        roles: ['admin', 'producao'],
+        roles: ["admin", "producao"],
       },
       {
-        name: 'Provas',
-        href: '/production/proofs',
+        name: "Provas",
+        href: "/production/proofs",
         icon: FileText,
-        roles: ['admin', 'producao'],
+        roles: ["admin", "producao"],
       },
       {
-        name: 'Qualidade',
-        href: '/production/quality',
+        name: "Qualidade",
+        href: "/production/quality",
         icon: Settings,
-        roles: ['admin', 'producao'],
+        roles: ["admin", "producao"],
       },
     ],
   },
   {
-    name: 'Financeiro',
-    href: '/finance',
+    name: "Financeiro",
+    href: "/finance",
     icon: DollarSign,
-    roles: ['admin', 'financeiro'],
+    roles: ["admin", "financeiro"],
     children: [
       {
-        name: 'Dashboard',
-        href: '/finance',
+        name: "Dashboard",
+        href: "/finance",
         icon: BarChart3,
-        roles: ['admin', 'financeiro'],
+        roles: ["admin", "financeiro"],
       },
       {
-        name: 'Faturas',
-        href: '/finance/invoices',
+        name: "Faturas",
+        href: "/finance/invoices",
         icon: FileText,
-        roles: ['admin', 'financeiro'],
+        roles: ["admin", "financeiro"],
       },
       {
-        name: 'Contas a Receber',
-        href: '/finance/receivables',
+        name: "Contas a Receber",
+        href: "/finance/receivables",
         icon: DollarSign,
-        roles: ['admin', 'financeiro'],
+        roles: ["admin", "financeiro"],
       },
     ],
   },
   {
-    name: 'Compras',
-    href: '/purchases',
+    name: "Compras",
+    href: "/purchases",
     icon: ShoppingCart,
-    roles: ['admin', 'compras'],
+    roles: ["admin", "compras"],
     children: [
       {
-        name: 'Dashboard',
-        href: '/purchases',
+        name: "Dashboard",
+        href: "/purchases",
         icon: BarChart3,
-        roles: ['admin', 'compras'],
+        roles: ["admin", "compras"],
       },
       {
-        name: 'Fornecedores',
-        href: '/purchases/suppliers',
+        name: "Fornecedores",
+        href: "/purchases/suppliers",
         icon: Users,
-        roles: ['admin', 'compras'],
+        roles: ["admin", "compras"],
       },
       {
-        name: 'Pedidos',
-        href: '/purchases/orders',
+        name: "Pedidos",
+        href: "/purchases/orders",
         icon: ShoppingCart,
-        roles: ['admin', 'compras'],
+        roles: ["admin", "compras"],
       },
     ],
   },
   {
-    name: 'Logística',
-    href: '/logistics',
+    name: "Logística",
+    href: "/logistics",
     icon: Truck,
-    roles: ['admin', 'logistica'],
+    roles: ["admin", "logistica"],
     children: [
       {
-        name: 'Dashboard',
-        href: '/logistics',
+        name: "Dashboard",
+        href: "/logistics",
         icon: BarChart3,
-        roles: ['admin', 'logistica'],
+        roles: ["admin", "logistica"],
       },
       {
-        name: 'Envios',
-        href: '/logistics/shipments',
+        name: "Envios",
+        href: "/logistics/shipments",
         icon: Truck,
-        roles: ['admin', 'logistica'],
+        roles: ["admin", "logistica"],
       },
       {
-        name: 'Rastreamento',
-        href: '/logistics/tracking',
+        name: "Rastreamento",
+        href: "/logistics/tracking",
         icon: Globe,
-        roles: ['admin', 'logistica'],
+        roles: ["admin", "logistica"],
       },
     ],
   },
   {
-    name: 'Marketing',
-    href: '/marketing',
+    name: "Marketing",
+    href: "/marketing",
     icon: Megaphone,
-    roles: ['admin', 'marketing'],
+    roles: ["admin", "marketing"],
     children: [
       {
-        name: 'Dashboard',
-        href: '/marketing',
+        name: "Dashboard",
+        href: "/marketing",
         icon: BarChart3,
-        roles: ['admin', 'marketing'],
+        roles: ["admin", "marketing"],
       },
       {
-        name: 'Campanhas',
-        href: '/marketing/campaigns',
+        name: "Campanhas",
+        href: "/marketing/campaigns",
         icon: Megaphone,
-        roles: ['admin', 'marketing'],
+        roles: ["admin", "marketing"],
       },
       {
-        name: 'Criativos',
-        href: '/marketing/creatives',
+        name: "Criativos",
+        href: "/marketing/creatives",
         icon: FileText,
-        roles: ['admin', 'marketing'],
+        roles: ["admin", "marketing"],
       },
     ],
   },
   {
-    name: 'Portal Cliente',
-    href: '/portal',
+    name: "Portal Cliente",
+    href: "/portal",
     icon: Globe,
-    roles: ['cliente'],
+    roles: ["cliente"],
     children: [
       {
-        name: 'Meus Projetos',
-        href: '/portal/projects',
+        name: "Meus Projetos",
+        href: "/portal/projects",
         icon: Briefcase,
-        roles: ['cliente'],
+        roles: ["cliente"],
       },
       {
-        name: 'Aprovações',
-        href: '/portal/approvals',
+        name: "Aprovações",
+        href: "/portal/approvals",
         icon: FileText,
-        roles: ['cliente'],
+        roles: ["cliente"],
       },
       {
-        name: 'Histórico',
-        href: '/portal/history',
+        name: "Histórico",
+        href: "/portal/history",
         icon: BarChart3,
-        roles: ['cliente'],
+        roles: ["cliente"],
       },
     ],
   },
   {
-    name: 'Administração',
-    href: '/admin',
+    name: "Administração",
+    href: "/admin",
     icon: Settings,
-    roles: ['admin'],
+    roles: ["admin"],
     children: [
-      { name: 'Usuários', href: '/admin/users', icon: Users, roles: ['admin'] },
+      { name: "Usuários", href: "/admin/users", icon: Users, roles: ["admin"] },
       {
-        name: 'Configurações',
-        href: '/admin/settings',
+        name: "Configurações",
+        href: "/admin/settings",
         icon: Settings,
-        roles: ['admin'],
+        roles: ["admin"],
       },
-      { name: 'Logs', href: '/admin/logs', icon: FileText, roles: ['admin'] },
+      { name: "Logs", href: "/admin/logs", icon: FileText, roles: ["admin"] },
     ],
   },
 ];
@@ -286,10 +286,10 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
             <Link
               href={item.href}
               className={cn(
-                'group flex items-center rounded-md px-2 py-2 text-sm font-medium transition-colors',
+                "group flex items-center rounded-md px-2 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-primary-600 hover:bg-primary-100 hover:text-primary-900',
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-primary-600 hover:bg-primary-100 hover:text-primary-900",
               )}
               onClick={() => {
                 if (window.innerWidth < 768) {
@@ -299,8 +299,8 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
             >
               <item.icon
                 className={cn(
-                  'mr-3 h-5 w-5 flex-shrink-0',
-                  isActive ? 'text-blue-500' : 'text-primary-400 group-hover:text-primary-500',
+                  "mr-3 h-5 w-5 flex-shrink-0",
+                  isActive ? "text-blue-500" : "text-primary-400 group-hover:text-primary-500",
                 )}
               />
               {item.name}
@@ -312,8 +312,8 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
               {item.children && (
                 <ChevronRight
                   className={cn(
-                    'ml-auto h-4 w-4 transition-transform',
-                    isActive ? 'rotate-90' : '',
+                    "ml-auto h-4 w-4 transition-transform",
+                    isActive ? "rotate-90" : "",
                   )}
                 />
               )}
@@ -328,10 +328,10 @@ export function Sidebar({ userRole, isOpen, onClose }: SidebarProps) {
                       <Link
                         href={child.href}
                         className={cn(
-                          'group flex items-center rounded-md px-2 py-2 text-sm transition-colors',
+                          "group flex items-center rounded-md px-2 py-2 text-sm transition-colors",
                           pathname === child.href
-                            ? 'bg-blue-50 font-medium text-blue-700'
-                            : 'text-primary-500 hover:bg-primary-50 hover:text-primary-700',
+                            ? "bg-blue-50 font-medium text-blue-700"
+                            : "text-primary-500 hover:bg-primary-50 hover:text-primary-700",
                         )}
                         onClick={() => {
                           if (window.innerWidth < 768) {

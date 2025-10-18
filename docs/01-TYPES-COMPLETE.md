@@ -2,7 +2,7 @@
 
 > **⚠️ DOCUMENTO CRÍTICO:** Sempre consultar antes de gerar código!  
 > **📅 Última Atualização:** 14 de outubro de 2025  
-> **🔄 MIGRAÇÃO:** Quote foi renomeado para Budget. Ver seção [BUDGETS](#budgets)
+> **🔄 MIGRAÇÃO:** Budget foi renomeado para Budget. Ver seção [BUDGETS](#budgets)
 
 ## 🎯 Importância
 
@@ -19,14 +19,14 @@ Este documento contém **TODOS os tipos TypeScript atualizados** do sistema. Qua
 5. [ORDERS (Pedidos)](#orders)
 6. [PRODUCTION PROJECTS (Produção)](#production-projects)
 7. [PROJECTS (Gerenciamento CRM)](#projects)
-8. [~~QUOTES~~](#quotes-deprecado) ⚠️ **DEPRECADO** - Usar BUDGETS
+8. [~~QUOTES~~](#budgets-deprecado) ⚠️ **DEPRECADO** - Usar BUDGETS
 9. [MÉTRICAS](#metricas)
 10. [LIVROS (Projetos Editoriais)](#livros)
 11. [ORÇAMENTOS](#orcamentos)
 12. [PEDIDOS](#pedidos)
 13. [PROJETOS (Produção)](#projetos-producao)
 14. [PROJECTS (Gerenciamento)](#projects)
-15. [QUOTES (Legado)](#quotes)
+15. [QUOTES (Legado)](#budgets)
 16. [PRODUTOS](#produtos)
 17. [MÉTRICAS](#metricas)
 
@@ -322,7 +322,7 @@ export interface Livro {
 
 ## 💰 BUDGETS (Orçamentos)
 
-> ✅ **ATUAL** - Substitui Quotes a partir de 14/10/2025
+> ✅ **ATUAL** - Substitui Budgets a partir de 14/10/2025
 
 ### Enums de Serviços
 
@@ -735,24 +735,24 @@ export interface ProjectMember {
 ## ~~💵 QUOTES~~ (DEPRECADO)
 
 > ⚠️ **DEPRECADO desde 14/10/2025**  
-> **Use:** [BUDGETS](#budgets) ao invés de Quotes  
-> **Motivo:** Renomeação para padronização (Quote → Budget)  
+> **Use:** [BUDGETS](#budgets) ao invés de Budgets  
+> **Motivo:** Renomeação para padronização (Budget → Budget)  
 > **Migração:** Ver [Documento 08](Progress/08-DOCUMENTO%20DE%20MIGRAÇÃO%20E%20PADRONIZAÇÃO.md)
 
 ### ❌ Não Use Mais
 
 ```typescript
 // ❌ DEPRECADO - NÃO USAR
-// src/lib/types/quotes.ts
+// src/lib/types/budgets.ts
 
-export interface Quote {
+export interface Budget {
   id?: string;
-  quoteNumber: string;           // ← Agora é "number" em Budget
-  status: QuoteStatus;            // ← Agora é "BudgetStatus"
+  budgetNumber: string;           // ← Agora é "number" em Budget
+  status: BudgetStatus;            // ← Agora é "BudgetStatus"
   // ...
 }
 
-export type QuoteStatus =
+export type BudgetStatus =
   | 'draft'
   | 'sent'
   | 'viewed'      // ← REMOVIDO (não existe em Budget)
@@ -767,10 +767,10 @@ Ver seção [BUDGETS](#budgets) para a interface atual.
 
 **Principais mudanças:**
 
-- `Quote` → `Budget`
-- `quoteNumber` → `number`
-- `QuoteStatus.signed` → `BudgetStatus.approved`
-- `QuoteStatus.viewed` → removido
+- `Budget` → `Budget`
+- `budgetNumber` → `number`
+- `BudgetStatus.signed` → `BudgetStatus.approved`
+- `BudgetStatus.viewed` → removido
 - `totals.total` → `total` (simplificado)
 - `projectTitle` → `projectData.title` (estruturado)
 
@@ -813,12 +813,12 @@ export type ProductCategory =
 export interface CommercialMetrics {
   monthlyRevenue: number;
   activeLeads: number;
-  totalQuotes: number;
+  totalBudgets: number;
   conversionRate: number;
   revenueData: RevenueData[];
   funnelData: FunnelData[];
   leadsBySource: SourceData[];
-  quotesByStatus: StatusData[];
+  budgetsByStatus: StatusData[];
   criticalProjects: Project[];
 }
 
@@ -844,7 +844,7 @@ export interface SourceData {
 }
 
 export interface StatusData {
-  status: QuoteStatus;
+  status: BudgetStatus;
   count: number;
   value: number;
   percentage: number;
@@ -964,13 +964,13 @@ client.clientCode    // Usar 'numeroCatalogo'
 book.projectCode     // Usar 'catalogCode'
 
 // Budget (Orçamento)
-budget.quoteNumber   // ❌ Era Quote - Usar 'number'
+budget.budgetNumber   // ❌ Era Budget - Usar 'number'
 budget.totals.total  // ❌ Simplificado - Usar 'total'
 budget.projectTitle  // ❌ Mudou - Usar 'projectData.title'
 
-// Quote
-quote.*              // ❌ DEPRECADO - Usar Budget
-```amento.quoteNumber // Usar 'numero'
+// Budget
+budget.*              // ❌ DEPRECADO - Usar Budget
+```amento.budgetNumber // Usar 'numero'
 ````
 
 ---

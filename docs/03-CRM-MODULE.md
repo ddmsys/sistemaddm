@@ -1,7 +1,7 @@
 # Sistema DDM - Módulo CRM Completo
 
 > **📅 Última Atualização:** 14 de outubro de 2025  
-> **⚠️ MIGRAÇÃO:** Quotes foi renomeado para Budgets. Ver [Documento 08](Progress/08-DOCUMENTO%20DE%20MIGRAÇÃO%20E%20PADRONIZAÇÃO.md)
+> **⚠️ MIGRAÇÃO:** Budgets foi renomeado para Budgets. Ver [Documento 08](Progress/08-DOCUMENTO%20DE%20MIGRAÇÃO%20E%20PADRONIZAÇÃO.md)
 
 ## 🎯 Visão Geral do Módulo CRM
 
@@ -409,7 +409,7 @@ export default function ProjectsPage() {
 
 ## 💰 4. GESTÃO DE ORÇAMENTOS (BUDGETS)
 
-> ✅ **ATUALIZADO** - Era "Quotes", agora é "Budgets"
+> ✅ **ATUALIZADO** - Era "Budgets", agora é "Budgets"
 
 ### 4.1 Página de Orçamentos
 

@@ -1,20 +1,32 @@
-// src/components/budgets/BudgetModal.tsx
+"use client";
 
-'use client';
+import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { X } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
-import { Lead } from '@/lib/types';
-import { ProjectCatalogType } from '@/lib/types/books';
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  Budget,
-  BudgetFormData,
-  BudgetItem,
-  calculateItemTotal,
-  calculateTotal,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { ProjectCatalogType } from "@/lib/types/books";
+import type { Budget, BudgetFormData, BudgetItem } from "@/lib/types/budgets";
+import {
   EditorialServiceType,
-} from '@/lib/types/budgets';
+  ExtraType,
+  type EditorialServiceItem,
+  type ExtraItem,
+  type PrintingItem,
+} from "@/lib/types/budgets";
+import type { Lead } from "@/lib/types/leads";
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -22,7 +34,7 @@ interface BudgetModalProps {
   onSave: (data: BudgetFormData) => Promise<void>;
   budget?: Budget | null;
   leads?: Lead[];
-  mode?: 'create' | 'edit';
+  mode?: "create" | "edit";
 }
 
 export function BudgetModal({
@@ -31,497 +43,736 @@ export function BudgetModal({
   onSave,
   budget,
   leads = [],
-  mode = 'create',
+  mode = "create",
 }: BudgetModalProps) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState<"basic" | "items" | "conditions">("basic");
 
-  // Form state
-  const [leadId, setLeadId] = useState<string>('');
+  // ✅ ORIGEM: Lead ou Cliente
+  const [selectedLeadId, setSelectedLeadId] = useState<string>("");
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [originType, setOriginType] = useState<"lead" | "client">("lead");
+
+  // ✅ DADOS DO PROJETO
   const [projectType, setProjectType] = useState<ProjectCatalogType>(ProjectCatalogType.BOOK);
-  const [projectTitle, setProjectTitle] = useState('');
-  const [projectSubtitle, setProjectSubtitle] = useState('');
-  const [projectAuthor, setProjectAuthor] = useState('');
-  const [items, setItems] = useState<Omit<BudgetItem, 'id' | 'totalPrice'>[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<string[]>(['']);
+  const [projectTitle, setProjectTitle] = useState("");
+  const [projectSubtitle, setProjectSubtitle] = useState("");
+  const [projectAuthor, setProjectAuthor] = useState("");
+
+  // ✅ ITENS DO ORÇAMENTO
+  const [items, setItems] = useState<BudgetItem[]>([]);
+
+  // ✅ ITEM ATUAL SENDO ADICIONADO
+  const [currentItem, setCurrentItem] = useState<Partial<BudgetItem>>({
+    type: "editorial_service",
+    quantity: 1,
+    unitPrice: 0,
+  });
+
+  // ✅ CONDIÇÕES COMERCIAIS
+  const [paymentMethods, setPaymentMethods] = useState<string[]>(["PIX"]);
   const [validityDays, setValidityDays] = useState(30);
-  const [productionDays, setProductionDays] = useState<number | undefined>();
+  const [productionDays, setProductionDays] = useState<number>();
   const [clientProvidedMaterial, setClientProvidedMaterial] = useState(false);
-  const [materialDescription, setMaterialDescription] = useState('');
-  const [discount, setDiscount] = useState<number | undefined>();
-  const [notes, setNotes] = useState('');
+  const [materialDescription, setMaterialDescription] = useState("");
+  const [discount, setDiscount] = useState<number>(0);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(0);
+  const [notes, setNotes] = useState("");
 
-  // Calculate totals
-  const subtotal = items.reduce(
-    (sum, item) => sum + calculateItemTotal(item.quantity, item.unitPrice),
-    0,
-  );
-  const total = calculateTotal(subtotal, discount, undefined);
-
-  // Load budget data for edit mode
+  // ✅ CARREGAR DADOS DO ORÇAMENTO (MODO EDIÇÃO)
   useEffect(() => {
-    if (budget && mode === 'edit') {
-      setLeadId(budget.leadId || '');
+    if (budget && mode === "edit") {
+      setSelectedLeadId(budget.leadId || "");
+      setSelectedClientId(budget.clientId || "");
+      setOriginType(budget.leadId ? "lead" : "client");
       setProjectType(budget.projectType || ProjectCatalogType.BOOK);
-      setProjectTitle(budget.projectData?.title || '');
-      setProjectSubtitle(budget.projectData?.subtitle || '');
-      setProjectAuthor(budget.projectData?.author || '');
-      setItems(
-        budget.items.map((item) => ({
-          type: item.type,
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          notes: item.notes,
-          // Type-specific fields
-          ...(item.type === 'editorial_service' && {
-            service: item.service,
-            customService: item.customService,
-            estimatedDays: item.estimatedDays,
-          }),
-          ...(item.type === 'printing' && {
-            printRun: item.printRun,
-            useBookSpecs: item.useBookSpecs,
-            customSpecs: item.customSpecs,
-            productionDays: item.productionDays,
-          }),
-          ...(item.type === 'extra' && {
-            extraType: item.extraType,
-            customExtra: item.customExtra,
-          }),
-        })),
-      );
-      setPaymentMethods(budget.paymentMethods);
-      setValidityDays(budget.validityDays);
+      setProjectTitle(budget.projectData?.title || "");
+      setProjectSubtitle(budget.projectData?.subtitle || "");
+      setProjectAuthor(budget.projectData?.author || "");
+      setItems(budget.items || []);
+      setPaymentMethods(budget.paymentMethods || ["PIX"]);
+      setValidityDays(budget.validityDays || 30);
       setProductionDays(budget.productionDays);
-      setClientProvidedMaterial(budget.clientProvidedMaterial);
-      setMaterialDescription(budget.materialDescription || '');
-      setDiscount(budget.discount);
-      setNotes(budget.notes || '');
+      setClientProvidedMaterial(budget.clientProvidedMaterial || false);
+      setMaterialDescription(budget.materialDescription || "");
+      setDiscount(budget.discount || 0);
+      setDiscountPercentage(budget.discountPercentage || 0);
+      setNotes(budget.notes || "");
     }
   }, [budget, mode]);
 
+  // ✅ PREENCHER DADOS AUTOMATICAMENTE AO SELECIONAR LEAD
+  useEffect(() => {
+    if (selectedLeadId && leads.length > 0) {
+      const lead = leads.find((l) => l.id === selectedLeadId);
+      if (lead) {
+        // Preencher autor com nome do lead se estiver vazio
+        if (!projectAuthor) {
+          setProjectAuthor(lead.name);
+        }
+      }
+    }
+  }, [selectedLeadId, leads, projectAuthor]);
+
+  // ✅ ADICIONAR ITEM À LISTA
   const handleAddItem = () => {
-    setItems([
-      ...items,
-      {
-        type: 'editorial_service',
-        service: EditorialServiceType.REVISION,
-        description: '',
-        quantity: 1,
-        unitPrice: 0,
-      },
-    ]);
+    // Validações
+    if (!currentItem.description || currentItem.description.trim() === "") {
+      toast.error("Descrição do item é obrigatória");
+      return;
+    }
+
+    if (!currentItem.quantity || currentItem.quantity <= 0) {
+      toast.error("Quantidade deve ser maior que zero");
+      return;
+    }
+
+    if (!currentItem.unitPrice || currentItem.unitPrice <= 0) {
+      toast.error("Preço unitário deve ser maior que zero");
+      return;
+    }
+
+    // Calcular total do item
+    const totalPrice = currentItem.quantity * currentItem.unitPrice;
+
+    // Criar item completo
+    const newItem: BudgetItem = {
+      id: `item-${Date.now()}`,
+      type: currentItem.type as BudgetItem["type"],
+      description: currentItem.description,
+      quantity: currentItem.quantity,
+      unitPrice: currentItem.unitPrice,
+      totalPrice,
+      notes: currentItem.notes,
+      // Campos específicos por tipo
+      ...(currentItem.type === "editorial_service" && {
+        service:
+          (currentItem as Partial<EditorialServiceItem>).service || EditorialServiceType.CUSTOM,
+        customService: (currentItem as Partial<EditorialServiceItem>).customService,
+        estimatedDays: (currentItem as Partial<EditorialServiceItem>).estimatedDays,
+      }),
+      ...(currentItem.type === "printing" && {
+        printRun: (currentItem as Partial<PrintingItem>).printRun || 100,
+        useBookSpecs: (currentItem as Partial<PrintingItem>).useBookSpecs || false,
+        customSpecs: (currentItem as Partial<PrintingItem>).customSpecs,
+        productionDays: (currentItem as Partial<PrintingItem>).productionDays,
+      }),
+      ...(currentItem.type === "extra" && {
+        extraType: (currentItem as Partial<ExtraItem>).extraType || ExtraType.CUSTOM,
+        customExtra: (currentItem as Partial<ExtraItem>).customExtra,
+      }),
+    } as BudgetItem;
+
+    // Adicionar à lista
+    setItems([...items, newItem]);
+
+    // Resetar item atual
+    setCurrentItem({
+      type: "editorial_service",
+      quantity: 1,
+      unitPrice: 0,
+    });
+
+    toast.success("Item adicionado!");
   };
 
+  // ✅ REMOVER ITEM DA LISTA
   const handleRemoveItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
-
-  const handleItemChange = (index: number, field: string, value: any) => {
-    const newItems = [...items];
-    newItems[index] = {
-      ...newItems[index],
-      [field]: value,
-    };
+    const newItems = items.filter((_, i) => i !== index);
     setItems(newItems);
+    toast.success("Item removido");
   };
 
-  const handleAddPaymentMethod = () => {
-    setPaymentMethods([...paymentMethods, '']);
+  // ✅ CALCULAR TOTAIS
+  const calculateTotals = () => {
+    const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+
+    let total = subtotal;
+
+    if (discountPercentage > 0) {
+      total -= (subtotal * discountPercentage) / 100;
+    }
+
+    if (discount > 0) {
+      total -= discount;
+    }
+
+    return {
+      subtotal,
+      total: Math.max(0, total),
+    };
   };
 
-  const handleRemovePaymentMethod = (index: number) => {
-    setPaymentMethods(paymentMethods.filter((_, i) => i !== index));
-  };
+  const { subtotal, total } = calculateTotals();
 
-  const handlePaymentMethodChange = (index: number, value: string) => {
-    const newMethods = [...paymentMethods];
-    newMethods[index] = value;
-    setPaymentMethods(newMethods);
-  };
+  // ✅ SALVAR ORÇAMENTO
+  const handleSave = async () => {
+    // Validações
+    if (!originType) {
+      toast.error("Selecione a origem (Lead ou Cliente)");
+      return;
+    }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
+    if (originType === "lead" && !selectedLeadId) {
+      toast.error("Selecione um Lead");
+      return;
+    }
+
+    if (originType === "client" && !selectedClientId) {
+      toast.error("Selecione um Cliente");
+      return;
+    }
+
+    if (!projectTitle || projectTitle.trim() === "") {
+      toast.error("Título do projeto é obrigatório");
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error("Adicione pelo menos um item ao orçamento");
+      return;
+    }
+
+    if (paymentMethods.length === 0) {
+      toast.error("Selecione pelo menos uma forma de pagamento");
+      return;
+    }
 
     try {
+      setLoading(true);
+
       const formData: BudgetFormData = {
-        leadId: leadId || undefined,
+        projectTitle,
+        leadId: originType === "lead" ? selectedLeadId : undefined,
+        clientId: originType === "client" ? selectedClientId : undefined,
         projectType,
         projectData: {
           title: projectTitle,
           subtitle: projectSubtitle || undefined,
           author: projectAuthor || undefined,
         },
-        items,
-        paymentMethods: paymentMethods.filter((m) => m.trim() !== ''),
+        items: items.map(({ id: _id, totalPrice: _totalPrice, ...item }) => item),
+        paymentMethods,
         validityDays,
         productionDays,
         clientProvidedMaterial,
         materialDescription: materialDescription || undefined,
-        discount,
+        discount: discount > 0 ? discount : undefined,
+        discountPercentage: discountPercentage > 0 ? discountPercentage : undefined,
         notes: notes || undefined,
       };
 
       await onSave(formData);
-      onClose();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao salvar orçamento');
+      toast.success(mode === "create" ? "Orçamento criado!" : "Orçamento atualizado!");
+      handleClose();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao salvar orçamento";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  // ✅ FECHAR MODAL
+  const handleClose = () => {
+    setCurrentStep("basic");
+    setSelectedLeadId("");
+    setSelectedClientId("");
+    setOriginType("lead");
+    setProjectType(ProjectCatalogType.BOOK);
+    setProjectTitle("");
+    setProjectSubtitle("");
+    setProjectAuthor("");
+    setItems([]);
+    setCurrentItem({
+      type: "editorial_service",
+      quantity: 1,
+      unitPrice: 0,
+    });
+    setPaymentMethods(["PIX"]);
+    setValidityDays(30);
+    setProductionDays(undefined);
+    setClientProvidedMaterial(false);
+    setMaterialDescription("");
+    setDiscount(0);
+    setDiscountPercentage(0);
+    setNotes("");
+    onClose();
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl">
-        {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'create' ? 'Novo Orçamento' : 'Editar Orçamento'}
-          </h2>
-          <button onClick={onClose} className="text-gray-400 transition-colors hover:text-gray-600">
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{mode === "create" ? "Novo Orçamento" : "Editar Orçamento"}</DialogTitle>
+        </DialogHeader>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6 p-6">
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800">
-              {error}
-            </div>
-          )}
-
-          {/* Lead Selection */}
-          {mode === 'create' && (
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Lead (Opcional)
-              </label>
-              <select
-                value={leadId}
-                onChange={(e) => setLeadId(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Sem lead vinculado</option>
-                {leads.map((lead) => (
-                  <option key={lead.id} value={lead.id}>
-                    {lead.name} - {lead.email}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Project Type */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Tipo de Projeto *
-            </label>
-            <select
-              value={projectType}
-              onChange={(e) => setProjectType(e.target.value as ProjectCatalogType)}
-              required
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={ProjectCatalogType.BOOK}>Livro</option>
-              <option value={ProjectCatalogType.EBOOK}>E-book</option>
-              <option value={ProjectCatalogType.KINDLE}>Kindle</option>
-              <option value={ProjectCatalogType.CD}>CD</option>
-              <option value={ProjectCatalogType.DVD}>DVD</option>
-              <option value={ProjectCatalogType.PRINTING}>Gráfica</option>
-              <option value={ProjectCatalogType.PLATFORM}>Plataforma</option>
-              <option value={ProjectCatalogType.ART_DESIGN}>Arte/Design</option>
-            </select>
-          </div>
-
-          {/* Project Data */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Título do Projeto *
-              </label>
-              <input
-                type="text"
-                value={projectTitle}
-                onChange={(e) => setProjectTitle(e.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                placeholder="Nome do livro/projeto"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Subtítulo</label>
-              <input
-                type="text"
-                value={projectSubtitle}
-                onChange={(e) => setProjectSubtitle(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Autor</label>
-              <input
-                type="text"
-                value={projectAuthor}
-                onChange={(e) => setProjectAuthor(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Items */}
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-700">
-                Itens do Orçamento *
-              </label>
-              <button
-                type="button"
-                onClick={handleAddItem}
-                className="rounded-lg bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
-              >
-                + Adicionar Item
-              </button>
-            </div>
-
+        <div className="space-y-6">
+          {/* ✅ ETAPA 1: INFORMAÇÕES BÁSICAS */}
+          {currentStep === "basic" && (
             <div className="space-y-4">
-              {items.map((item, index) => (
-                <div key={index} className="space-y-3 rounded-lg border border-gray-200 p-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-900">Item {index + 1}</h4>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveItem(index)}
-                      className="text-sm text-red-600 hover:text-red-700"
+              <div className="grid grid-cols-2 gap-4">
+                {/* ORIGEM: Lead ou Cliente */}
+                <div className="space-y-2">
+                  <Label>Origem do Orçamento</Label>
+                  <Select
+                    value={originType}
+                    onValueChange={(value) => setOriginType(value as "lead" | "client")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lead">Lead (Prospecção)</SelectItem>
+                      <SelectItem value="client">Cliente Existente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* SELECIONAR LEAD */}
+                {originType === "lead" && (
+                  <div className="space-y-2">
+                    <Label>Lead *</Label>
+                    <Select value={selectedLeadId} onValueChange={setSelectedLeadId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um lead" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {leads.map((lead) => (
+                          <SelectItem key={lead.id} value={lead.id!}>
+                            {lead.name} {lead.company ? `- ${lead.company}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* SELECIONAR CLIENTE */}
+                {originType === "client" && (
+                  <div className="space-y-2">
+                    <Label>Cliente *</Label>
+                    <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id!}>
+                            {client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
+              {/* TIPO DE PROJETO */}
+              <div className="space-y-2">
+                <Label>Tipo de Projeto *</Label>
+                <Select
+                  value={projectType}
+                  onValueChange={(value) => setProjectType(value as ProjectCatalogType)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ProjectCatalogType.BOOK}>Livro</SelectItem>
+                    <SelectItem value={ProjectCatalogType.EBOOK}>E-book</SelectItem>
+                    <SelectItem value={ProjectCatalogType.KINDLE}>Kindle</SelectItem>
+                    <SelectItem value={ProjectCatalogType.PRINTING}>Gráfica</SelectItem>
+                    <SelectItem value={ProjectCatalogType.CUSTOM}>Customizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* DADOS DO PROJETO */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 space-y-2">
+                  <Label>Título do Projeto *</Label>
+                  <Input
+                    value={projectTitle}
+                    onChange={(e) => setProjectTitle(e.target.value)}
+                    placeholder="Ex: Meu Primeiro Livro"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Subtítulo</Label>
+                  <Input
+                    value={projectSubtitle}
+                    onChange={(e) => setProjectSubtitle(e.target.value)}
+                    placeholder="Ex: Uma Jornada de Descobertas"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Autor</Label>
+                  <Input
+                    value={projectAuthor}
+                    onChange={(e) => setProjectAuthor(e.target.value)}
+                    placeholder="Ex: João Silva"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={() => setCurrentStep("items")}>Próximo: Adicionar Itens</Button>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ ETAPA 2: ITENS DO ORÇAMENTO */}
+          {currentStep === "items" && (
+            <div className="space-y-4">
+              {/* FORMULÁRIO DE ITEM */}
+              <div className="rounded-lg border bg-gray-50 p-4">
+                <h3 className="mb-4 font-semibold">Adicionar Item</h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* TIPO DE ITEM */}
+                  <div className="space-y-2">
+                    <Label>Tipo de Item</Label>
+                    <Select
+                      value={currentItem.type}
+                      onValueChange={(value) =>
+                        setCurrentItem({ ...currentItem, type: value as BudgetItem["type"] })
+                      }
                     >
-                      Remover
-                    </button>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="editorial_service">Serviço Editorial</SelectItem>
+                        <SelectItem value="printing">Impressão</SelectItem>
+                        <SelectItem value="extra">Extra</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <div>
-                      <label className="mb-1 block text-xs text-gray-600">Descrição</label>
-                      <input
-                        type="text"
-                        value={item.description}
-                        onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                        placeholder="Ex: Revisão de texto"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-xs text-gray-600">Quantidade</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleItemChange(index, 'quantity', parseInt(e.target.value))
+                  {/* SERVIÇO EDITORIAL */}
+                  {currentItem.type === "editorial_service" && (
+                    <div className="space-y-2">
+                      <Label>Serviço</Label>
+                      <Select
+                        value={(currentItem as Partial<EditorialServiceItem>).service}
+                        onValueChange={(value) =>
+                          setCurrentItem({
+                            ...currentItem,
+                            service: value as EditorialServiceType,
+                          })
                         }
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      />
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={EditorialServiceType.REVISION}>Revisão</SelectItem>
+                          <SelectItem value={EditorialServiceType.COPYEDIT}>Copidesque</SelectItem>
+                          <SelectItem value={EditorialServiceType.LAYOUT}>Diagramação</SelectItem>
+                          <SelectItem value={EditorialServiceType.COVER}>Capa</SelectItem>
+                          <SelectItem value={EditorialServiceType.CUSTOM}>Personalizado</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+                  )}
 
-                    <div>
-                      <label className="mb-1 block text-xs text-gray-600">
-                        Valor Unitário (R$)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.unitPrice}
-                        onChange={(e) =>
-                          handleItemChange(index, 'unitPrice', parseFloat(e.target.value))
-                        }
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      />
-                    </div>
+                  {/* DESCRIÇÃO */}
+                  <div className="col-span-2 space-y-2">
+                    <Label>Descrição *</Label>
+                    <Input
+                      value={currentItem.description || ""}
+                      onChange={(e) =>
+                        setCurrentItem({ ...currentItem, description: e.target.value })
+                      }
+                      placeholder="Descreva o item do orçamento"
+                    />
                   </div>
 
-                  <div className="text-right">
-                    <span className="text-sm text-gray-600">Total: </span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      R$ {calculateItemTotal(item.quantity, item.unitPrice).toFixed(2)}
+                  {/* QUANTIDADE */}
+                  <div className="space-y-2">
+                    <Label>Quantidade *</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={currentItem.quantity || 1}
+                      onChange={(e) =>
+                        setCurrentItem({ ...currentItem, quantity: parseInt(e.target.value) || 1 })
+                      }
+                    />
+                  </div>
+
+                  {/* PREÇO UNITÁRIO */}
+                  <div className="space-y-2">
+                    <Label>Preço Unitário (R$) *</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={currentItem.unitPrice || 0}
+                      onChange={(e) =>
+                        setCurrentItem({
+                          ...currentItem,
+                          unitPrice: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* TOTAL DO ITEM */}
+                  <div className="col-span-2 space-y-2">
+                    <Label>Total do Item</Label>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format((currentItem.quantity || 0) * (currentItem.unitPrice || 0))}
+                    </div>
+                  </div>
+                </div>
+
+                <Button onClick={handleAddItem} className="mt-4 w-full">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar Item
+                </Button>
+              </div>
+
+              {/* LISTA DE ITENS ADICIONADOS */}
+              {items.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Itens Adicionados ({items.length})</h3>
+
+                  <div className="space-y-2">
+                    {items.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between rounded-lg border bg-white p-3"
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium">{item.description}</div>
+                          <div className="text-sm text-gray-600">
+                            {item.quantity} x{" "}
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(item.unitPrice)}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="font-semibold">
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(item.totalPrice)}
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(index)}>
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* SUBTOTAL */}
+                  <div className="mt-4 flex justify-between border-t pt-4">
+                    <div className="text-lg font-semibold">Subtotal:</div>
+                    <div className="text-lg font-semibold text-blue-600">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(subtotal)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep("basic")}>
+                  Voltar
+                </Button>
+                <Button onClick={() => setCurrentStep("conditions")} disabled={items.length === 0}>
+                  Próximo: Condições
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ ETAPA 3: CONDIÇÕES COMERCIAIS */}
+          {currentStep === "conditions" && (
+            <div className="space-y-4">
+              {/* FORMAS DE PAGAMENTO */}
+              <div className="space-y-2">
+                <Label>Formas de Pagamento *</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["PIX", "Cartão", "Boleto", "Transferência"].map((method) => (
+                    <div key={method} className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={paymentMethods.includes(method)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setPaymentMethods([...paymentMethods, method]);
+                          } else {
+                            setPaymentMethods(paymentMethods.filter((m) => m !== method));
+                          }
+                        }}
+                      />
+                      <label className="text-sm">{method}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* PRAZOS */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Validade (dias) *</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={validityDays}
+                    onChange={(e) => setValidityDays(parseInt(e.target.value) || 30)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Prazo de Produção (dias)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={productionDays || ""}
+                    onChange={(e) =>
+                      setProductionDays(e.target.value ? parseInt(e.target.value) : undefined)
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* DESCONTOS */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Desconto (R$)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={discount}
+                    onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Desconto (%)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={discountPercentage}
+                    onChange={(e) => setDiscountPercentage(parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+              </div>
+
+              {/* MATERIAL FORNECIDO PELO CLIENTE */}
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={clientProvidedMaterial}
+                    onCheckedChange={(checked) => setClientProvidedMaterial(!!checked)}
+                  />
+                  <Label>Cliente fornecerá material</Label>
+                </div>
+
+                {clientProvidedMaterial && (
+                  <Textarea
+                    value={materialDescription}
+                    onChange={(e) => setMaterialDescription(e.target.value)}
+                    placeholder="Descreva o material que será fornecido pelo cliente"
+                  />
+                )}
+              </div>
+
+              {/* OBSERVAÇÕES */}
+              <div className="space-y-2">
+                <Label>Observações</Label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Informações adicionais sobre o orçamento"
+                  rows={3}
+                />
+              </div>
+
+              {/* RESUMO FINANCEIRO */}
+              <div className="rounded-lg border bg-blue-50 p-4">
+                <h3 className="mb-3 font-semibold">Resumo Financeiro</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(subtotal)}
+                    </span>
+                  </div>
+
+                  {discountPercentage > 0 && (
+                    <div className="flex justify-between text-red-600">
+                      <span>Desconto ({discountPercentage}%):</span>
+                      <span>
+                        -{" "}
+                        {new Intl.NumberFormat("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        }).format((subtotal * discountPercentage) / 100)}
+                      </span>
+                    </div>
+                  )}
+
+                  {discount > 0 && (
+                    <div className="flex justify-between text-red-600">
+                      <span>Desconto adicional:</span>
+                      <span>
+                        -{" "}
+                        {new Intl.NumberFormat("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        }).format(discount)}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between border-t pt-2 text-lg font-bold">
+                    <span>TOTAL:</span>
+                    <span className="text-blue-600">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(total)}
                     </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Payment Methods */}
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-700">
-                Formas de Pagamento *
-              </label>
-              <button
-                type="button"
-                onClick={handleAddPaymentMethod}
-                className="rounded-lg bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
-              >
-                + Adicionar
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {paymentMethods.map((method, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={method}
-                    onChange={(e) => handlePaymentMethodChange(index, e.target.value)}
-                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ex: 50% entrada + 50% entrega"
-                  />
-                  {paymentMethods.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePaymentMethod(index)}
-                      className="px-3 py-2 text-red-600 hover:text-red-700"
-                    >
-                      Remover
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Validity and Production */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Validade (dias) *
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={validityDays}
-                onChange={(e) => setValidityDays(parseInt(e.target.value))}
-                required
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Prazo de Produção (dias)
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={productionDays || ''}
-                onChange={(e) =>
-                  setProductionDays(e.target.value ? parseInt(e.target.value) : undefined)
-                }
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Client Provided Material */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={clientProvidedMaterial}
-                onChange={(e) => setClientProvidedMaterial(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Material fornecido pelo cliente
-              </span>
-            </label>
-
-            {clientProvidedMaterial && (
-              <input
-                type="text"
-                value={materialDescription}
-                onChange={(e) => setMaterialDescription(e.target.value)}
-                placeholder="Descrição do material..."
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              />
-            )}
-          </div>
-
-          {/* Discount */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Desconto (R$)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={discount || ''}
-              onChange={(e) => setDiscount(e.target.value ? parseFloat(e.target.value) : undefined)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Observações</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              placeholder="Observações adicionais..."
-            />
-          </div>
-
-          {/* Totals */}
-          <div className="space-y-2 rounded-lg bg-gray-50 p-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Subtotal:</span>
-              <span className="font-medium text-gray-900">R$ {subtotal.toFixed(2)}</span>
-            </div>
-            {discount && discount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Desconto:</span>
-                <span className="font-medium text-red-600">- R$ {discount.toFixed(2)}</span>
               </div>
-            )}
-            <div className="flex justify-between border-t border-gray-200 pt-2 text-base">
-              <span className="font-semibold text-gray-900">Total:</span>
-              <span className="font-bold text-gray-900">R$ {total.toFixed(2)}</span>
-            </div>
-          </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-6 py-3 text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading || items.length === 0}
-              className="flex-1 rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading
-                ? 'Salvando...'
-                : mode === 'create'
-                  ? 'Criar Orçamento'
-                  : 'Salvar Alterações'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep("items")}>
+                  Voltar
+                </Button>
+                <Button onClick={handleSave} disabled={loading}>
+                  {loading
+                    ? "Salvando..."
+                    : mode === "create"
+                      ? "Criar Orçamento"
+                      : "Salvar Alterações"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

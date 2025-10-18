@@ -11,7 +11,7 @@
 ### ✅ O QUE ESTÁ CORRETO
 
 1. **Código Implementado:**
-   - ✅ `src/lib/types/budgets.ts` existe (substitui quotes)
+   - ✅ `src/lib/types/budgets.ts` existe (substitui budgets)
    - ✅ `src/lib/types/books.ts` existe
    - ✅ `src/lib/types/orders.ts` existe
    - ✅ `src/lib/types/production-projects.ts` existe
@@ -19,20 +19,20 @@
 
 2. **Documentação Atualizada:**
    - ✅ `06-ORCAMENTOS-FASE-1-COMPLETA.md` - Descreve Budget corretamente
-   - ✅ `08-DOCUMENTO DE MIGRAÇÃO E PADRONIZAÇÃO.md` - Define Quote → Budget
+   - ✅ `08-DOCUMENTO DE MIGRAÇÃO E PADRONIZAÇÃO.md` - Define Budget → Budget
 
 ### ❌ O QUE ESTÁ DESATUALIZADO
 
 1. **Documentação Principal:**
-   - ❌ `00-OVERVIEW.md` - Ainda menciona `/quotes` e `QuoteList.tsx`
+   - ❌ `00-OVERVIEW.md` - Ainda menciona `/budgets` e `BudgetList.tsx`
    - ❌ `01-TYPES-COMPLETE.md` - Seção "QUOTES (Legado)" confusa
-   - ❌ `02-FIREBASE-HOOKS.md` - Hook `useQuotes` não existe mais
-   - ❌ `03-CRM-MODULE.md` - Páginas `/crm/quotes` não existem mais
-   - ❌ `Plano_Mestre_DDM.md` - Estrutura antiga com `quotes/`
+   - ❌ `02-FIREBASE-HOOKS.md` - Hook `useBudgets` não existe mais
+   - ❌ `03-CRM-MODULE.md` - Páginas `/crm/budgets` não existem mais
+   - ❌ `Plano_Mestre_DDM.md` - Estrutura antiga com `budgets/`
 
 2. **Cloud Functions:**
-   - ❌ `functions/src/quotes/` ainda existe (deveria ser `budgets/`)
-   - ❌ `onQuoteSigned.ts` existe (deveria ser `onBudgetApproved.ts`)
+   - ❌ `functions/src/budgets/` ainda existe (deveria ser `budgets/`)
+   - ❌ `onBudgetSigned.ts` existe (deveria ser `onBudgetApproved.ts`)
 
 ---
 
@@ -42,10 +42,10 @@
 
 #### ❌ PROBLEMAS ENCONTRADOS
 
-**Linha 48:** Estrutura de pastas menciona `/quotes`
+**Linha 48:** Estrutura de pastas menciona `/budgets`
 
 ```markdown
-│ │ │ │ └── quotes/ # ❌ Gestão de orçamentos
+│ │ │ │ └── budgets/ # ❌ Gestão de orçamentos
 ```
 
 **Deveria ser:**
@@ -56,10 +56,10 @@
 
 ---
 
-**Linha 81:** Componentes ainda referenciam Quote
+**Linha 81:** Componentes ainda referenciam Budget
 
 ```markdown
-│ │ │ ├── QuoteList.tsx # ❌ Lista de orçamentos
+│ │ │ ├── BudgetList.tsx # ❌ Lista de orçamentos
 ```
 
 **Deveria ser:**
@@ -70,10 +70,10 @@
 
 ---
 
-**Linha 105:** Hooks mencionam useQuotes
+**Linha 105:** Hooks mencionam useBudgets
 
 ```markdown
-│ │ │ └── useQuotes.ts # ❌ CRUD e queries orçamentos
+│ │ │ └── useBudgets.ts # ❌ CRUD e queries orçamentos
 ```
 
 **Deveria ser:**
@@ -90,7 +90,7 @@
 ### Status dos Orçamentos
 
 \`\`\`typescript
-type QuoteStatus =
+type BudgetStatus =
 | 'draft' // Rascunho
 | 'sent' // Enviado
 | 'viewed' // Visualizado ← ❌ NÃO EXISTE
@@ -112,10 +112,10 @@ type BudgetStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
 
 ---
 
-**Linha 245:** Collections menciona `quotes/`
+**Linha 245:** Collections menciona `budgets/`
 
 ```markdown
-└── quotes/ # ❌ Orçamentos enviados
+└── budgets/ # ❌ Orçamentos enviados
 ```
 
 **Deveria ser:**
@@ -130,7 +130,7 @@ type BudgetStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
 
 #### ❌ PROBLEMAS ENCONTRADOS
 
-**Linha 1:** Título confuso - mistura Quote e Orçamento
+**Linha 1:** Título confuso - mistura Budget e Orçamento
 
 ```markdown
 # Sistema DDM - Tipos e Interfaces Completas
@@ -141,7 +141,7 @@ type BudgetStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
 ```markdown
 # Sistema DDM - Tipos e Interfaces Completas
 
-> ⚠️ **ATENÇÃO:** Quote foi renomeado para Budget. Ver seção [BUDGETS](#budgets)
+> ⚠️ **ATENÇÃO:** Budget foi renomeado para Budget. Ver seção [BUDGETS](#budgets)
 ```
 
 ---
@@ -149,14 +149,14 @@ type BudgetStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
 **Linha 15:** Índice menciona "QUOTES (Legado)"
 
 ```markdown
-8. [QUOTES (Legado)](#quotes)
+8. [QUOTES (Legado)](#budgets)
 ```
 
 **Deveria ser:**
 
 ```markdown
 8. [BUDGETS (Orçamentos)](#budgets)
-9. [~~QUOTES~~](#quotes-deprecado) ⚠️ DEPRECADO - Usar BUDGETS
+9. [~~QUOTES~~](#budgets-deprecado) ⚠️ DEPRECADO - Usar BUDGETS
 ```
 
 ---
@@ -167,13 +167,13 @@ type BudgetStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
 ## 💵 QUOTES (Legado)
 
 \`\`\`typescript
-// src/lib/types/quotes.ts
+// src/lib/types/budgets.ts
 // Mantido para compatibilidade ← ❌ NÃO EXISTE MAIS
 
-export interface Quote {
+export interface Budget {
 id?: string;
-quoteNumber: string; ← ❌ É 'number'
-status: QuoteStatus; ← ❌ É 'BudgetStatus'
+budgetNumber: string; ← ❌ É 'number'
+status: BudgetStatus; ← ❌ É 'BudgetStatus'
 // ...
 }
 \`\`\`
@@ -219,18 +219,18 @@ status: BudgetStatus; // 'draft' | 'sent' | 'approved' | 'rejected' | 'expired'
 
 #### ❌ PROBLEMAS ENCONTRADOS
 
-**Linha 467:** Hook useQuotes não existe
+**Linha 467:** Hook useBudgets não existe
 
 ```markdown
-## 💰 Hook Especializado: useQuotes
+## 💰 Hook Especializado: useBudgets
 
 ### Implementação
 
 \`\`\`typescript
-// src/hooks/comercial/useQuotes.ts ← ❌ NÃO EXISTE
+// src/hooks/comercial/useBudgets.ts ← ❌ NÃO EXISTE
 
 import { useFirestore } from '@/hooks/useFirestore';
-import { Quote, QuoteFormData, QuoteStatus, QuoteItem } from '@/lib/types/quotes';
+import { Budget, BudgetFormData, BudgetStatus, BudgetItem } from '@/lib/types/budgets';
 ```
 
 **Deveria ser:**
@@ -253,14 +253,14 @@ import { Budget, BudgetFormData, BudgetStatus, BudgetItem } from '@/lib/types/bu
 
 #### ❌ PROBLEMAS ENCONTRADOS
 
-**Linha 307:** Página /crm/quotes não existe
+**Linha 307:** Página /crm/budgets não existe
 
 ```markdown
 ## 💰 4. GESTÃO DE ORÇAMENTOS
 
 ### 4.1 Página de Orçamentos
 
-**Localização:** \`/src/app/(authenticated)/crm/quotes/page.tsx\` ← ❌
+**Localização:** \`/src/app/(authenticated)/crm/budgets/page.tsx\` ← ❌
 ```
 
 **Deveria ser:**
@@ -275,10 +275,10 @@ import { Budget, BudgetFormData, BudgetStatus, BudgetItem } from '@/lib/types/bu
 
 ---
 
-**Código de exemplo usa useQuotes:**
+**Código de exemplo usa useBudgets:**
 
 ```typescript
-const { quotes, loading, createQuote, updateQuote, deleteQuote, generatePDF } = useQuotes();
+const { budgets, loading, createBudget, updateBudget, deleteBudget, generatePDF } = useBudgets();
 ```
 
 **Deveria ser:**
@@ -293,12 +293,12 @@ const { budgets, loading, createBudget, updateBudget, deleteBudget } = useBudget
 
 #### ❌ PROBLEMAS ENCONTRADOS
 
-**Linha 48:** Estrutura menciona quotes/
+**Linha 48:** Estrutura menciona budgets/
 
 ```markdown
-│ │ │ │ ├── quotes/ # ❌ Functions de orçamentos
-│ │ │ │ │ ├── createQuotePdf.ts
-│ │ │ │ │ └── onQuoteSigned.ts
+│ │ │ │ ├── budgets/ # ❌ Functions de orçamentos
+│ │ │ │ │ ├── createBudgetPdf.ts
+│ │ │ │ │ └── onBudgetSigned.ts
 ```
 
 **Deveria ser:**
@@ -314,7 +314,7 @@ const { budgets, loading, createBudget, updateBudget, deleteBudget } = useBudget
 **Linha 51:** Rotas antigas
 
 ```markdown
-│ │ │ │ ├── quotes/ # ❌ Orçamentos e propostas
+│ │ │ │ ├── budgets/ # ❌ Orçamentos e propostas
 │ │ │ │ │ ├── page.tsx
 │ │ │ │ │ └── [id]/page.tsx
 ```
@@ -332,7 +332,7 @@ const { budgets, loading, createBudget, updateBudget, deleteBudget } = useBudget
 **Linha 305:** Collections Firestore
 
 ```markdown
-└── quotes/ # ❌ Orçamentos enviados
+└── budgets/ # ❌ Orçamentos enviados
 ```
 
 **Deveria ser:**
@@ -343,13 +343,13 @@ const { budgets, loading, createBudget, updateBudget, deleteBudget } = useBudget
 
 ---
 
-**Seção 3.3:** Toda seção de Orçamentos usa Quote
+**Seção 3.3:** Toda seção de Orçamentos usa Budget
 
 ```markdown
-### 3.3 Orçamentos (\`quotes\`)
+### 3.3 Orçamentos (\`budgets\`)
 
 - Proposta formal enviada ao autor.
-- **Automação:** \`createQuotePdf\`, \`onQuoteSigned\`.
+- **Automação:** \`createBudgetPdf\`, \`onBudgetSigned\`.
 
 Campos principais:
 
@@ -384,10 +384,10 @@ Campos principais:
 **Pasta existe:**
 
 ```
-functions/src/quotes/
-├── assignQuoteNumber.ts      ← ❌ RENOMEAR
-├── createQuotePdf.ts         ← ❌ RENOMEAR
-└── onQuoteSigned.ts          ← ❌ RENOMEAR
+functions/src/budgets/
+├── assignBudgetNumber.ts      ← ❌ RENOMEAR
+├── createBudgetPdf.ts         ← ❌ RENOMEAR
+└── onBudgetSigned.ts          ← ❌ RENOMEAR
 ```
 
 **Deveria ser:**
@@ -407,13 +407,13 @@ functions/src/budgets/
 
 ```bash
 # 1. Renomear pasta
-mv functions/src/quotes functions/src/budgets
+mv functions/src/budgets functions/src/budgets
 
 # 2. Renomear arquivos
 cd functions/src/budgets
-mv assignQuoteNumber.ts assignBudgetNumber.ts
-mv createQuotePdf.ts createBudgetPdf.ts
-mv onQuoteSigned.ts onBudgetApproved.ts
+mv assignBudgetNumber.ts assignBudgetNumber.ts
+mv createBudgetPdf.ts createBudgetPdf.ts
+mv onBudgetSigned.ts onBudgetApproved.ts
 
 # 3. Atualizar imports em functions/src/index.ts
 ```
@@ -423,11 +423,11 @@ mv onQuoteSigned.ts onBudgetApproved.ts
 #### Arquivo por arquivo:
 
 1. **00-OVERVIEW.md**
-   - [ ] Linha 48: `/quotes` → `/budgets`
-   - [ ] Linha 81: `QuoteList` → `BudgetsList`
-   - [ ] Linha 105: `useQuotes` → `useBudgets`
+   - [ ] Linha 48: `/budgets` → `/budgets`
+   - [ ] Linha 81: `BudgetList` → `BudgetsList`
+   - [ ] Linha 105: `useBudgets` → `useBudgets`
    - [ ] Linha 229: Atualizar BudgetStatus
-   - [ ] Linha 245: `quotes/` → `budgets/`
+   - [ ] Linha 245: `budgets/` → `budgets/`
 
 2. **01-TYPES-COMPLETE.md**
    - [ ] Adicionar aviso no topo
@@ -436,18 +436,18 @@ mv onQuoteSigned.ts onBudgetApproved.ts
    - [ ] Adicionar seção "QUOTES DEPRECADO"
 
 3. **02-FIREBASE-HOOKS.md**
-   - [ ] Linha 467: Hook `useQuotes` → `useBudgets`
+   - [ ] Linha 467: Hook `useBudgets` → `useBudgets`
    - [ ] Atualizar todos os exemplos de código
 
 4. **03-CRM-MODULE.md**
-   - [ ] Linha 307: `/crm/quotes` → `/budgets`
+   - [ ] Linha 307: `/crm/budgets` → `/budgets`
    - [ ] Atualizar todos os exemplos de código
-   - [ ] Substituir `useQuotes` por `useBudgets`
+   - [ ] Substituir `useBudgets` por `useBudgets`
 
 5. **Plano_Mestre_DDM.md**
-   - [ ] Linha 48: `functions/src/quotes` → `budgets`
-   - [ ] Linha 51: `/crm/quotes` → `/budgets`
-   - [ ] Linha 305: Collection `quotes/` → `budgets/`
+   - [ ] Linha 48: `functions/src/budgets` → `budgets`
+   - [ ] Linha 51: `/crm/budgets` → `/budgets`
+   - [ ] Linha 305: Collection `budgets/` → `budgets/`
    - [ ] Seção 3.3: Reescrever com Budget
 
 ### PRIORIDADE 3: DELETAR ARQUIVOS OBSOLETOS
@@ -483,7 +483,7 @@ mv docs/*-old.md docs/legacy/ 2>/dev/null || true
 - Auth
 - Clients
 - Leads
-- **Budgets** (Orçamentos - substitui Quotes)
+- **Budgets** (Orçamentos - substitui Budgets)
 - Books
 - Orders
 - ProductionProjects
@@ -493,7 +493,7 @@ mv docs/*-old.md docs/legacy/ 2>/dev/null || true
 - useAuth
 - useClients
 - useLeads
-- **useBudgets** (substitui useQuotes)
+- **useBudgets** (substitui useBudgets)
 - useBooks
 - useOrders
 - useProductionProjects
@@ -524,7 +524,7 @@ Lead → Budget → Client + Book + Order + ProductionProject
 
 ## ANEXOS
 
-- Tabela de Equivalências (Quote → Budget)
+- Tabela de Equivalências (Budget → Budget)
 - Status Enums
 - Máscaras e Formatos
 ```
@@ -544,7 +544,7 @@ rm "docs/Progress/# Sessão #001 - Diagnóstico Inicial"
 Não deletar, mas adicionar aviso:
 
 - Seção QUOTES em `01-TYPES-COMPLETE.md`
-- Hook useQuotes em `02-FIREBASE-HOOKS.md`
+- Hook useBudgets em `02-FIREBASE-HOOKS.md`
 
 **Adicionar no topo:**
 
@@ -556,21 +556,21 @@ Não deletar, mas adicionar aviso:
 
 ## 🔄 TABELA DE EQUIVALÊNCIAS (Para Referência)
 
-| Conceito Antigo         | Conceito Novo            | Status             |
-| ----------------------- | ------------------------ | ------------------ |
-| **Quotes**              | **Budgets**              | ✅ Renomeado       |
-| `useQuotes`             | `useBudgets`             | ✅ Renomeado       |
-| `QuoteModal`            | `BudgetModal`            | ✅ Renomeado       |
-| `QuoteCard`             | `BudgetCard`             | ✅ Renomeado       |
-| `QuoteList`             | `BudgetsList`            | ✅ Renomeado       |
-| `/crm/quotes`           | `/budgets`               | ✅ Movido          |
-| `functions/src/quotes/` | `functions/src/budgets/` | ❌ Pendente        |
-| `onQuoteSigned`         | `onBudgetApproved`       | ❌ Pendente        |
-| `createQuotePdf`        | `createBudgetPdf`        | ❌ Pendente        |
-| `assignQuoteNumber`     | `assignBudgetNumber`     | ❌ Pendente        |
-| Collection `quotes/`    | Collection `budgets/`    | ✅ Migrado         |
-| `QuoteStatus.signed`    | `BudgetStatus.approved`  | ✅ Renomeado       |
-| `QuoteStatus.viewed`    | ❌ REMOVIDO              | ✅ Não existe mais |
+| Conceito Antigo          | Conceito Novo            | Status             |
+| ------------------------ | ------------------------ | ------------------ |
+| **Budgets**              | **Budgets**              | ✅ Renomeado       |
+| `useBudgets`             | `useBudgets`             | ✅ Renomeado       |
+| `BudgetModal`            | `BudgetModal`            | ✅ Renomeado       |
+| `BudgetCard`             | `BudgetCard`             | ✅ Renomeado       |
+| `BudgetList`             | `BudgetsList`            | ✅ Renomeado       |
+| `/crm/budgets`           | `/budgets`               | ✅ Movido          |
+| `functions/src/budgets/` | `functions/src/budgets/` | ❌ Pendente        |
+| `onBudgetSigned`         | `onBudgetApproved`       | ❌ Pendente        |
+| `createBudgetPdf`        | `createBudgetPdf`        | ❌ Pendente        |
+| `assignBudgetNumber`     | `assignBudgetNumber`     | ❌ Pendente        |
+| Collection `budgets/`    | Collection `budgets/`    | ✅ Migrado         |
+| `BudgetStatus.signed`    | `BudgetStatus.approved`  | ✅ Renomeado       |
+| `BudgetStatus.viewed`    | ❌ REMOVIDO              | ✅ Não existe mais |
 
 ---
 
@@ -578,10 +578,10 @@ Não deletar, mas adicionar aviso:
 
 ### Cloud Functions
 
-- [ ] Renomear `functions/src/quotes/` → `budgets/`
-- [ ] Renomear `assignQuoteNumber.ts` → `assignBudgetNumber.ts`
-- [ ] Renomear `createQuotePdf.ts` → `createBudgetPdf.ts`
-- [ ] Renomear `onQuoteSigned.ts` → `onBudgetApproved.ts`
+- [ ] Renomear `functions/src/budgets/` → `budgets/`
+- [ ] Renomear `assignBudgetNumber.ts` → `assignBudgetNumber.ts`
+- [ ] Renomear `createBudgetPdf.ts` → `createBudgetPdf.ts`
+- [ ] Renomear `onBudgetSigned.ts` → `onBudgetApproved.ts`
 - [ ] Atualizar imports em `functions/src/index.ts`
 - [ ] Testar deploy das functions
 
@@ -589,7 +589,7 @@ Não deletar, mas adicionar aviso:
 
 - [ ] Atualizar `00-OVERVIEW.md` (5 ocorrências)
 - [ ] Atualizar `01-TYPES-COMPLETE.md` (seção completa)
-- [ ] Atualizar `02-FIREBASE-HOOKS.md` (hook useQuotes)
+- [ ] Atualizar `02-FIREBASE-HOOKS.md` (hook useBudgets)
 - [ ] Atualizar `03-CRM-MODULE.md` (exemplos de código)
 - [ ] Atualizar `Plano_Mestre_DDM.md` (estrutura e seções)
 - [ ] Deletar arquivo vazio "# Sessão #001"
@@ -604,7 +604,7 @@ Não deletar, mas adicionar aviso:
 ### Firestore (✅ JÁ FEITO)
 
 - [x] Collection `budgets/` em uso
-- [x] Collection `quotes/` deprecada
+- [x] Collection `budgets/` deprecada
 
 ---
 

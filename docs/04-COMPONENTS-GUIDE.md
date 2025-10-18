@@ -14,7 +14,7 @@ import { LeadModal } from '@/components/comercial/modals/LeadModal';
 // ✅ DEFAULT EXPORT (sem chaves)
 import ClientModal from '@/components/comercial/modals/ClientModal';
 import ProjectModal from '@/components/comercial/modals/ProjectModal';
-import QuoteModal from '@/components/comercial/modals/QuoteModal';
+import BudgetModal from '@/components/comercial/modals/BudgetModal';
 ```
 
 ---
@@ -213,20 +213,20 @@ function MyComponent() {
 
 ---
 
-### 4. QuoteModal (Default Export)
+### 4. BudgetModal (Default Export)
 
 ```typescript
-import QuoteModal from '@/components/comercial/modals/QuoteModal';
-import { Quote, QuoteFormData, QuoteItem } from '@/lib/types/quotes';
+import BudgetModal from '@/components/comercial/modals/BudgetModal';
+import { Budget, BudgetFormData, BudgetItem } from '@/lib/types/budgets';
 import { Client } from '@/lib/types/clients';
 
 // Props Interface
-interface QuoteModalProps {
-  quote?: Quote | null;
+interface BudgetModalProps {
+  budget?: Budget | null;
   clients: Client[];           // ⚠️ OBRIGATÓRIO
   projects?: Project[];        // Opcional
   onClose: () => void;
-  onSubmit: (data: QuoteFormData) => Promise<void>;
+  onSubmit: (data: BudgetFormData) => Promise<void>;
 }
 
 // Exemplo de Uso
@@ -234,10 +234,10 @@ function MyComponent() {
   const [showModal, setShowModal] = useState(false);
   const { clients } = useClients();
   const { projects } = useProjects();
-  const { createQuote } = useQuotes();
+  const { createBudget } = useBudgets();
 
-  const handleCreate = async (data: QuoteFormData) => {
-    await createQuote(data);
+  const handleCreate = async (data: BudgetFormData) => {
+    await createBudget(data);
     setShowModal(false);
   };
 
@@ -246,7 +246,7 @@ function MyComponent() {
       <Button onClick={() => setShowModal(true)}>Novo Orçamento</Button>
 
       {showModal && (
-        <QuoteModal
+        <BudgetModal
           clients={clients}
           projects={projects}
           onClose={() => setShowModal(false)}
@@ -264,7 +264,7 @@ function MyComponent() {
 {
   clientId: string;            // ✅ Obrigatório - Select
   projectId?: string;          // Opcional - Select
-  items: QuoteItem[];          // ✅ Obrigatório - Tabela dinâmica
+  items: BudgetItem[];          // ✅ Obrigatório - Tabela dinâmica
   discount: number;            // Padrão: 0
   tax: number;                 // Padrão: 0
   validUntil: Date;            // ✅ Obrigatório - DatePicker
@@ -272,8 +272,8 @@ function MyComponent() {
   terms?: string;              // Opcional - Textarea
 }
 
-// QuoteItem Structure
-interface QuoteItem {
+// BudgetItem Structure
+interface BudgetItem {
   id: string;                  // UUID gerado
   description: string;         // ✅ Obrigatório
   quantity: number;            // ✅ Obrigatório - Min: 1
@@ -464,24 +464,24 @@ interface ProjectListProps {
 
 ---
 
-### 4. QuoteList
+### 4. BudgetList
 
 ```typescript
-import { QuoteList } from '@/components/comercial/QuoteList';
-import { Quote } from '@/lib/types/quotes';
+import { BudgetList } from '@/components/comercial/BudgetList';
+import { Budget } from '@/lib/types/budgets';
 
 // Props
-interface QuoteListProps {
-  quotes: Quote[];
-  onEdit: (quote: Quote) => void;
-  onDelete: (quoteId: string) => void;
-  onGeneratePDF: (quoteId: string) => void;
-  onUpdateStatus?: (quoteId: string, status: QuoteStatus) => void;
+interface BudgetListProps {
+  budgets: Budget[];
+  onEdit: (budget: Budget) => void;
+  onDelete: (budgetId: string) => void;
+  onGeneratePDF: (budgetId: string) => void;
+  onUpdateStatus?: (budgetId: string, status: BudgetStatus) => void;
 }
 
 // Exemplo
-<QuoteList
-  quotes={quotes}
+<BudgetList
+  budgets={budgets}
   onEdit={handleEdit}
   onDelete={handleDelete}
   onGeneratePDF={handleGeneratePDF}
@@ -500,7 +500,7 @@ import { KPICards } from '@/components/comercial/KPICards';
 interface KPICardsProps {
   revenue: number;           // Receita total
   leads: number;             // Total de leads
-  quotes: number;            // Total de orçamentos
+  budgets: number;            // Total de orçamentos
   conversionRate: number;    // Taxa de conversão (%)
 }
 
@@ -508,7 +508,7 @@ interface KPICardsProps {
 <KPICards
   revenue={150000}
   leads={45}
-  quotes={12}
+  budgets={12}
   conversionRate={23.5}
 />
 ```

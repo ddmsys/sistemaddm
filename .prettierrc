@@ -1,5 +1,5 @@
 {
-  "singleQuote": true,
+  "singleBudget": true,
   "semi": true,
   "trailingComma": "all",
   "printWidth": 100,

@@ -1,4 +1,4 @@
-# 🚀 GUIA DE DEPLOY - Migração Quote → Budget
+# 🚀 GUIA DE DEPLOY - Migração Budget → Budget
 
 **Data:** 14 de outubro de 2025  
 **Branch:** fix/comercial-layout  
@@ -133,13 +133,13 @@ firebase functions:log --only assignBudgetNumber
 
 ### 3.1 NÃO Deletar Imediatamente
 
-As functions antigas (`quotes/*`) ainda podem ter dados em produção.
+As functions antigas (`budgets/*`) ainda podem ter dados em produção.
 
 ### 3.2 Estratégia de Deprecação
 
 ```typescript
-// functions/src/quotes/createQuotePdf.ts (DEPRECADO)
-export const createQuotePdf = functions.https.onCall(async (request) => {
+// functions/src/budgets/createBudgetPdf.ts (DEPRECADO)
+export const createBudgetPdf = functions.https.onCall(async (request) => {
   console.warn('⚠️ DEPRECATION WARNING: Use createBudgetPdf instead');
 
   // Redirecionar para a nova function
@@ -166,39 +166,39 @@ Semana 7+: Deletar functions antigas
 ### 4.1 Verificar Dados Existentes
 
 ```bash
-# Contar documentos na collection quotes
-firebase firestore:count quotes
+# Contar documentos na collection budgets
+firebase firestore:count budgets
 
 # Listar alguns documentos
-firebase firestore:get quotes --limit 5
+firebase firestore:get budgets --limit 5
 ```
 
 ### 4.2 Script de Migração (Se Necessário)
 
 ```typescript
-// scripts/migrate-quotes-to-budgets.ts
+// scripts/migrate-budgets-to-budgets.ts
 import admin from 'firebase-admin';
 
 admin.initializeApp();
 const db = admin.firestore();
 
-async function migrateQuotesToBudgets() {
-  const quotesSnapshot = await db.collection('quotes').get();
+async function migrateBudgetsToBudgets() {
+  const budgetsSnapshot = await db.collection('budgets').get();
 
   const batch = db.batch();
   let count = 0;
 
-  for (const quoteDoc of quotesSnapshot.docs) {
-    const quoteData = quoteDoc.data();
+  for (const budgetDoc of budgetsSnapshot.docs) {
+    const budgetData = budgetDoc.data();
 
-    // Converter Quote para Budget
+    // Converter Budget para Budget
     const budgetData = {
-      number: quoteData.quoteNumber || quoteData.number,
-      status: quoteData.status === 'signed' ? 'approved' : quoteData.status,
+      number: budgetData.budgetNumber || budgetData.number,
+      status: budgetData.status === 'signed' ? 'approved' : budgetData.status,
       // ... resto dos campos
     };
 
-    const budgetRef = db.collection('budgets').doc(quoteDoc.id);
+    const budgetRef = db.collection('budgets').doc(budgetDoc.id);
     batch.set(budgetRef, budgetData);
 
     count++;
@@ -214,17 +214,17 @@ async function migrateQuotesToBudgets() {
   console.log(`✅ Migration complete! Total: ${count} documents`);
 }
 
-migrateQuotesToBudgets().catch(console.error);
+migrateBudgetsToBudgets().catch(console.error);
 ```
 
 ### 4.3 Executar Migração
 
 ```bash
 # Backup primeiro!
-firebase firestore:export gs://[BUCKET]/backups/quotes-$(date +%Y%m%d)
+firebase firestore:export gs://[BUCKET]/backups/budgets-$(date +%Y%m%d)
 
 # Executar script
-ts-node scripts/migrate-quotes-to-budgets.ts
+ts-node scripts/migrate-budgets-to-budgets.ts
 
 # Verificar
 firebase firestore:count budgets
@@ -356,7 +356,7 @@ git checkout [COMMIT_ANTERIOR]
 # 2. Re-deploy functions antigas
 cd functions
 npm run build
-firebase deploy --only functions:quotes
+firebase deploy --only functions:budgets
 
 # 3. Investigar e corrigir
 # 4. Re-tentar deploy

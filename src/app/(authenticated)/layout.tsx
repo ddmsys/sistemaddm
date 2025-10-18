@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ReactNode } from 'react';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ReactNode } from "react";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -15,35 +15,35 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
 
   const navigation = [
     {
-      name: 'Dashboard',
-      href: '/',
-      icon: '🏠',
+      name: "Dashboard",
+      href: "/",
+      icon: "🏠",
     },
     {
-      name: 'Leads',
-      href: '/crm/leads',
-      icon: '🎯',
+      name: "Leads",
+      href: "/crm/leads",
+      icon: "🎯",
     },
     {
-      name: 'Clientes',
-      href: '/crm/clients',
-      icon: '🏢',
+      name: "Clientes",
+      href: "/crm/clients",
+      icon: "🏢",
     },
     {
-      name: 'Orçamentos',
-      href: '/crm/quotes',
-      icon: '📄',
+      name: "Orçamentos",
+      href: "/crm/budgets",
+      icon: "📄",
     },
     {
-      name: 'Projetos',
-      href: '/crm/projects',
-      icon: '🚀',
+      name: "Projetos",
+      href: "/crm/projects",
+      icon: "🚀",
     },
     // ✅ PRODUTOS ADICIONADO
     {
-      name: 'Produtos',
-      href: '/products',
-      icon: '📦',
+      name: "Produtos",
+      href: "/products",
+      icon: "📦",
     },
   ];
 
@@ -61,10 +61,10 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center px-6 py-3 text-sm font-medium transition-colors hover:bg-slate-50',
+                "flex items-center px-6 py-3 text-sm font-medium transition-colors hover:bg-slate-50",
                 pathname === item.href
-                  ? 'border-r-2 border-blue-600 bg-blue-50 text-blue-600'
-                  : 'text-slate-700 hover:text-slate-900',
+                  ? "border-r-2 border-blue-600 bg-blue-50 text-blue-600"
+                  : "text-slate-700 hover:text-slate-900",
               )}
             >
               <span className="mr-3">{item.icon}</span>

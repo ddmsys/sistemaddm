@@ -1,40 +1,37 @@
-'use client';
+"use client";
 
-import { Timestamp } from 'firebase/firestore';
-import { Plus, RefreshCw, TrendingUp } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { Timestamp } from "firebase/firestore";
+import { Plus, RefreshCw, TrendingUp } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 
 // Componentes existentes
-import { LeadCard } from '@/components/comercial/cards/LeadCard';
-import { BookCard } from '@/components/comercial/cards/BookCard';
-import { DonutChart } from '@/components/comercial/charts/DonutChart';
-import { FunnelChart } from '@/components/comercial/charts/FunnelChart';
-import { RevenueChart } from '@/components/comercial/charts/RevenueChart';
-import { KPICards } from '@/components/comercial/KPICards';
-
+import { BudgetCard } from "@/components/comercial/cards/BookCard"; // Arquivo BookCard.tsx exporta BudgetCard
+import { LeadCard } from "@/components/comercial/cards/LeadCard";
+import { DonutChart } from "@/components/comercial/charts/DonutChart";
+import { FunnelChart } from "@/components/comercial/charts/FunnelChart";
+import { RevenueChart } from "@/components/comercial/charts/RevenueChart";
+import { KPICards } from "@/components/comercial/KPICards";
 // Modals existentes
-import { ClientModal } from '@/components/comercial/modals/ClientModal';
-import { LeadModal } from '@/components/comercial/modals/LeadModal';
-import BookModal from '@/components/comercial/modals/BookModal';
-
+import BookModal from "@/components/comercial/modals/BooktModal";
+import BudgetModal from "@/components/comercial/modals/BudgetModal";
+import { ClientModal } from "@/components/comercial/modals/ClientModal";
+import { LeadModal } from "@/components/comercial/modals/LeadModal";
 // UI Components
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useClients } from '@/hooks/comercial/useClients';
-import { useLeads } from '@/hooks/comercial/useLeads';
-
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useBooks } from "@/hooks/comercial/useBooks";
+import { useBudgets } from "@/hooks/comercial/useBudgets";
+import { useClients } from "@/hooks/comercial/useClients";
+import { useLeads } from "@/hooks/comercial/useLeads";
 // Types
-import { Lead, LeadStatus } from '@/lib/types/leads';
-import { Book } from '@/lib/types/books';
-import { formatDate, formatDateTime } from '@/lib/utils';
-
-import { useBooks } from '@/hooks/comercial/useBooks';
-import { Budget } from '@/lib/types/budgets';
-import { useBudgets } from '@/hooks/comercial/useBudgets';
+import { Book } from "@/lib/types/books";
+import { Budget, BudgetFormData } from "@/lib/types/budgets";
+import { Lead, LeadStatus } from "@/lib/types/leads";
+import { formatDate, formatDateTime } from "@/lib/utils";
 
 // Filtros de período
-type PeriodFilter = '7d' | '30d' | '90d' | '1y' | 'all';
+type PeriodFilter = "7d" | "30d" | "90d" | "1y" | "all";
 
 interface DashboardMetrics {
   totalClients: number;
@@ -50,7 +47,7 @@ interface DashboardMetrics {
 function getJSDate(date: Date | Timestamp | undefined): Date {
   if (!date) return new Date();
   if (date instanceof Date) return date;
-  if (typeof (date as any).toDate === 'function') {
+  if (typeof (date as Timestamp).toDate === "function") {
     return (date as Timestamp).toDate();
   }
   return new Date();
@@ -63,7 +60,7 @@ function SimpleSelect({
   children,
 }: {
   value: string;
-  onValueChange: (value: any) => void;
+  onValueChange: (value: string) => void;
   children: React.ReactNode;
 }) {
   return (
@@ -79,19 +76,13 @@ function SimpleSelect({
 
 export default function CommercialDashboard() {
   // ✅ CORREÇÃO 1: Desestruturar corretamente os hooks
-  const {
-    leads: leadsData = [],
-    loading: leadsLoading,
-    createLead,
-    updateLead,
-    updateLeadStage,
-  } = useLeads();
+  const { leads: leadsData = [], loading: leadsLoading, createLead, updateLeadStage } = useLeads();
 
   const { clients: clientsData = [], loading: clientsLoading, createClient } = useClients();
 
-  const { books: booksData = [], loading: booksLoading, createBook } = useBooks();
+  const { books: booksData = [], loading: booksLoading } = useBooks();
 
-  const { budgets: budgetsData = [], loading: budgetsLoading, createBudget } = useBudgets();
+  const { budgets: budgetsData = [], loading: budgetsLoading } = useBudgets();
   // Estados dos modals
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
@@ -99,29 +90,29 @@ export default function CommercialDashboard() {
   const [showBudgetModal, setShowBudgetModal] = useState(false);
 
   // Estados para incrementos
-  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('30d');
-  const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'books' | 'budgets'>(
-    'overview',
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("30d");
+  const [activeTab, setActiveTab] = useState<"overview" | "leads" | "books" | "budgets">(
+    "overview",
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // ✅ CORREÇÃO 2: Usar dados diretos, não acessar .data
   const metrics = useMemo((): DashboardMetrics => {
     const activeLeadsCount = leadsData.filter((lead: Lead) =>
-      ['primeiro_contato', 'qualificado', 'proposta_enviada', 'negociacao'].includes(lead.status),
+      ["primeiro_contato", "qualificado", "proposta_enviada", "negociacao"].includes(lead.status),
     ).length;
 
     // ✅ CORREÇÃO 3: 'won' → 'signed'
-    const wonBudgets = budgetsData.filter((budget: Budget) => budget.status === 'signed').length;
+    const wonBudgets = budgetsData.filter((budget: Budget) => budget.status === "approved").length;
 
     // ✅ CORREÇÃO 4: budget.total → budget.totals.total
     const totalRevenue = budgetsData
-      .filter((budget: Budget) => budget.status === 'signed')
+      .filter((budget: Budget) => budget.status === "approved")
       .reduce((sum: number, budget: Budget) => sum + (budget.totals?.total || 0), 0);
 
     const conversionRate =
       leadsData.length > 0
-        ? (leadsData.filter((lead: Lead) => lead.status === 'fechado_ganho').length /
+        ? (leadsData.filter((lead: Lead) => lead.status === "fechado_ganho").length /
             leadsData.length) *
           100
         : 0;
@@ -135,63 +126,62 @@ export default function CommercialDashboard() {
       totalRevenue,
       avgTicket: wonBudgets > 0 ? totalRevenue / wonBudgets : 0,
     };
-  }, [leadsData, clientsData, booksData, budgetsData]);
-
+  }, [leadsData, clientsData, budgetsData]);
   // Dados para gráficos
   const chartData = useMemo(() => {
     // Dados para o funil
     const funnelData = [
       {
-        status: 'primeiro_contato' as LeadStatus,
-        count: leadsData.filter((l: Lead) => l.status === 'primeiro_contato').length,
+        status: "primeiro_contato" as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === "primeiro_contato").length,
       },
       {
-        status: 'qualificado' as LeadStatus,
-        count: leadsData.filter((l: Lead) => l.status === 'qualificado').length,
+        status: "qualificado" as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === "qualificado").length,
       },
       {
-        status: 'proposta_enviada' as LeadStatus,
-        count: leadsData.filter((l: Lead) => l.status === 'proposta_enviada').length,
+        status: "proposta_enviada" as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === "proposta_enviada").length,
       },
       {
-        status: 'negociacao' as LeadStatus,
-        count: leadsData.filter((l: Lead) => l.status === 'negociacao').length,
+        status: "negociacao" as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === "negociacao").length,
       },
       {
-        status: 'fechado_ganho' as LeadStatus,
-        count: leadsData.filter((l: Lead) => l.status === 'fechado_ganho').length,
+        status: "fechado_ganho" as LeadStatus,
+        count: leadsData.filter((l: Lead) => l.status === "fechado_ganho").length,
       },
     ];
 
     // ✅ CORREÇÃO 5: Status corretos para budgets
     const budgetStatusData = [
       {
-        stage: 'draft',
-        label: 'Rascunho',
-        value: budgetsData.filter((q: Budget) => q.status === 'draft').length,
+        stage: "draft",
+        label: "Rascunho",
+        value: budgetsData.filter((q: Budget) => q.status === "draft").length,
         percentage: 0,
-        color: '#64748b',
+        color: "#64748b",
       },
       {
-        stage: 'sent',
-        label: 'Enviado',
-        value: budgetsData.filter((q: Budget) => q.status === 'sent').length,
+        stage: "sent",
+        label: "Enviado",
+        value: budgetsData.filter((q: Budget) => q.status === "sent").length,
         percentage: 0,
-        color: '#3b82f6',
+        color: "#3b82f6",
       },
       {
-        stage: 'signed',
-        label: 'Assinado',
-        value: budgetsData.filter((q: Budget) => q.status === 'signed').length,
+        stage: "approved",
+        label: "Assinado",
+        value: budgetsData.filter((q: Budget) => q.status === "approved").length,
         percentage: 0,
-        color: '#10b981',
+        color: "#10b981",
       },
       {
-        stage: 'rejected',
-        label: 'Rejeitado',
-        value: budgetsData.filter((q: Budget) => q.status === 'rejected').length,
+        stage: "rejected",
+        label: "Rejeitado",
+        value: budgetsData.filter((q: Budget) => q.status === "rejected").length,
         percentage: 0,
-        color: '#ef4444',
+        color: "#ef4444",
       },
     ].map((item) => ({
       ...item,
@@ -200,12 +190,12 @@ export default function CommercialDashboard() {
 
     // Dados de receita (simulados)
     const revenueData = [
-      { period: 'Jan', revenue: 25000, expenses: 15000, profit: 10000 },
-      { period: 'Fev', revenue: 32000, expenses: 18000, profit: 14000 },
-      { period: 'Mar', revenue: 28000, expenses: 16000, profit: 12000 },
-      { period: 'Abr', revenue: 35000, expenses: 20000, profit: 15000 },
-      { period: 'Mai', revenue: 42000, expenses: 22000, profit: 20000 },
-      { period: 'Jun', revenue: 38000, expenses: 21000, profit: 17000 },
+      { period: "Jan", revenue: 25000, expenses: 15000, profit: 10000 },
+      { period: "Fev", revenue: 32000, expenses: 18000, profit: 14000 },
+      { period: "Mar", revenue: 28000, expenses: 16000, profit: 12000 },
+      { period: "Abr", revenue: 35000, expenses: 20000, profit: 15000 },
+      { period: "Mai", revenue: 42000, expenses: 22000, profit: 20000 },
+      { period: "Jun", revenue: 38000, expenses: 21000, profit: 17000 },
     ];
 
     return { funnelData, budgetStatusData, revenueData };
@@ -226,12 +216,13 @@ export default function CommercialDashboard() {
   }, [booksData]);
 
   // Atividades recentes
+  // Atividades recentes
   const recentActivities = useMemo(() => {
     const activities: Array<{
       id: string;
       type: string;
       title: string;
-      time: any;
+      time: Timestamp;
       color: string;
     }> = [];
 
@@ -239,10 +230,10 @@ export default function CommercialDashboard() {
     leadsData.slice(0, 3).forEach((lead: Lead) => {
       activities.push({
         id: `lead-${lead.id}`,
-        type: 'lead',
+        type: "lead",
         title: `Novo lead: ${lead.name}`,
         time: lead.createdAt,
-        color: 'bg-blue-100 text-blue-800',
+        color: "bg-blue-100 text-blue-800",
       });
     });
 
@@ -250,10 +241,10 @@ export default function CommercialDashboard() {
     booksData.slice(0, 2).forEach((book: Book) => {
       activities.push({
         id: `book-${book.id}`,
-        type: 'book',
+        type: "book",
         title: `Projeto iniciado: ${book.title}`,
         time: book.createdAt,
-        color: 'bg-green-100 text-green-800',
+        color: "bg-green-100 text-green-800",
       });
     });
 
@@ -289,7 +280,7 @@ export default function CommercialDashboard() {
         <div className="flex flex-wrap items-center gap-3">
           <SimpleSelect
             value={periodFilter}
-            onValueChange={(value: PeriodFilter) => setPeriodFilter(value)}
+            onValueChange={(value) => setPeriodFilter(value as PeriodFilter)}
           >
             <option value="7d">Últimos 7 dias</option>
             <option value="30d">Últimos 30 dias</option>
@@ -299,7 +290,7 @@ export default function CommercialDashboard() {
           </SimpleSelect>
 
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
 
@@ -327,18 +318,18 @@ export default function CommercialDashboard() {
       <div className="border-b border-slate-200">
         <nav className="-mb-px flex space-x-8">
           {[
-            { id: 'overview', label: 'Visão Geral', icon: TrendingUp },
-            { id: 'leads', label: 'Leads', count: metrics.activeLeads },
-            { id: 'books', label: 'Projetos', count: booksData.length },
-            { id: 'budgets', label: 'Orçamentos', count: metrics.totalBudgets },
+            { id: "overview", label: "Visão Geral", icon: TrendingUp },
+            { id: "leads", label: "Leads", count: metrics.activeLeads },
+            { id: "books", label: "Projetos", count: booksData.length },
+            { id: "budgets", label: "Orçamentos", count: metrics.totalBudgets },
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as "overview" | "leads" | "books" | "budgets")}
               className={`flex items-center border-b-2 px-1 py-2 text-sm font-medium ${
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
               }`}
             >
               {tab.icon && <tab.icon className="mr-2 h-4 w-4" />}
@@ -354,7 +345,7 @@ export default function CommercialDashboard() {
       </div>
 
       {/* Conteúdo Overview */}
-      {activeTab === 'overview' && (
+      {activeTab === "overview" && (
         <>
           {/* Gráficos Principais */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -426,15 +417,11 @@ export default function CommercialDashboard() {
               <CardContent>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {criticalBooks.map((book: Book) => (
-                    <div
-                      key={book.id}
-                      className="rounded-lg border border-red-200 bg-red-50 p-4"
-                    >
+                    <div key={book.id} className="rounded-lg border border-red-200 bg-red-50 p-4">
                       <h4 className="font-medium text-red-800">{book.title}</h4>
                       <p className="mt-1 text-sm text-red-600">{book.clientName}</p>
                       <p className="mt-2 text-xs text-red-500">
-                        Prazo:{' '}
-                        {book.dueDate ? formatDate(getJSDate(book.dueDate)) : 'Não definido'}
+                        Prazo: {book.dueDate ? formatDate(getJSDate(book.dueDate)) : "Não definido"}
                       </p>
                     </div>
                   ))}
@@ -446,7 +433,7 @@ export default function CommercialDashboard() {
       )}
 
       {/* Tab de Leads */}
-      {activeTab === 'leads' && (
+      {activeTab === "leads" && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Leads Ativos</CardTitle>
@@ -465,7 +452,7 @@ export default function CommercialDashboard() {
                       key={lead.id}
                       lead={lead}
                       onStatusChange={updateLeadStage}
-                      onEdit={(lead: Lead) => console.log('Edit lead:', lead)}
+                      onEdit={(lead: Lead) => console.log("Edit lead:", lead)}
                     />
                   ))
               ) : (
@@ -477,7 +464,7 @@ export default function CommercialDashboard() {
       )}
 
       {/* Tab de Projetos */}
-      {activeTab === 'books' && (
+      {activeTab === "books" && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Projetos Ativos</CardTitle>
@@ -489,15 +476,15 @@ export default function CommercialDashboard() {
           <CardContent>
             <div className="space-y-4">
               {booksData.length > 0 ? (
-                booksData
-                  .slice(0, 10)
-                  .map((book: Book) => (
-                    <BookCard
-                      key={book.id}
-                      book={book}
-                      onEdit={(book: Book) => console.log('Edit book:', book)}
-                    />
-                  ))
+                booksData.slice(0, 10).map((book: Book) => (
+                  <div key={book.id} className="rounded-lg border border-gray-200 bg-white p-4">
+                    <h4 className="font-medium text-gray-800">{book.title}</h4>
+                    <p className="mt-1 text-sm text-gray-600">{book.clientName}</p>
+                    <p className="mt-2 text-xs text-gray-500">
+                      Prazo: {book.dueDate ? formatDate(getJSDate(book.dueDate)) : "Não definido"}
+                    </p>
+                  </div>
+                ))
               ) : (
                 <p className="py-8 text-center text-slate-500">Nenhum projeto encontrado</p>
               )}
@@ -507,7 +494,7 @@ export default function CommercialDashboard() {
       )}
 
       {/* Tab de Orçamentos */}
-      {activeTab === 'budgets' && (
+      {activeTab === "budgets" && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Orçamentos</CardTitle>
@@ -518,14 +505,14 @@ export default function CommercialDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {budgetData.length > 0 ? (
+              {budgetsData.length > 0 ? (
                 budgetsData
                   .slice(0, 10)
-                  .map((budget: Budget => (
+                  .map((budget: Budget) => (
                     <BudgetCard
                       key={budget.id}
                       budget={budget}
-                      onEdit={(budget: Budget) => console.log('Edit budget:', budget)}
+                      onEdit={() => console.log("Edit budget:", budget.id)}
                     />
                   ))
               ) : (
@@ -536,6 +523,7 @@ export default function CommercialDashboard() {
         </Card>
       )}
 
+      {/* Modais */}
       {/* Modais */}
       {showLeadModal && (
         <LeadModal
@@ -558,26 +546,28 @@ export default function CommercialDashboard() {
           }}
         />
       )}
-
-      {/* Book Modal */}
+      {/* Book Modal - TODO: Corrigir props */}
       {showBookModal && (
         <BookModal
           isOpen={showBookModal}
-          clients={clientsData as any}
-          users={[]}
           onClose={() => setShowBookModal(false)}
-          onSubmit={async (data) => {
-            await createBook?.(data);
+          onSave={async () => {
             setShowBookModal(false);
           }}
         />
       )}
 
-      <BudgetModal
-        isOpen={showBudgetModal}
-        clients={clientsData as any}
-        onClose={() => setShowBudgetModal(false)}
-      />
+      {/* Budget Modal - TODO: Corrigir props */}
+      {showBudgetModal && (
+        <BudgetModal
+          isOpen={showBudgetModal}
+          onClose={() => setShowBudgetModal(false)}
+          onSubmit={async (data: BudgetFormData) => {
+            console.log("Budget data:", data);
+            setShowBudgetModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

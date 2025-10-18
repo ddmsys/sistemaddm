@@ -2,7 +2,7 @@
 
 > **📅 Última Atualização:** 14 de outubro de 2025  
 > **🎯 Objetivo:** Documentação completa e atualizada para continuidade de desenvolvimento  
-> **⚠️ IMPORTANTE:** Quote foi renomeado para Budget. Ver [MIGRAÇÃO](Progress/08-DOCUMENTO%20DE%20MIGRAÇÃO%20E%20PADRONIZAÇÃO.md)
+> **⚠️ IMPORTANTE:** Budget foi renomeado para Budget. Ver [MIGRAÇÃO](Progress/08-DOCUMENTO%20DE%20MIGRAÇÃO%20E%20PADRONIZAÇÃO.md)
 
 ## 🎯 Sobre o Sistema
 
@@ -44,8 +44,8 @@ sistemaddm/
 │   │   │   │   ├── clients/         # Gestão de clientes
 │   │   │   │   ├── leads/           # Gestão de leads
 │   │   │   │   └── projects/        # Gestão de projetos
-│   │   │   ├── budgets/             # ✅ Gestão de orçamentos (substitui quotes)
-│   │   │   │   └── quotes/          # Gestão de orçamentos
+│   │   │   ├── budgets/             # ✅ Gestão de orçamentos (substitui budgets)
+│   │   │   │   └── budgets/          # Gestão de orçamentos
 │   │   │   ├── dashboard/           # Dashboard principal
 │   │   │   └── layout.tsx           # Layout autenticado
 │   │   ├── (auth)/                  # Rotas de autenticação
@@ -87,7 +87,7 @@ sistemaddm/
 │   │   │   ├── clients.ts          # ⚠️ CRÍTICO
 │   │   │   ├── leads.ts            # ⚠️ CRÍTICO
 │   │   │   ├── projects.ts         # ⚠️ CRÍTICO
-│   │   │   ├── budgets.ts          # ✅ CRÍTICO (substitui quotes.ts)
+│   │   │   ├── budgets.ts          # ✅ CRÍTICO (substitui budgets.ts)
 │   │   │   ├── books.ts            # ✅ Catálogo de livros
 │   │   │   ├── orders.ts           # ✅ Pedidos
 │   │   │   └── production-projects.ts  # ✅ Projetos de produção
@@ -230,7 +230,7 @@ firestore/
 ├── leads/                  # Leads (potenciais clientes)
 ├── clients/                # Clientes ativos
 ├── projects/               # Projetos em andamento
-├── budgets/                # ✅ Orçamentos (substitui quotes)
+├── budgets/                # ✅ Orçamentos (substitui budgets)
 ├── books/                  # ✅ Catálogo de livros
 ├── orders/                 # ✅ Pedidos
 ## 🚀 Next Steps
@@ -239,13 +239,13 @@ firestore/
 2. Ler **02-FIREBASE-HOOKS.md** - Hooks e operações
 3. Ler **03-CRM-MODULE.md** - Módulo comercial completo
 4. Ler **06-ORCAMENTOS-FASE-1-COMPLETA.md** - ✅ Implementação de Budgets
-5. Ler **08-DOCUMENTO DE MIGRAÇÃO E PADRONIZAÇÃO.md** - ✅ Guia Quote→Budget
+5. Ler **08-DOCUMENTO DE MIGRAÇÃO E PADRONIZAÇÃO.md** - ✅ Guia Budget→Budget
 
 ---
 
 > **⚠️ ATENÇÃO:**
 > - Sempre consultar os tipos em `01-TYPES-COMPLETE.md` antes de gerar código!
-> - **Quote foi renomeado para Budget.** Ver documento 08 para detalhes.
+> - **Budget foi renomeado para Budget.** Ver documento 08 para detalhes.
 
 ---
 

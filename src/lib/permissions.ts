@@ -1,20 +1,20 @@
 // src/lib/permissions.ts
 export enum UserRole {
-  ADMIN = 'admin',
-  MANAGER = 'manager',
-  COMMERCIAL = 'commercial',
-  PRODUCTION = 'production',
-  FINANCE = 'finance',
-  CLIENT = 'client',
+  ADMIN = "admin",
+  MANAGER = "manager",
+  COMMERCIAL = "commercial",
+  PRODUCTION = "production",
+  FINANCE = "finance",
+  CLIENT = "client",
 }
 
 export enum Permission {
-  LEADS_VIEW = 'leads.view',
-  LEADS_CREATE = 'leads.create',
-  LEADS_EDIT = 'leads.edit',
-  LEADS_DELETE = 'leads.delete',
-  QUOTES_VIEW = 'quotes.view',
-  QUOTES_CREATE = 'quotes.create',
+  LEADS_VIEW = "leads.view",
+  LEADS_CREATE = "leads.create",
+  LEADS_EDIT = "leads.edit",
+  LEADS_DELETE = "leads.delete",
+  QUOTES_VIEW = "budgets.view",
+  QUOTES_CREATE = "budgets.create",
   // … demais permissões
 }
 

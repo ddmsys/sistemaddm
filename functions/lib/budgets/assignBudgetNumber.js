@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assignQuoteNumber = void 0;
+exports.assignBudgetNumber = void 0;
 const admin = __importStar(require("firebase-admin"));
 const functions = __importStar(require("firebase-functions/v2"));
 if (!admin.apps.length)
@@ -47,25 +47,25 @@ function formatNumberDate() {
     const mm = now.getMinutes().toString().padStart(2, '0');
     return `${yearPrefix}${MM}${DD}.${HH}${mm}`;
 }
-exports.assignQuoteNumber = functions.firestore.onDocumentCreated({
+exports.assignBudgetNumber = functions.firestore.onDocumentCreated({
     region: 'southamerica-east1',
-    document: 'quotes/{quoteId}',
+    document: 'budgets/{budgetId}',
 }, async (event) => {
-    const quoteDoc = event.data;
-    if (!quoteDoc)
+    const budgetDoc = event.data;
+    if (!budgetDoc)
         return;
-    const data = quoteDoc.data();
+    const data = budgetDoc.data();
     // Não sobrescreve se já existir número
     if (data.number && data.number.length > 0)
         return;
     try {
-        // Gera o número com timestamp customizado v5.MMDD.HHMM
-        const quoteNumber = formatNumberDate();
-        await quoteDoc.ref.update({
-            number: quoteNumber,
+        // Gera o número com timestamp customizado v5_MMDD.HHMM
+        const budgetNumber = `v${formatNumberDate()}`;
+        await budgetDoc.ref.update({
+            number: budgetNumber,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        console.log(`Orçamento ${event.params.quoteId} recebeu número: ${quoteNumber}`);
+        console.log(`Orçamento ${event.params.budgetId} recebeu número: ${budgetNumber}`);
     }
     catch (error) {
         console.error('Erro ao atribuir número de orçamento:', error);

@@ -240,7 +240,7 @@ export default function DashboardPage() {
       <KPICards
         revenue={metrics.monthlyRevenue}
         leads={metrics.activeLeads}
-        quotes={metrics.totalQuotes}
+        budgets={metrics.totalBudgets}
         conversionRate={metrics.conversionRate}
       />
 
@@ -254,7 +254,7 @@ export default function DashboardPage() {
           height={300}
         />
         <DonutChart
-          data={metrics.quotesByStatus}
+          data={metrics.budgetsByStatus}
           title="Orçamentos por Status"
           height={300}
         />
@@ -563,10 +563,10 @@ export function validateCNPJ(cnpj: string): boolean {
 ### Calcular Totais de Orçamento
 
 ```typescript
-import { QuoteItem } from '@/lib/types/quotes';
+import { BudgetItem } from '@/lib/types/budgets';
 
-export function calculateQuoteTotals(
-  items: QuoteItem[],
+export function calculateBudgetTotals(
+  items: BudgetItem[],
   discount: number = 0,
   tax: number = 0
 ) {
@@ -584,12 +584,12 @@ export function calculateQuoteTotals(
 }
 
 // Uso
-const items: QuoteItem[] = [
+const items: BudgetItem[] = [
   { id: '1', description: 'Item 1', quantity: 2, unitPrice: 100, total: 200 },
   { id: '2', description: 'Item 2', quantity: 1, unitPrice: 300, total: 300 },
 ];
 
-const totals = calculateQuoteTotals(items, 50, 25);
+const totals = calculateBudgetTotals(items, 50, 25);
 // { subtotal: 500, discount: 50, tax: 25, total: 475 }
 ```
 
