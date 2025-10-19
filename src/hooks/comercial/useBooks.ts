@@ -13,19 +13,19 @@ import {
   Timestamp,
   updateDoc,
   where,
-} from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+} from "firebase/firestore";
+import { useEffect, useState } from "react";
 
-import { useAuth } from '@/hooks/useAuth';
-import { db } from '@/lib/firebase';
+import { useAuth } from "@/hooks/useAuth";
+import { db } from "@/lib/firebase";
 import {
   Book,
   BookSpecifications,
   generateCatalogCode,
   ProjectCatalogType,
   validateBookSpecifications,
-} from '@/lib/types/books';
-import { getUserId } from '@/lib/utils/user-helper';
+} from "@/lib/types/books";
+import { getUserId } from "@/lib/utils/user-helper";
 
 // ==================== INTERFACES ====================
 interface UseBooksOptions {
@@ -56,7 +56,7 @@ interface CreateBookData {
   referenceFiles?: {
     name: string;
     url: string;
-    type: 'pdf' | 'mockup' | 'artwork' | 'other';
+    type: "pdf" | "mockup" | "artwork" | "other";
   }[];
   notes?: string;
 }
@@ -70,7 +70,7 @@ interface UpdateBookData {
   referenceFiles?: {
     name: string;
     url: string;
-    type: 'pdf' | 'mockup' | 'artwork' | 'other';
+    type: "pdf" | "mockup" | "artwork" | "other";
     uploadedAt: Timestamp;
   }[];
   notes?: string;
@@ -96,18 +96,18 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
     setError(null);
 
     try {
-      const booksRef = collection(db, 'books');
+      const booksRef = collection(db, "books");
       const constraints: QueryConstraint[] = [];
 
       if (clientId) {
-        constraints.push(where('clientId', '==', clientId));
+        constraints.push(where("clientId", "==", clientId));
       }
 
       if (catalogType) {
-        constraints.push(where('catalogMetadata.type', '==', catalogType));
+        constraints.push(where("catalogMetadata.type", "==", catalogType));
       }
 
-      constraints.push(orderBy('createdAt', 'desc'));
+      constraints.push(orderBy("createdAt", "desc"));
 
       const q = query(booksRef, ...constraints);
 
@@ -124,7 +124,7 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
             setLoading(false);
           },
           (err) => {
-            console.error('Error loading books:', err);
+            console.error("Error loading books:", err);
             setError(err.message);
             setLoading(false);
           },
@@ -143,14 +143,14 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
             setLoading(false);
           })
           .catch((err) => {
-            console.error('Error loading books:', err);
+            console.error("Error loading books:", err);
             setError(err.message);
             setLoading(false);
           });
       }
     } catch (err) {
-      console.error('Error setting up books query:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error("Error setting up books query:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
       setLoading(false);
     }
   }, [user, clientId, catalogType, realtime]);
@@ -161,12 +161,12 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
     type: ProjectCatalogType,
   ): Promise<number> => {
     try {
-      const booksRef = collection(db, 'books');
+      const booksRef = collection(db, "books");
       const q = query(
         booksRef,
-        where('clientId', '==', targetClientId),
-        where('catalogMetadata.type', '==', type),
-        orderBy('catalogMetadata.workNumber', 'desc'),
+        where("clientId", "==", targetClientId),
+        where("catalogMetadata.type", "==", type),
+        orderBy("catalogMetadata.workNumber", "desc"),
       );
 
       const snapshot = await getDocs(q);
@@ -178,7 +178,7 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
       const lastBook = snapshot.docs[0].data() as Book;
       return lastBook.catalogMetadata.workNumber + 1;
     } catch (err) {
-      console.error('Error getting next work number:', err);
+      console.error("Error getting next work number:", err);
       throw err;
     }
   };
@@ -186,14 +186,14 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
   // ===== CREATE BOOK =====
   const createBook = async (data: CreateBookData): Promise<string> => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
       // ✅ CORRIGIDO: Validação retorna array
       const validationErrors = validateBookSpecifications(data.specifications);
       if (validationErrors.length > 0) {
-        throw new Error(`Validation errors: ${validationErrors.join(', ')}`);
+        throw new Error(`Validation errors: ${validationErrors.join(", ")}`);
       }
 
       const workNumber = await getNextWorkNumber(data.clientId, data.catalogType);
@@ -206,11 +206,11 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
 
       const userId = getUserId(user);
 
-      const bookData: Omit<Book, 'id'> = {
+      const bookData: Omit<Book, "id"> = {
         clientId: data.clientId,
         catalogCode,
         catalogMetadata: {
-          prefix: 'DDM',
+          prefix: "DDM",
           type: data.catalogType,
           clientNumber: data.clientNumber,
           workNumber,
@@ -227,10 +227,10 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
         createdBy: userId,
       };
 
-      const docRef = await addDoc(collection(db, 'books'), bookData);
+      const docRef = await addDoc(collection(db, "books"), bookData);
       return docRef.id;
     } catch (err) {
-      console.error('Error creating book:', err);
+      console.error("Error creating book:", err);
       throw err;
     }
   };
@@ -238,7 +238,7 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
   // ===== UPDATE BOOK =====
   const updateBook = async (id: string, data: Partial<UpdateBookData>): Promise<void> => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
@@ -246,7 +246,7 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
       if (data.specifications) {
         const validationErrors = validateBookSpecifications(data.specifications);
         if (validationErrors.length > 0) {
-          throw new Error(`Validation errors: ${validationErrors.join(', ')}`);
+          throw new Error(`Validation errors: ${validationErrors.join(", ")}`);
         }
       }
 
@@ -255,10 +255,10 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
         updatedAt: Timestamp.now(),
       };
 
-      const bookRef = doc(db, 'books', id);
+      const bookRef = doc(db, "books", id);
       await updateDoc(bookRef, updateData);
     } catch (err) {
-      console.error('Error updating book:', err);
+      console.error("Error updating book:", err);
       throw err;
     }
   };
@@ -266,14 +266,14 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
   // ===== DELETE BOOK =====
   const deleteBook = async (id: string): Promise<void> => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
-      const bookRef = doc(db, 'books', id);
+      const bookRef = doc(db, "books", id);
       await deleteDoc(bookRef);
     } catch (err) {
-      console.error('Error deleting book:', err);
+      console.error("Error deleting book:", err);
       throw err;
     }
   };

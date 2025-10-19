@@ -12,8 +12,8 @@ import { FunnelChart } from "@/components/comercial/charts/FunnelChart";
 import { RevenueChart } from "@/components/comercial/charts/RevenueChart";
 import { KPICards } from "@/components/comercial/KPICards";
 // Modals existentes
-import BookModal from "@/components/comercial/modals/BooktModal";
-import BudgetModal from "@/components/comercial/modals/BudgetModal";
+import BookModal from "@/components/comercial/modals/BookModal";
+import { BudgetModal } from "@/components/comercial/modals/BudgetModal";
 import { ClientModal } from "@/components/comercial/modals/ClientModal";
 import { LeadModal } from "@/components/comercial/modals/LeadModal";
 // UI Components

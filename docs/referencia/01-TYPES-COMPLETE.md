@@ -1,3 +1,37 @@
+# Sistema DDM - Tipos e Interfaces Completas
+
+> **⚠️ DOCUMENTO CRÍTICO:** Sempre consultar antes de gerar código!  
+> **📅 Última Atualização:** 14 de outubro de 2025  
+> **🔄 MIGRAÇÃO:** Budget foi renomeado para Budget. Ver seção [BUDGETS](#budgets)
+
+## 🎯 Importância
+
+Este documento contém **TODOS os tipos TypeScript atualizados** do sistema. Qualquer código gerado deve ser 100% compatível com estes tipos.
+
+## ⚠️ AVISOS IMPORTANTES
+
+## 📚 ÍNDICE
+
+1. [LEADS](#leads)
+2. [CLIENTS](#clients)
+3. [BOOKS (Livros/Catálogo)](#books)
+4. [BUDGETS (Orçamentos)](#budgets) ✅ **ATUAL**
+5. [ORDERS (Pedidos)](#orders)
+6. [PRODUCTION PROJECTS (Produção)](#production-projects)
+7. [PROJECTS (Gerenciamento CRM)](#projects)
+8. [~~QUOTES~~](#budgets-deprecado) ⚠️ **DEPRECADO** - Usar BUDGETS
+9. [MÉTRICAS](#metricas)
+10. [LIVROS (Projetos Editoriais)](#livros)
+11. [ORÇAMENTOS](#orcamentos)
+12. [PEDIDOS](#pedidos)
+13. [PROJETOS (Produção)](#projetos-producao)
+14. [PROJECTS (Gerenciamento)](#projects)
+15. [QUOTES (Legado)](#budgets)
+16. [PRODUTOS](#produtos)
+17. [MÉTRICAS](#metricas)
+
+---
+
 # 📚 REFERÊNCIA COMPLETA DE TYPES - Sistema DDM
 
 **Data:** 15 de outubro de 2025  

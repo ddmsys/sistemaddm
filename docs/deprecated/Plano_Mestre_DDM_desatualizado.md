@@ -1171,7 +1171,7 @@ const schema = z.object({
 })
 
 export const ENV = schema.parse({
- NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyD9_vAO_-xcMGtlDXkHqrhtlbjjUF3Y1Uc
+ NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=sistemaddm-dev.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=sistemaddm-dev
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=sistemaddm-dev.firebasestorage.app
