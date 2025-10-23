@@ -102,6 +102,7 @@ export interface Budget {
     title: string;
     subtitle?: string;
     author?: string;
+    pages?: number;
     specifications?: BookSpecifications;
   };
 
@@ -166,6 +167,7 @@ export interface BudgetFormData {
     title: string;
     subtitle?: string;
     author?: string;
+    pages?: number;
     specifications?: any;
   };
   discount?: number;

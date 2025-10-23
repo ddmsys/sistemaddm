@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { X } from 'lucide-react';
-import { useState } from 'react';
+import { X } from "lucide-react";
+import { useState } from "react";
 
-import { useFirestore } from '@/hooks/useFirestore';
-import { Lead, LeadFormData, LeadSource, LeadStatus } from '@/lib/types/leads';
-import { isValidEmail, maskPhone } from '@/lib/utils';
+import { useFirestore } from "@/hooks/useFirestore";
+import { Lead, LeadFormData, LeadSource, LeadStatus } from "@/lib/types/leads";
+import { isValidEmail, maskPhone } from "@/lib/utils";
 
 interface LeadModalProps {
   isOpen: boolean;
@@ -16,28 +16,28 @@ interface LeadModalProps {
 
 // Opções de origem do lead
 const sourceOptions = [
-  { value: 'website', label: 'Site' },
-  { value: 'email', label: 'Email' },
-  { value: 'phone', label: 'Telefone' },
-  { value: 'referral', label: 'Indicação' },
-  { value: 'socialmedia', label: 'Redes Sociais' },
-  { value: 'coldcall', label: 'Cold Call' },
-  { value: 'event', label: 'Evento' },
-  { value: 'advertising', label: 'Publicidade' },
-  { value: 'other', label: 'Outro' },
+  { value: "website", label: "Site" },
+  { value: "email", label: "Email" },
+  { value: "phone", label: "Telefone" },
+  { value: "referral", label: "Indicação" },
+  { value: "socialmedia", label: "Redes Sociais" },
+  { value: "coldcall", label: "Cold Call" },
+  { value: "event", label: "Evento" },
+  { value: "advertising", label: "Publicidade" },
+  { value: "other", label: "Outro" },
 ];
 
 export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
-  const { checkDuplicate } = useFirestore<Lead>('leads');
+  const { checkDuplicate } = useFirestore<Lead>("leads");
   const [formData, setFormData] = useState<LeadFormData>({
-    name: lead?.name || '',
-    email: lead?.email || '',
-    phone: lead?.phone || '',
-    company: lead?.company || '',
-    source: (lead?.source as LeadSource) || 'website',
-    interestArea: lead?.interestArea || '',
-    notes: lead?.notes || '',
-    status: (lead?.status as LeadStatus) || 'primeiro_contato', // ajuste para status correto!
+    name: lead?.name || "",
+    email: lead?.email || "",
+    phone: lead?.phone || "",
+    company: lead?.company || "",
+    source: (lead?.source as LeadSource) || "website",
+    interestArea: lead?.interestArea || "",
+    notes: lead?.notes || "",
+    status: (lead?.status as LeadStatus) || "primeiro_contato", // ajuste para status correto!
     value: lead?.value,
     probability: lead?.probability,
     tags: lead?.tags || [],
@@ -52,22 +52,22 @@ export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Nome é obrigatório';
+      newErrors.name = "Nome é obrigatório";
     }
     if (!formData.email?.trim()) {
-      newErrors.email = 'Email é obrigatório';
+      newErrors.email = "Email é obrigatório";
     } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Email inválido';
+      newErrors.email = "Email inválido";
     } else {
-      const isDuplicate = await checkDuplicate('email', formData.email, lead?.id);
+      const isDuplicate = await checkDuplicate("email", formData.email, lead?.id);
       if (isDuplicate) {
-        newErrors.email = 'Este email já está cadastrado';
+        newErrors.email = "Este email já está cadastrado";
       }
     }
     if (formData.phone) {
-      const cleaned = formData.phone.replace(/\D/g, '');
+      const cleaned = formData.phone.replace(/\D/g, "");
       if (cleaned.length < 10 || cleaned.length > 11) {
-        newErrors.phone = 'Telefone inválido';
+        newErrors.phone = "Telefone inválido";
       }
     }
     return newErrors;
@@ -88,22 +88,22 @@ export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
 
       // Reset form
       setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        company: '',
-        source: 'website',
-        interestArea: '',
-        notes: '',
-        status: 'primeiro_contato',
+        name: "",
+        email: "",
+        phone: "",
+        company: "",
+        source: "website",
+        interestArea: "",
+        notes: "",
+        status: "primeiro_contato",
         value: undefined,
         probability: undefined,
         tags: [],
       });
       setErrors({});
     } catch (error) {
-      console.error('Erro ao salvar lead:', error);
-      setErrors({ general: 'Erro ao salvar lead. Tente novamente.' });
+      console.error("Erro ao salvar lead:", error);
+      setErrors({ general: "Erro ao salvar lead. Tente novamente." });
     } finally {
       setLoading(false);
     }
@@ -119,7 +119,7 @@ export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
       <div className="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
         <div className="flex items-center justify-between border-b p-6">
           <h2 className="text-xl font-semibold text-primary-900">
-            {lead ? 'Editar Lead' : 'Novo Lead'}
+            {lead ? "Editar Lead" : "Novo Lead"}
           </h2>
           <button onClick={handleClose} className="p-1 text-primary-400 hover:text-primary-600">
             <X className="h-5 w-5" />
@@ -144,7 +144,7 @@ export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
                   value={formData.name}
                   onChange={(e) => {
                     setFormData({ ...formData, name: e.target.value });
-                    if (errors.name) setErrors({ ...errors, name: '' });
+                    if (errors.name) setErrors({ ...errors, name: "" });
                   }}
                   placeholder="Digite o nome"
                 />
@@ -158,7 +158,7 @@ export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
                   value={formData.email}
                   onChange={(e) => {
                     setFormData({ ...formData, email: e.target.value });
-                    if (errors.email) setErrors({ ...errors, email: '' });
+                    if (errors.email) setErrors({ ...errors, email: "" });
                   }}
                   placeholder="email@exemplo.com"
                 />
@@ -176,7 +176,7 @@ export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
                   onChange={(e) => {
                     const masked = maskPhone(e.target.value);
                     setFormData({ ...formData, phone: masked });
-                    if (errors.phone) setErrors({ ...errors, phone: '' });
+                    if (errors.phone) setErrors({ ...errors, phone: "" });
                   }}
                   placeholder="(11) 99999-9999"
                   maxLength={15}
@@ -226,7 +226,7 @@ export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
                   className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   value={formData.interestArea}
                   onChange={(e) => setFormData({ ...formData, interestArea: e.target.value })}
-                  placeholder="Ex: Livros, Revistas, Cursos..."
+                  placeholder="Ex: Livros, E-books, CDs, DVDs..."
                 />
               </div>
             </div>
@@ -261,7 +261,7 @@ export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
             {loading && (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
             )}
-            {lead ? 'Salvar Alterações' : 'Criar Lead'}
+            {lead ? "Salvar Alterações" : "Criar Lead"}
           </button>
         </div>
       </div>

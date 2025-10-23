@@ -74,7 +74,7 @@ const date = project.createdAt instanceof Timestamp
 - `/crm/clients` ✅ (100% funcional)
 - `/crm/leads` ✅ (Kanban funcional)
 - `/crm/projects` ✅ (CRUD funcional)
-- `/crm/budgets` ✅ (Sistema funcional)
+- `//budgets` ✅ (Sistema funcional)
 
 ## 🐛 **Problemas Comuns e Soluções**
 

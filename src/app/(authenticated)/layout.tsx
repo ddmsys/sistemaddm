@@ -31,7 +31,7 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
     },
     {
       name: "Orçamentos",
-      href: "/crm/budgets",
+      href: "/budgets",
       icon: "📄",
     },
     {

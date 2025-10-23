@@ -1,6 +1,6 @@
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from "firebase/firestore";
 
-export type ClientStatus = 'active' | 'inactive' | 'blocked';
+export type ClientStatus = "active" | "inactive" | "blocked";
 
 export interface Address {
   street?: string;
@@ -19,7 +19,7 @@ export interface Contact {
   email?: string;
   phone?: string;
 }
-export type ClientType = 'individual' | 'company';
+export type ClientType = "individual" | "company";
 
 export interface Client {
   id?: string;
@@ -44,6 +44,9 @@ export interface Client {
   cnpj?: string;
   stateRegistration?: string;
   contactPerson?: string;
+
+  // 🔥 NOVO: Indicação (referral)
+  referralSource?: string; // Ex: "João Silva", "Maria Santos"
   businessType?: string;
 
   // ✅ Campos adicionais
@@ -52,7 +55,6 @@ export interface Client {
   socialMedia?: SocialMedia;
   address?: Address;
   firebaseAuthUid?: string;
-  referredBy?: string; // nome da pessoa que indicou, pode ser opcional
   tags?: string[];
 
   // ✅ Timestamps obrigatórios
@@ -74,11 +76,13 @@ export interface ClientFormData {
   phone: string;
   document: string; // CPF ou CNPJ
   cpf?: string;
+  rg?: string;
   cnpj?: string;
+  stateRegistration?: string;
   company?: string;
   companyName?: string;
-  stateRegistration?: string;
   contactPerson?: string;
+  birthDate?: string;
   businessType?: string;
   status: ClientStatus;
   tags: string[];
@@ -86,7 +90,7 @@ export interface ClientFormData {
   notes?: string;
   socialMedia?: SocialMedia;
   address?: Address;
-  referredBy?: string; // nome da pessoa que indicou, pode ser opcional
+  referralSource?: string; // nome da pessoa que indicou, pode ser opcional
 }
 export interface ClientModalProps {
   isOpen: boolean;

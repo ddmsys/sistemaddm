@@ -378,7 +378,7 @@ RESULTADO ESPERADO:
 - **🟡 Componentes Incompletos:**
 - - 🟡 BudgetModal - Falta itens de serviço/impressão
 - - 🟡 Dashboard Comercial - Apenas estrutura básica
-- - ❌ Detalhes do Budget (/crm/budgets/[id])
+- - ❌ Detalhes do Budget (//budgets/[id])
 + **🟡 Componentes Incompletos:**
 + - ✅ BudgetModal - Completo
 + - 🟡 Dashboard Comercial - Estrutura básica

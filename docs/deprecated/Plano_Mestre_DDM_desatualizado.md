@@ -50,7 +50,7 @@ sistemaddm/
 │   │   │   │   └── clients/          # Base de clientes
 │   │   │   │       ├── page.tsx
 │   │   │   │       └── [id]/page.tsx
-│   │   │   ├── budgets/              # ✅ Orçamentos (era /crm/budgets)
+│   │   │   ├── budgets/              # ✅ Orçamentos (era //budgets)
 │   │   │   │   ├── page.tsx
 │   │   │   │   └── [id]/page.tsx
 │   │   │   │       └── [id]/page.tsx

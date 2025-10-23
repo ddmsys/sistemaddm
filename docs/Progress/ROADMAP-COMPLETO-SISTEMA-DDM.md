@@ -26,14 +26,14 @@
 
 **6 MÓDULOS PRINCIPAIS:**
 
-| Módulo | Funcionalidades | Status | Prioridade |
-|--------|----------------|--------|------------|
+| Módulo                 | Funcionalidades                              | Status | Prioridade |
+| ---------------------- | -------------------------------------------- | ------ | ---------- |
 | 🏢 **Comercial (CRM)** | Leads, Budgets, Projects, Clients, Dashboard | 🟡 70% | 🔴 CRÍTICA |
-| 🎨 **Produção** | Queue, Proofs, Quality, Dashboard | ⚪ 0% | 🟠 ALTA |
-| 💰 **Financeiro** | Invoices, Payments, Reports, Dashboard | ⚪ 0% | 🟠 ALTA |
-| 🛒 **Compras** | Suppliers, Purchases, Dashboard | ⚪ 0% | 🟡 MÉDIA |
-| 🚚 **Logística** | Shipments, Tracking, Dashboard | ⚪ 0% | 🟡 MÉDIA |
-| 📣 **Marketing** | Campaigns, Creatives, Dashboard | ⚪ 0% | 🟢 BAIXA |
+| 🎨 **Produção**        | Queue, Proofs, Quality, Dashboard            | ⚪ 0%  | 🟠 ALTA    |
+| 💰 **Financeiro**      | Invoices, Payments, Reports, Dashboard       | ⚪ 0%  | 🟠 ALTA    |
+| 🛒 **Compras**         | Suppliers, Purchases, Dashboard              | ⚪ 0%  | 🟡 MÉDIA   |
+| 🚚 **Logística**       | Shipments, Tracking, Dashboard               | ⚪ 0%  | 🟡 MÉDIA   |
+| 📣 **Marketing**       | Campaigns, Creatives, Dashboard              | ⚪ 0%  | 🟢 BAIXA   |
 
 **Total de Funcionalidades:** 22 áreas principais  
 **Estimativa de Conclusão:** 15-20 semanas (3,5-5 meses)
@@ -45,6 +45,7 @@
 ### **1. INFRAESTRUTURA (100%)**
 
 **Backend (Firebase)**
+
 - ✅ Firebase configurado (região São Paulo - `southamerica-east1`)
 - ✅ Firestore Database
 - ✅ Authentication
@@ -52,6 +53,7 @@
 - ✅ Storage configurado
 
 **Frontend (Next.js 14)**
+
 - ✅ Next.js com App Router
 - ✅ TypeScript 5.x
 - ✅ Tailwind CSS + Shadcn UI
@@ -61,6 +63,7 @@
 ### **2. TIPOS TYPESCRIPT (100%)**
 
 **Interfaces Completas:**
+
 - ✅ `Lead` - Prospecção comercial
 - ✅ `Client` - Base de clientes (PF e PJ)
 - ✅ `Budget` - Orçamentos (migrado de Quote)
@@ -74,6 +77,7 @@
 ### **3. HOOKS FIREBASE (100%)**
 
 **Hooks Implementados:**
+
 - ✅ `useAuth.ts` - Autenticação
 - ✅ `useLeads.ts` - CRUD de leads
 - ✅ `useClients.ts` - CRUD de clientes
@@ -84,13 +88,15 @@
 ### **4. MÓDULO COMERCIAL (70%)**
 
 **✅ Páginas Criadas:**
+
 - ✅ `/crm/leads` - Lista de leads
 - ✅ `/crm/leads/[id]` - Detalhes do lead
 - ✅ `/crm/clients` - Lista de clientes
 - ✅ `/crm/projects` - Lista de projetos
-- ✅ `/crm/budgets` - Lista de orçamentos
+- ✅ `//budgets` - Lista de orçamentos
 
 **✅ Componentes Básicos:**
+
 - ✅ `LeadModal` - Criar/editar leads
 - ✅ `ClientModal` - Criar/editar clientes
 - ✅ `ProjectModal` - Criar/editar projetos
@@ -98,15 +104,17 @@
 - ✅ Cards de KPI básicos
 
 **🟡 Componentes Incompletos:**
+
 - 🟡 `BudgetModal` - Falta formulário completo de itens
 - 🟡 Dashboard Comercial - Apenas estrutura básica
-- ❌ Detalhes do Budget (`/crm/budgets/[id]`)
+- ❌ Detalhes do Budget (`//budgets/[id]`)
 - ❌ Gestão de Books (catálogo)
 - ❌ Gestão de Orders (pedidos)
 
 ### **5. CLOUD FUNCTIONS (100%)**
 
 **Functions Implementadas:**
+
 - ✅ `onBudgetSigned` - Trigger de aprovação
   - Cria Cliente automaticamente
   - Cria Book (catálogo)
@@ -123,6 +131,7 @@
 ### **IMPEDEM FUNCIONAMENTO - RESOLVER URGENTE**
 
 #### **1. Nomenclatura Inconsistente**
+
 ```typescript
 // ❌ PROBLEMA: Código usa onSave mas deveria ser onSubmit
 <BudgetModal onSave={handleCreate} />
@@ -132,8 +141,9 @@
 ```
 
 **Arquivos Afetados:**
+
 - `src/components/comercial/modals/BudgetModal.tsx`
-- `src/app/(app)/crm/budgets/page.tsx`
+- `src/app/(app)//budgets/page.tsx`
 - `src/hooks/comercial/useBudgets.ts`
 
 **Ação:** Trocar todas as ocorrências de `onSave` por `onSubmit`
@@ -141,6 +151,7 @@
 ---
 
 #### **2. Status Budget Inconsistente**
+
 ```typescript
 // ❌ PROBLEMA: Código usa "approved" mas doc oficial usa "signed"
 status: "approved" // ERRADO
@@ -156,6 +167,7 @@ status: "signed" // CORRETO
 #### **3. BudgetModal Incompleto**
 
 **Faltam:**
+
 - ❌ Formulário de Serviços Editoriais
 - ❌ Formulário de Impressão
 - ❌ Formulário de Extras
@@ -169,6 +181,7 @@ status: "signed" // CORRETO
 #### **4. Fluxos Não Testados**
 
 **Nunca foram testados:**
+
 - ❌ Conversão Lead → Cliente
 - ❌ Aprovação Budget → Criação automática
 - ❌ Fluxo end-to-end completo
@@ -182,25 +195,29 @@ status: "signed" // CORRETO
 ---
 
 ## 📅 FASE 0: CORREÇÕES URGENTES
+
 **⏱️ Duração:** 3 dias  
 **🎯 Objetivo:** Resolver problemas críticos que impedem funcionamento
 
 ### **Tarefa 0.1: Padronizar Nomenclaturas** (1 dia)
 
 **Arquivos:**
+
 ```
 src/components/comercial/modals/BudgetModal.tsx
-src/app/(app)/crm/budgets/page.tsx
+src/app/(app)//budgets/page.tsx
 src/hooks/comercial/useBudgets.ts
 ```
 
 **Checklist:**
+
 - [ ] Substituir `onSave` → `onSubmit` em todos os modais
 - [ ] Padronizar status para `"signed"` (remover "approved")
 - [ ] Verificar todos os imports/exports
 - [ ] Atualizar documentação
 
 **Critério de Aceitação:**
+
 - ✅ Zero referências a `onSave`
 - ✅ Apenas status válidos em uso
 - ✅ Testes unitários passando
@@ -210,6 +227,7 @@ src/hooks/comercial/useBudgets.ts
 ### **Tarefa 0.2: Verificar Compilação** (0.5 dia)
 
 **Checklist:**
+
 - [ ] `npm run build` sem erros
 - [ ] `npm run type-check` sem erros
 - [ ] `npm run lint` sem erros críticos
@@ -222,6 +240,7 @@ src/hooks/comercial/useBudgets.ts
 **Objetivo:** Documentar estado atual do banco
 
 **Coleções a verificar:**
+
 - [ ] `leads`
 - [ ] `clients`
 - [ ] `budgets`
@@ -235,6 +254,7 @@ src/hooks/comercial/useBudgets.ts
 ---
 
 ## 📅 FASE 1: ESTABILIZAÇÃO
+
 **⏱️ Duração:** 1-2 semanas  
 **🎯 Objetivo:** Completar MVP Comercial funcional
 
@@ -247,6 +267,7 @@ src/hooks/comercial/useBudgets.ts
 #### **1.1.1 Seção de Serviços Editoriais**
 
 **Interface:**
+
 ```typescript
 interface EditorialServiceItem {
   id: string;
@@ -277,6 +298,7 @@ enum EditorialServiceType {
 ```
 
 **Campos do Formulário:**
+
 - [ ] Select: Tipo de serviço (enum acima)
 - [ ] Input condicional: Se CUSTOM, mostrar campo texto
 - [ ] Textarea: Descrição do serviço
@@ -287,6 +309,7 @@ enum EditorialServiceType {
 - [ ] Textarea: Observações (opcional)
 
 **Validações:**
+
 - Serviço obrigatório
 - Se CUSTOM, customService obrigatório
 - Quantidade > 0
@@ -297,6 +320,7 @@ enum EditorialServiceType {
 #### **1.1.2 Seção de Impressão**
 
 **Interface:**
+
 ```typescript
 interface PrintingItem {
   id: string;
@@ -314,6 +338,7 @@ interface PrintingItem {
 ```
 
 **Campos do Formulário:**
+
 - [ ] Number: Tiragem (quantidade de exemplares)
 - [ ] Checkbox: Usar especificações do Book?
 - [ ] Condicional: Se `useBookSpecs = false`, mostrar:
@@ -329,6 +354,7 @@ interface PrintingItem {
 - [ ] Textarea: Observações
 
 **Validações:**
+
 - Tiragem > 0
 - Se useBookSpecs = false, todos os specs obrigatórios
 - UnitPrice > 0
@@ -338,6 +364,7 @@ interface PrintingItem {
 #### **1.1.3 Seção de Extras**
 
 **Interface:**
+
 ```typescript
 interface ExtraItem {
   id: string;
@@ -359,6 +386,7 @@ enum ExtraType {
 ```
 
 **Campos do Formulário:**
+
 - [ ] Select: Tipo de extra
 - [ ] Input condicional: Se CUSTOM, campo texto
 - [ ] Textarea: Descrição
@@ -372,6 +400,7 @@ enum ExtraType {
 #### **1.1.4 Layout do BudgetModal**
 
 **Estrutura:**
+
 ```tsx
 <Dialog open={isOpen} onClose={onClose}>
   <DialogHeader>
@@ -384,7 +413,7 @@ enum ExtraType {
     {/* SEÇÃO 1: DADOS BÁSICOS */}
     <section className="space-y-4">
       <h3>Dados Básicos</h3>
-      
+
       {/* Lead OU Cliente (apenas um) */}
       <div className="grid grid-cols-2 gap-4">
         <Select label="Lead" />
@@ -427,7 +456,7 @@ enum ExtraType {
       </Tabs>
 
       {/* Lista de itens adicionados */}
-      <BudgetItemsList 
+      <BudgetItemsList
         items={items}
         onRemove={handleRemoveItem}
         onEdit={handleEditItem}
@@ -448,16 +477,16 @@ enum ExtraType {
         <div className="flex justify-between items-center mt-2">
           <span>Desconto:</span>
           <div className="flex gap-2">
-            <Input 
-              type="number" 
-              placeholder="%" 
+            <Input
+              type="number"
+              placeholder="%"
               value={discountPercentage}
               onChange={(e) => setDiscountPercentage(e.target.value)}
             />
             <span>ou</span>
-            <Input 
-              type="number" 
-              placeholder="R$" 
+            <Input
+              type="number"
+              placeholder="R$"
               value={discount}
               onChange={(e) => setDiscount(e.target.value)}
             />
@@ -475,42 +504,42 @@ enum ExtraType {
       </div>
 
       {/* Condições comerciais */}
-      <MultiSelect 
-        label="Formas de Pagamento" 
+      <MultiSelect
+        label="Formas de Pagamento"
         options={['PIX', 'Cartão', 'Boleto', 'Transferência']}
         value={paymentMethods}
         onChange={setPaymentMethods}
       />
 
-      <Input 
-        label="Validade (dias)" 
-        type="number" 
+      <Input
+        label="Validade (dias)"
+        type="number"
         value={validityDays}
         onChange={(e) => setValidityDays(e.target.value)}
       />
 
-      <Input 
-        label="Prazo de Produção (dias)" 
-        type="number" 
+      <Input
+        label="Prazo de Produção (dias)"
+        type="number"
         value={productionDays}
         onChange={(e) => setProductionDays(e.target.value)}
       />
 
-      <Checkbox 
+      <Checkbox
         label="Cliente fornecerá material?"
         checked={clientProvidedMaterial}
         onChange={(e) => setClientProvidedMaterial(e.target.checked)}
       />
 
       {clientProvidedMaterial && (
-        <Textarea 
+        <Textarea
           label="Descrição do Material"
           value={materialDescription}
           onChange={(e) => setMaterialDescription(e.target.value)}
         />
       )}
 
-      <Textarea 
+      <Textarea
         label="Observações"
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
@@ -535,6 +564,7 @@ enum ExtraType {
 #### **1.1.5 Cálculos Automáticos**
 
 **Funções:**
+
 ```typescript
 // Calcular total de um item
 function calculateItemTotal(quantity: number, unitPrice: number): number {
@@ -563,6 +593,7 @@ function calculateTotal(
 ```
 
 **Atualização em Tempo Real:**
+
 ```typescript
 // Sempre que quantity ou unitPrice mudar
 useEffect(() => {
@@ -588,6 +619,7 @@ useEffect(() => {
 #### **1.1.6 Validações**
 
 **Antes de submeter:**
+
 ```typescript
 function validateBudgetForm(data: BudgetFormData): string[] {
   const errors: string[] = [];
@@ -632,12 +664,13 @@ function validateBudgetForm(data: BudgetFormData): string[] {
 ```
 
 **Exibir erros:**
+
 ```typescript
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  
+
   const errors = validateBudgetForm(formData);
-  
+
   if (errors.length > 0) {
     errors.forEach(error => toast.error(error));
     return;
@@ -651,7 +684,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 ### **Tarefa 1.2: Criar Página de Detalhes do Budget** (2 dias)
 
-**Arquivo:** `src/app/(app)/crm/budgets/[id]/page.tsx`
+**Arquivo:** `src/app/(app)//budgets/[id]/page.tsx`
 
 **Estrutura Completa:**
 
@@ -665,21 +698,21 @@ import { Budget, BudgetStatus } from '@/lib/types/budgets';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { 
-  FileText, 
-  Mail, 
-  Edit, 
-  Copy, 
-  Trash2, 
-  Check, 
-  X 
+import {
+  FileText,
+  Mail,
+  Edit,
+  Copy,
+  Trash2,
+  Check,
+  X
 } from 'lucide-react';
 
 export default function BudgetDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { getBudgetById, approveBudget, rejectBudget, deleteBudget } = useBudgets();
-  
+
   const [budget, setBudget] = useState<Budget | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -700,11 +733,11 @@ export default function BudgetDetailsPage() {
 
   const handleApprove = async () => {
     if (!window.confirm('Aprovar este orçamento?')) return;
-    
+
     try {
       await approveBudget(budget!.id!);
       toast.success('Orçamento aprovado! Criando Cliente, Book, Order...');
-      router.push('/crm/budgets');
+      router.push('//budgets');
     } catch (error) {
       toast.error('Erro ao aprovar orçamento');
     }
@@ -712,7 +745,7 @@ export default function BudgetDetailsPage() {
 
   const handleReject = async () => {
     if (!window.confirm('Rejeitar este orçamento?')) return;
-    
+
     try {
       await rejectBudget(budget!.id!);
       toast.success('Orçamento rejeitado');
@@ -738,18 +771,18 @@ export default function BudgetDetailsPage() {
 
         <div className="flex gap-2">
           <StatusBadge status={budget.status} />
-          
+
           {budget.status === 'sent' && (
             <>
-              <Button 
-                variant="success" 
+              <Button
+                variant="success"
                 onClick={handleApprove}
               >
                 <Check className="w-4 h-4 mr-2" />
                 Aprovar
               </Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={handleReject}
               >
                 <X className="w-4 h-4 mr-2" />
@@ -907,7 +940,7 @@ export default function BudgetDetailsPage() {
       {(budget.clientProvidedMaterial || budget.notes) && (
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Observações</h2>
-          
+
           {budget.clientProvidedMaterial && (
             <div className="mb-4">
               <span className="text-sm font-medium">Material fornecido pelo cliente:</span>
@@ -956,6 +989,7 @@ export default function BudgetDetailsPage() {
 ```
 
 **Componente StatusBadge:**
+
 ```tsx
 // components/comercial/StatusBadge.tsx
 export function StatusBadge({ status }: { status: BudgetStatus }) {
@@ -984,6 +1018,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 **Cenário de Teste Completo:**
 
 #### **Passo 1: Criar Lead**
+
 - [ ] Ir em `/crm/leads`
 - [ ] Clicar em "Novo Lead"
 - [ ] Preencher:
@@ -997,6 +1032,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 - [ ] Verificar apareceu na lista
 
 #### **Passo 2: Qualificar Lead**
+
 - [ ] Abrir detalhes do lead criado
 - [ ] Mudar status para "qualificado"
 - [ ] Adicionar observação: "Cliente tem interesse real"
@@ -1004,6 +1040,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 - [ ] Verificar atualização
 
 #### **Passo 3: Converter em Cliente**
+
 - [ ] Clicar em "Converter em Cliente"
 - [ ] Preencher dados adicionais:
   - Tipo: Pessoa Física
@@ -1014,7 +1051,8 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 - [ ] **VERIFICAR:** Lead marcado com `clientId`
 
 #### **Passo 4: Criar Budget**
-- [ ] Ir em `/crm/budgets`
+
+- [ ] Ir em `/budgets`
 - [ ] Clicar em "Novo Orçamento"
 - [ ] Selecionar o cliente "João da Silva"
 - [ ] Tipo de projeto: "Livro Impresso"
@@ -1024,6 +1062,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
   - Páginas: 200
 
 **Adicionar Serviço Editorial:**
+
 - [ ] Aba "Serviços Editoriais"
 - [ ] Serviço: Revisão
 - [ ] Descrição: "Revisão ortográfica e gramatical"
@@ -1033,6 +1072,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 - [ ] Clicar "Adicionar"
 
 **Adicionar Impressão:**
+
 - [ ] Aba "Impressão"
 - [ ] Tiragem: 100 exemplares
 - [ ] Não usar specs do book (customizar)
@@ -1047,6 +1087,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 - [ ] Clicar "Adicionar"
 
 **Adicionar Extra:**
+
 - [ ] Aba "Extras"
 - [ ] Tipo: Frete
 - [ ] Descrição: "Frete via Correios"
@@ -1056,11 +1097,13 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 - [ ] Clicar "Adicionar"
 
 **Resumo:**
+
 - [ ] **VERIFICAR:** Subtotal = R$ 2.650,00
 - [ ] Aplicar desconto: 10%
 - [ ] **VERIFICAR:** Total = R$ 2.385,00
 
 **Condições:**
+
 - [ ] Formas de pagamento: PIX, Cartão
 - [ ] Validade: 30 dias
 - [ ] Prazo de produção: 15 dias
@@ -1071,6 +1114,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 - [ ] Verificar na lista de budgets
 
 #### **Passo 5: Enviar Budget**
+
 - [ ] Abrir budget criado
 - [ ] Clicar em "Editar"
 - [ ] Mudar status para "enviado"
@@ -1079,6 +1123,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 - [ ] **VERIFICAR:** Budget aparece como "Enviado"
 
 #### **Passo 6: Aprovar Budget** 🔥 **CRÍTICO**
+
 - [ ] Abrir budget
 - [ ] Clicar em "Aprovar"
 - [ ] Confirmar
@@ -1091,6 +1136,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
 **No Firestore Console:**
 
 **Verificar Book:**
+
 - [ ] Abrir coleção `books`
 - [ ] Encontrar book criado
 - [ ] **VERIFICAR:**
@@ -1102,6 +1148,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
   - `specifications` preenchidas
 
 **Verificar Order:**
+
 - [ ] Abrir coleção `orders`
 - [ ] Encontrar order criado
 - [ ] **VERIFICAR:**
@@ -1114,6 +1161,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
   - `status` = "pending"
 
 **Verificar ProductionProject:**
+
 - [ ] Abrir coleção `productionProjects`
 - [ ] Encontrar projeto criado
 - [ ] **VERIFICAR:**
@@ -1124,6 +1172,7 @@ export function StatusBadge({ status }: { status: BudgetStatus }) {
   - `title` = "As Aventuras de João"
 
 **Verificar Relacionamentos:**
+
 ```
 Budget (aprovado)
   ↓
@@ -1134,6 +1183,7 @@ Budget (aprovado)
 ```
 
 #### **Passo 8: Validação Final**
+
 - [ ] Todos os relacionamentos corretos (IDs batem)
 - [ ] Números sequenciais únicos
 - [ ] Timestamps corretos
@@ -1142,6 +1192,7 @@ Budget (aprovado)
 - [ ] Sem erros no console do Firebase Functions
 
 **Critérios de Sucesso:**
+
 - ✅ Fluxo completo sem erros
 - ✅ Todas as criações automáticas funcionando
 - ✅ Dados consistentes entre coleções
@@ -1152,6 +1203,7 @@ Budget (aprovado)
 ---
 
 ## 🎯 ENTREGA DA FASE 1
+
 - ✅ BudgetModal 100% funcional
 - ✅ Página de detalhes do Budget
 - ✅ Fluxo end-to-end testado e validado
@@ -1160,6 +1212,7 @@ Budget (aprovado)
 ---
 
 ## 📅 FASE 2: COMPLETAR MÓDULO COMERCIAL
+
 **⏱️ Duração:** 2-3 semanas  
 **🎯 Objetivo:** Finalizar 100% do CRM
 
@@ -1168,6 +1221,7 @@ Budget (aprovado)
 **Página:** `src/app/(app)/crm/books/page.tsx`
 
 **Funcionalidades:**
+
 - [ ] Lista de todos os books (catálogo)
 - [ ] Filtros: cliente, tipo, status
 - [ ] Card exibindo: código, título, cliente, specs básicas
@@ -1175,6 +1229,7 @@ Budget (aprovado)
 - [ ] Integração com Budget e Order
 
 **Componentes:**
+
 ```
 components/comercial/books/
   ├── BooksList.tsx
@@ -1184,6 +1239,7 @@ components/comercial/books/
 ```
 
 **Hook:**
+
 ```typescript
 // hooks/comercial/useBooks.ts
 export function useBooks() {
@@ -1204,17 +1260,20 @@ export function useBooks() {
 ### **Tarefa 2.2: Gestão de Orders** (4 dias)
 
 **Páginas:**
+
 - `src/app/(app)/crm/orders/page.tsx` - Lista
 - `src/app/(app)/crm/orders/[id]/page.tsx` - Detalhes
 
 **Funcionalidades:**
 
 **Lista:**
+
 - [ ] Tabela: número, cliente, data, status, valor, ações
 - [ ] Filtros: status, cliente, período, valor
 - [ ] Busca por número
 
 **Detalhes:**
+
 - [ ] Header (número, status, cliente)
 - [ ] Dados do budget/book vinculado
 - [ ] Itens do pedido
@@ -1228,6 +1287,7 @@ export function useBooks() {
 - [ ] Arquivos anexados
 
 **Componentes:**
+
 ```
 components/comercial/orders/
   ├── OrdersList.tsx
@@ -1239,6 +1299,7 @@ components/comercial/orders/
 ```
 
 **Hook:**
+
 ```typescript
 // hooks/comercial/useOrders.ts
 export function useOrders() {
@@ -1263,12 +1324,14 @@ export function useOrders() {
 **Seções:**
 
 **KPIs (Topo):**
+
 - [ ] Leads Ativos
 - [ ] Taxa de Conversão
 - [ ] Receita do Mês
 - [ ] Budgets Pendentes
 
 **Gráficos:**
+
 - [ ] Funil de Vendas (visualização interativa)
 - [ ] Receita (linha, evolução mensal)
 - [ ] Budgets por Status (pizza/donut)
@@ -1277,6 +1340,7 @@ export function useOrders() {
 - [ ] Atividades Recentes (timeline)
 
 **Componentes:**
+
 ```
 components/dashboards/comercial/
   ├── CommercialDashboard.tsx
@@ -1290,6 +1354,7 @@ components/dashboards/comercial/
 ```
 
 **Hook:**
+
 ```typescript
 // hooks/comercial/useCommercialMetrics.ts
 export function useCommercialMetrics() {
@@ -1311,6 +1376,7 @@ export function useCommercialMetrics() {
 ### **Tarefa 2.4: Sistema de Notificações** (3 dias)
 
 **Tipos de Notificações:**
+
 - [ ] Novo lead atribuído
 - [ ] Budget prestes a expirar
 - [ ] Budget aprovado/rejeitado
@@ -1319,13 +1385,14 @@ export function useCommercialMetrics() {
 - [ ] Projeto atrasado
 
 **Componente:**
+
 ```tsx
 // components/layout/NotificationCenter.tsx
 <NotificationCenter>
   <NotificationBell count={unreadCount} />
   <NotificationList>
     {notifications.map(notif => (
-      <NotificationItem 
+      <NotificationItem
         key={notif.id}
         notification={notif}
         onClick={handleClick}
@@ -1337,6 +1404,7 @@ export function useCommercialMetrics() {
 ```
 
 **Cloud Function:**
+
 ```typescript
 // functions/src/notifications/sendNotification.ts
 export const sendNotification = functions.firestore
@@ -1350,6 +1418,7 @@ export const sendNotification = functions.firestore
 ```
 
 **Hook:**
+
 ```typescript
 // hooks/useNotifications.ts
 export function useNotifications() {
@@ -1367,6 +1436,7 @@ export function useNotifications() {
 ---
 
 ## 🎯 ENTREGA DA FASE 2
+
 - ✅ Módulo Comercial 100% completo
 - ✅ Books e Orders totalmente funcionais
 - ✅ Dashboard executivo com métricas
@@ -1375,12 +1445,14 @@ export function useNotifications() {
 ---
 
 ## 📅 FASE 3: MÓDULO DE PRODUÇÃO
+
 **⏱️ Duração:** 3-4 semanas  
 **🎯 Objetivo:** Gestão completa de produção
 
 ### **Tarefa 3.1: Dashboard de Produção** (3 dias)
 
 **KPIs:**
+
 - Projetos em produção
 - Projetos atrasados
 - Taxa de aprovação de provas
@@ -1388,6 +1460,7 @@ export function useNotifications() {
 - Capacidade utilizada
 
 **Gráficos:**
+
 - Projetos por status (Kanban visual)
 - Timeline de projetos
 - Distribuição por tipo
@@ -1398,6 +1471,7 @@ export function useNotifications() {
 ### **Tarefa 3.2: Fila de Produção (Kanban)** (5 dias)
 
 **Colunas:**
+
 - Aguardando início
 - Em andamento
 - Aguardando prova
@@ -1405,6 +1479,7 @@ export function useNotifications() {
 - Finalizado
 
 **Funcionalidades:**
+
 - [ ] Drag & drop
 - [ ] Filtros (cliente, prazo, responsável)
 - [ ] Atribuição de responsáveis
@@ -1415,6 +1490,7 @@ export function useNotifications() {
 ### **Tarefa 3.3: Gestão de Provas** (4 dias)
 
 **Funcionalidades:**
+
 - [ ] Upload (PDF, imagens, InDesign)
 - [ ] Versionamento automático
 - [ ] Envio para cliente
@@ -1428,6 +1504,7 @@ export function useNotifications() {
 ### **Tarefa 3.4: Controle de Qualidade** (3 dias)
 
 **Checklist:**
+
 - Revisão ortográfica
 - Conferência de imagens
 - Verificação de margens
@@ -1437,6 +1514,7 @@ export function useNotifications() {
 - Quebras de linha
 
 **Funcionalidades:**
+
 - [ ] Registro de não conformidades
 - [ ] Aprovação final
 - [ ] Assinatura digital
@@ -1446,6 +1524,7 @@ export function useNotifications() {
 ### **Tarefa 3.5: Integração Produção ↔ Financeiro** (2 dias)
 
 **Cloud Function:**
+
 ```typescript
 export const onProductionComplete = functions.firestore
   .document('productionProjects/{projectId}')
@@ -1455,7 +1534,7 @@ export const onProductionComplete = functions.firestore
     if (after.status === 'completed') {
       // Gerar fatura automaticamente
       await createInvoice({ /* ... */ });
-      
+
       // Notificar financeiro
       await sendNotification({ /* ... */ });
     }
@@ -1465,6 +1544,7 @@ export const onProductionComplete = functions.firestore
 ---
 
 ## 🎯 ENTREGA DA FASE 3
+
 - ✅ Módulo de Produção completo
 - ✅ Fila visual (Kanban)
 - ✅ Gestão de provas
@@ -1473,12 +1553,14 @@ export const onProductionComplete = functions.firestore
 ---
 
 ## 📅 FASE 4: MÓDULO FINANCEIRO
+
 **⏱️ Duração:** 2-3 semanas  
 **🎯 Objetivo:** Controle financeiro completo
 
 ### **Tarefa 4.1: Dashboard Financeiro** (3 dias)
 
 **KPIs:**
+
 - Receita do mês
 - Despesas do mês
 - Lucro líquido
@@ -1487,6 +1569,7 @@ export const onProductionComplete = functions.firestore
 - Fluxo de caixa
 
 **Gráficos:**
+
 - Receita vs Despesas
 - Fluxo de caixa
 - Despesas por categoria
@@ -1497,6 +1580,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 4.2: Gestão de Faturas** (4 dias)
 
 **Funcionalidades:**
+
 - [ ] Criar fatura manual
 - [ ] Fatura automática (via Order)
 - [ ] Geração de PDF
@@ -1513,6 +1597,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 4.3: Contas a Receber** (2 dias)
 
 **Funcionalidades:**
+
 - [ ] Lista de faturas pendentes
 - [ ] Alertas de vencimento
 - [ ] Envio de lembrete automático
@@ -1524,6 +1609,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 4.4: Relatórios Financeiros** (3 dias)
 
 **Tipos:**
+
 - [ ] DRE
 - [ ] Fluxo de caixa projetado
 - [ ] Receita por cliente/projeto
@@ -1531,6 +1617,7 @@ export const onProductionComplete = functions.firestore
 - [ ] Lucro por projeto
 
 **Exportação:**
+
 - PDF
 - Excel
 - CSV
@@ -1540,6 +1627,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 4.5: Contas a Pagar** (2 dias)
 
 **Funcionalidades:**
+
 - [ ] Registrar despesa
 - [ ] Categorias (Gráfica, Fornecedores, Salários, etc)
 - [ ] Pagamento recorrente
@@ -1549,6 +1637,7 @@ export const onProductionComplete = functions.firestore
 ---
 
 ## 🎯 ENTREGA DA FASE 4
+
 - ✅ Módulo Financeiro completo
 - ✅ Faturas + Pagamentos
 - ✅ Contas a receber/pagar
@@ -1557,9 +1646,11 @@ export const onProductionComplete = functions.firestore
 ---
 
 ## 📅 FASE 5: MÓDULOS SECUNDÁRIOS
+
 **⏱️ Duração:** 2-3 semanas
 
 ### **Tarefa 5.1: Módulo de Compras** (5 dias)
+
 - Cadastro de fornecedores
 - Cotações de preços
 - Comparação de cotações
@@ -1567,6 +1658,7 @@ export const onProductionComplete = functions.firestore
 - Controle de estoque básico
 
 ### **Tarefa 5.2: Módulo de Logística** (5 dias)
+
 - Cadastro de transportadoras
 - Registro de envios
 - Rastreamento
@@ -1574,6 +1666,7 @@ export const onProductionComplete = functions.firestore
 - Custo de frete
 
 ### **Tarefa 5.3: Módulo de Marketing** (5 dias)
+
 - Gestão de campanhas
 - Criativos
 - ROI por canal
@@ -1583,11 +1676,13 @@ export const onProductionComplete = functions.firestore
 ---
 
 ## 📅 FASE 6: FUNCIONALIDADES AVANÇADAS
+
 **⏱️ Duração:** 2-3 semanas
 
 ### **Tarefa 6.1: Sistema de Permissões (RBAC)** (3 dias)
 
 **Perfis:**
+
 - Admin (acesso total)
 - Comercial (CRM)
 - Produção (projetos, provas)
@@ -1599,6 +1694,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 6.2: Portal do Cliente** (4 dias)
 
 **Funcionalidades:**
+
 - [ ] Visualizar projetos
 - [ ] Acompanhar status
 - [ ] Aprovar/rejeitar provas
@@ -1613,9 +1709,11 @@ export const onProductionComplete = functions.firestore
 **Atalho:** Cmd/Ctrl + K
 
 **Buscar em:**
+
 - Leads, Clientes, Projetos, Budgets, Orders, Books
 
 **Funcionalidades:**
+
 - Fuzzy search
 - Filtros rápidos
 - Histórico
@@ -1627,6 +1725,7 @@ export const onProductionComplete = functions.firestore
 **Formatos:** PDF, Excel, CSV
 
 **Funcionalidades:**
+
 - Exportar listas filtradas
 - Agendar relatórios automáticos
 - Enviar por email
@@ -1638,6 +1737,7 @@ export const onProductionComplete = functions.firestore
 **Provider:** SendGrid ou Mailgun
 
 **Emails:**
+
 - Envio de orçamentos
 - Envio de provas
 - Faturas
@@ -1649,12 +1749,14 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 6.6: Histórico de Atividades** (2 dias)
 
 **Registrar:**
+
 - Criação/edição/exclusão
 - Mudança de status
 - Upload de arquivos
 - Envio de emails
 
 **Funcionalidades:**
+
 - Timeline
 - Filtros
 - Logs de auditoria
@@ -1662,11 +1764,13 @@ export const onProductionComplete = functions.firestore
 ---
 
 ## 📅 FASE 7: TESTES E OTIMIZAÇÃO
+
 **⏱️ Duração:** 1-2 semanas
 
 ### **Tarefa 7.1: Testes de Integração** (3 dias)
 
 **Fluxos:**
+
 - Lead → Cliente → Budget → Order → Produção → Entrega
 - Aprovação de prova
 - Geração de fatura
@@ -1678,6 +1782,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 7.2: Otimização** (2 dias)
 
 **Ações:**
+
 - Índices Firestore
 - Paginação
 - Lazy loading
@@ -1689,6 +1794,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 7.3: Segurança** (2 dias)
 
 **Verificações:**
+
 - Firestore Security Rules
 - Validação de inputs
 - Proteção XSS
@@ -1700,6 +1806,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 7.4: UX** (2 dias)
 
 **Melhorias:**
+
 - Loading states
 - Mensagens de erro
 - Feedback visual
@@ -1709,11 +1816,13 @@ export const onProductionComplete = functions.firestore
 ---
 
 ## 📅 FASE 8: DEPLOY E DOCUMENTAÇÃO
+
 **⏱️ Duração:** 1 semana
 
 ### **Tarefa 8.1: Preparação** (2 dias)
 
 **Checklist:**
+
 - [ ] Variáveis de ambiente
 - [ ] Domínio personalizado
 - [ ] SSL/HTTPS
@@ -1726,6 +1835,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 8.2: Deploy** (1 dia)
 
 **Plataformas:**
+
 - Frontend → Vercel
 - Functions → Firebase
 - Rules → Firebase
@@ -1735,6 +1845,7 @@ export const onProductionComplete = functions.firestore
 ### **Tarefa 8.3: Documentação** (2 dias)
 
 **Entregas:**
+
 - Manual do usuário (PDF)
 - Vídeos tutoriais
 - FAQ
@@ -1745,18 +1856,18 @@ export const onProductionComplete = functions.firestore
 
 ## 📊 CRONOGRAMA CONSOLIDADO
 
-| Fase | Descrição | Duração | Acumulado |
-|------|-----------|---------|-----------|
-| **Fase 0** | Correções Urgentes | 3 dias | 3 dias |
-| **Fase 1** | Estabilização | 1-2 semanas | 2 semanas |
-| **Fase 2** | Completar CRM | 2-3 semanas | 5 semanas |
-| **Fase 3** | Produção | 3-4 semanas | 9 semanas |
-| **Fase 4** | Financeiro | 2-3 semanas | 12 semanas |
-| **Fase 5** | Módulos Secundários | 2-3 semanas | 15 semanas |
-| **Fase 6** | Funcionalidades Avançadas | 2-3 semanas | 18 semanas |
-| **Fase 7** | Testes e Otimização | 1-2 semanas | 20 semanas |
-| **Fase 8** | Deploy | 1 semana | 21 semanas |
-| **TOTAL** | | **15-21 semanas** | **≈ 4-5 meses** |
+| Fase       | Descrição                 | Duração           | Acumulado       |
+| ---------- | ------------------------- | ----------------- | --------------- |
+| **Fase 0** | Correções Urgentes        | 3 dias            | 3 dias          |
+| **Fase 1** | Estabilização             | 1-2 semanas       | 2 semanas       |
+| **Fase 2** | Completar CRM             | 2-3 semanas       | 5 semanas       |
+| **Fase 3** | Produção                  | 3-4 semanas       | 9 semanas       |
+| **Fase 4** | Financeiro                | 2-3 semanas       | 12 semanas      |
+| **Fase 5** | Módulos Secundários       | 2-3 semanas       | 15 semanas      |
+| **Fase 6** | Funcionalidades Avançadas | 2-3 semanas       | 18 semanas      |
+| **Fase 7** | Testes e Otimização       | 1-2 semanas       | 20 semanas      |
+| **Fase 8** | Deploy                    | 1 semana          | 21 semanas      |
+| **TOTAL**  |                           | **15-21 semanas** | **≈ 4-5 meses** |
 
 ---
 
@@ -1921,6 +2032,7 @@ O projeto será considerado **100% concluído** quando:
 ## 📚 REFERÊNCIAS
 
 **Documentos Principais:**
+
 1. `Plano_Mestre_IA.md` - Estrutura simplificada
 2. `PLANO-MESTRE-INTEGRADO-COMPLETO.md` - Plano detalhado
 3. `01-TYPES-COMPLETE.md` - Tipos TypeScript
@@ -1931,6 +2043,7 @@ O projeto será considerado **100% concluído** quando:
 8. `INSTRUCOES-IA.md` - Instruções para IA
 
 **Stack Tecnológica:**
+
 - Next.js 14 + App Router
 - TypeScript 5.x
 - Firebase (Firestore + Auth + Functions + Storage)

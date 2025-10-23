@@ -12,7 +12,6 @@ import { FunnelChart } from "@/components/comercial/charts/FunnelChart";
 import { RevenueChart } from "@/components/comercial/charts/RevenueChart";
 import { KPICards } from "@/components/comercial/KPICards";
 // Modals existentes
-import BookModal from "@/components/comercial/modals/BookModal";
 import { BudgetModal } from "@/components/comercial/modals/BudgetModal";
 import { ClientModal } from "@/components/comercial/modals/ClientModal";
 import { LeadModal } from "@/components/comercial/modals/LeadModal";
@@ -86,7 +85,7 @@ export default function CommercialDashboard() {
   // Estados dos modals
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
-  const [showBookModal, setShowBookModal] = useState(false);
+  // TODO FASE 2: const [showBookModal, setShowBookModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
 
   // Estados para incrementos
@@ -468,10 +467,11 @@ export default function CommercialDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Projetos Ativos</CardTitle>
-            <Button size="sm" onClick={() => setShowBookModal(true)}>
+            {/* TODO FASE 2: Adicionar botão quando BookModal for implementado */}
+            {/* <Button size="sm" onClick={() => setShowBookModal(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Novo Projeto
-            </Button>
+            </Button> */}
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -546,18 +546,28 @@ export default function CommercialDashboard() {
           }}
         />
       )}
-      {/* Book Modal - TODO: Corrigir props */}
-      {showBookModal && (
-        <BookModal
-          isOpen={showBookModal}
-          onClose={() => setShowBookModal(false)}
-          onSave={async () => {
-            setShowBookModal(false);
-          }}
-        />
-      )}
 
-      {/* Budget Modal - TODO: Corrigir props */}
+      {/* 
+        📋 TODO FASE 2: Implementar BookModal real
+        
+        BookModal será implementado na FASE 2 para gerenciar catálogo de livros (Books).
+        O arquivo atual (BookModal.tsx) é uma cópia errada do BudgetModal.
+        
+        Funcionalidades do BookModal real:
+        - Gerenciar catálogo de livros (Books)
+        - Especificações técnicas (formato, papel, cores, acabamento)
+        - Upload de arquivos (capa, miolo)
+        - Geração de catalogCode (DDML0001, DDML0002...)
+        - Vínculo com Cliente
+        
+        Ver documentação:
+        - docs/principais/PLANO-MESTRE-INTEGRADO-COMPLETO.md (Seção 2.1)
+        - docs/principais/ROADMAP-COMPLETO-SISTEMA-DDM.md (FASE 2)
+        
+        Tempo estimado: 4 dias
+      */}
+
+      {/* Budget Modal */}
       {showBudgetModal && (
         <BudgetModal
           isOpen={showBudgetModal}

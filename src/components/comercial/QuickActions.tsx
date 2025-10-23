@@ -23,7 +23,7 @@ export function QuickActions() {
     {
       label: "Novo Orçamento",
       icon: "📄",
-      action: () => router.push("/crm/budgets?action=new"),
+      action: () => router.push("/budgets?action=new"),
       color: "bg-purple-500 hover:bg-purple-600",
     },
     {

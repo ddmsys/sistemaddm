@@ -59,7 +59,7 @@ const navigation: NavigationItem[] = [
       },
       {
         name: "Orçamentos",
-        href: "/crm/budgets",
+        href: "/budgets",
         icon: FileText,
         roles: ["admin", "comercial"],
       },

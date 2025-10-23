@@ -77,7 +77,7 @@
 - ✅ `/crm/leads/[id]` - Detalhes do lead
 - ✅ `/crm/clients` - Lista de clientes
 - ✅ `/crm/projects` - Lista de projetos
-- ✅ `/crm/budgets` - Lista de orçamentos
+- ✅ `//budgets` - Lista de orçamentos
 
 **✅ Componentes Básicos:**
 
@@ -91,7 +91,7 @@
 
 - 🟡 `BudgetModal` - Falta itens de serviço/impressão
 - 🟡 Dashboard Comercial - Apenas estrutura básica
-- ❌ Detalhes do Budget (`/crm/budgets/[id]`)
+- ❌ Detalhes do Budget (`//budgets/[id]`)
 - ❌ Gestão de Books (catálogo)
 - ❌ Gestão de Orders (pedidos)
 
@@ -115,12 +115,10 @@
 ### 🔴 CRÍTICO - Impedem funcionamento
 
 1. **Nomenclatura Inconsistente**
-
    - ❌ Código usa `onSave` mas deveria ser `onSubmit`
    - ❌ Mistura de `Quote` e `Budget` em alguns lugares
 
 2. **BudgetModal Incompleto**
-
    - ❌ Falta formulário de itens de Serviço Editorial
    - ❌ Falta formulário de itens de Impressão
    - ❌ Falta cálculo automático de subtotais
@@ -145,7 +143,7 @@
 
 ```
 src/components/comercial/modals/BudgetModal.tsx
-src/app/(app)/crm/budgets/page.tsx
+src/app/(app)//budgets/page.tsx
 src/hooks/comercial/useBudgets.ts
 ```
 
@@ -184,7 +182,7 @@ src/hooks/comercial/useBudgets.ts
 
 #### 1.3 Criar Página de Detalhes do Budget
 
-**Arquivo:** `src/app/(app)/crm/budgets/[id]/page.tsx`
+**Arquivo:** `src/app/(app)//budgets/[id]/page.tsx`
 
 **Funcionalidades:**
 

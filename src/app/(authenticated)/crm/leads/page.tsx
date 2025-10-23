@@ -1,45 +1,45 @@
 // src/app/(authenticated)/crm/leads/page.tsx
-'use client';
-import { Filter, Plus, Search } from 'lucide-react';
-import { useState } from 'react';
+"use client";
+import { Filter, Plus, Search } from "lucide-react";
+import { useState } from "react";
 
-import { LeadModal } from '@/components/comercial/modals/LeadModal'; // named import corrigido
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useLeads } from '@/hooks/comercial/useLeads'; // caminho correto e hooks corretos
-import { Lead, LeadFormData, LeadSource, LeadStatus } from '@/lib/types/leads';
-import { cn } from '@/lib/utils';
+import { LeadModal } from "@/components/comercial/modals/LeadModal"; // named import corrigido
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useLeads } from "@/hooks/comercial/useLeads"; // caminho correto e hooks corretos
+import { Lead, LeadFormData, LeadSource, LeadStatus } from "@/lib/types/leads";
+import { cn } from "@/lib/utils";
 
 export default function LeadsPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
-  const [sourceFilter, setSourceFilter] = useState<LeadSource | 'all'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [sourceFilter, setSourceFilter] = useState<LeadSource | "all">("all");
 
   const { leads, createLead, updateLead, updateLeadStage, deleteLead } = useLeads();
 
   // CORRIGIDO: Status colors com nomes corretos
   const getStatusColor = (status: LeadStatus) => {
     const colors = {
-      primeiro_contato: 'bg-blue-100 text-blue-800',
-      qualificado: 'bg-yellow-100 text-yellow-800', // CORRIGIDO: não é 'primeiro_contato'
-      proposta_enviada: 'bg-purple-100 text-purple-800',
-      negociacao: 'bg-orange-100 text-orange-800',
-      fechado_ganho: 'bg-emerald-100 text-emerald-800',
-      fechado_perdido: 'bg-red-100 text-red-800',
+      primeiro_contato: "bg-blue-100 text-blue-800",
+      qualificado: "bg-yellow-100 text-yellow-800", // CORRIGIDO: não é 'primeiro_contato'
+      proposta_enviada: "bg-purple-100 text-purple-800",
+      negociacao: "bg-orange-100 text-orange-800",
+      fechado_ganho: "bg-emerald-100 text-emerald-800",
+      fechado_perdido: "bg-red-100 text-red-800",
     };
     return colors[status] || colors.primeiro_contato; // CORRIGIDO: retorna cor válida
   };
 
   const getStatusLabel = (status: LeadStatus) => {
     const labels = {
-      primeiro_contato: 'Primeiro Contato',
-      qualificado: 'Qualificado',
-      proposta_enviada: 'Proposta Enviada',
-      negociacao: 'Negociação',
-      fechado_ganho: 'Fechado - Ganho',
-      fechado_perdido: 'Fechado - Perdido',
+      primeiro_contato: "Primeiro Contato",
+      qualificado: "Qualificado",
+      proposta_enviada: "Proposta Enviada",
+      negociacao: "Negociação",
+      fechado_ganho: "Fechado - Ganho",
+      fechado_perdido: "Fechado - Perdido",
     };
     return labels[status] || labels.primeiro_contato;
   };
@@ -51,8 +51,8 @@ export default function LeadsPage() {
       lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (lead.company && lead.company.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
-    const matchesSource = sourceFilter === 'all' || lead.source === sourceFilter;
+    const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
+    const matchesSource = sourceFilter === "all" || lead.source === sourceFilter;
 
     return matchesSearch && matchesStatus && matchesSource;
   });
@@ -82,7 +82,7 @@ export default function LeadsPage() {
       setShowModal(false);
       setSelectedLead(null);
     } catch (error) {
-      console.error('Erro ao salvar lead:', error);
+      console.error("Erro ao salvar lead:", error);
     }
   };
 
@@ -90,20 +90,20 @@ export default function LeadsPage() {
     try {
       await updateLeadStage(leadId, status);
     } catch (error) {
-      console.error('Erro ao alterar status:', error);
+      console.error("Erro ao alterar status:", error);
     }
   };
 
   const handleConvertLead = async (leadId: string) => {
     // Implementar conversão para cliente/projeto
-    console.log('Converting lead:', leadId);
+    console.log("Converting lead:", leadId);
   };
 
   const handleDeleteLead = async (leadId: string) => {
     try {
       await deleteLead(leadId);
     } catch (error) {
-      console.error('Erro ao excluir lead:', error);
+      console.error("Erro ao excluir lead:", error);
     }
   };
 
@@ -129,25 +129,25 @@ export default function LeadsPage() {
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <div className="text-2xl font-bold text-blue-600">
-            {leads.filter((l: Lead) => l.status === 'primeiro_contato').length}
+            {leads.filter((l: Lead) => l.status === "primeiro_contato").length}
           </div>
           <div className="text-sm text-gray-600">Novos</div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <div className="text-2xl font-bold text-yellow-600">
-            {leads.filter((l: Lead) => l.status === 'qualificado').length}
+            {leads.filter((l: Lead) => l.status === "qualificado").length}
           </div>
           <div className="text-sm text-gray-600">Em Contato</div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <div className="text-2xl font-bold text-purple-600">
-            {leads.filter((l: Lead) => l.status === 'proposta_enviada').length}
+            {leads.filter((l: Lead) => l.status === "proposta_enviada").length}
           </div>
           <div className="text-sm text-gray-600">Propostas</div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <div className="text-2xl font-bold text-emerald-600">
-            {leads.filter((l: Lead) => l.status === 'fechado_ganho').length}
+            {leads.filter((l: Lead) => l.status === "fechado_ganho").length}
           </div>
           <div className="text-sm text-gray-600">Convertidos</div>
         </div>
@@ -168,7 +168,7 @@ export default function LeadsPage() {
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as LeadStatus | 'all')}
+            onChange={(e) => setStatusFilter(e.target.value as LeadStatus | "all")}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Todos os status</option>
@@ -182,7 +182,7 @@ export default function LeadsPage() {
 
           <select
             value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value as LeadSource | 'all')}
+            onChange={(e) => setSourceFilter(e.target.value as LeadSource | "all")}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Todas as fontes</option>
@@ -219,7 +219,7 @@ export default function LeadsPage() {
               <div className="flex flex-col space-y-2">
                 <span
                   className={cn(
-                    'rounded-full px-2 py-1 text-xs font-medium',
+                    "rounded-full px-2 py-1 text-xs font-medium",
                     getStatusColor(lead.status),
                   )}
                 >

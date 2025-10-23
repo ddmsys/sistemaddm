@@ -1,4 +1,5 @@
-'use client';
-export default function DashboardPage() {
-  return <div>Commercial Dashboard</div>;
+import { redirect } from "next/navigation";
+
+export default function HomePage() {
+  redirect("/dashboard");
 }

@@ -1,6 +1,7 @@
-// src/components/budgets/BudgetsList.tsx
+// src/components/comercial/budgets/BudgetsList.tsx
 
 "use client";
+
 import { Filter, Plus, Search } from "lucide-react";
 import { useState } from "react";
 
@@ -12,8 +13,8 @@ import { Lead } from "@/lib/types/leads";
 
 interface BudgetsListProps {
   budgets: Budget[];
-  leads?: Lead[];
-  clients?: Client[];
+  leads: Lead[];
+  clients: Client[];
   loading?: boolean;
   onCreate: (data: BudgetFormData) => Promise<void>;
   onUpdate: (id: string, data: Partial<Budget>) => Promise<void>;
@@ -24,6 +25,8 @@ interface BudgetsListProps {
 
 export function BudgetsList({
   budgets,
+  leads = [],
+  clients = [],
   loading = false,
   onCreate,
   onUpdate,
@@ -70,13 +73,10 @@ export function BudgetsList({
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (budgetId: string) => {
-    const budget = budgets.find((b) => b.id === budgetId);
-    if (budget) {
-      setSelectedBudget(budget);
-      setModalMode("edit");
-      setIsModalOpen(true);
-    }
+  const handleOpenEditModal = (budget: Budget) => {
+    setSelectedBudget(budget);
+    setIsModalOpen(true);
+    setModalMode("edit");
   };
 
   const handleSave = async (data: BudgetFormData) => {
@@ -119,7 +119,10 @@ export function BudgetsList({
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-600">Valor Aprovado</p>
           <p className="text-2xl font-bold text-gray-900">
-            R$ {stats.approvedValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            {new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }).format(stats.approvedValue)}
           </p>
         </div>
       </div>
@@ -195,11 +198,17 @@ export function BudgetsList({
         </div>
       )}
 
+      {/* Modal */}
       <BudgetModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedBudget(null);
+        }}
+        onSubmit={handleSave}
         budget={selectedBudget}
+        leads={leads}
+        clients={clients}
         mode={modalMode}
       />
     </div>

@@ -1,6 +1,5 @@
-// src/app/page.tsx
-import CommercialDashboard from '@/components/dashboard/CommercialDashboard';
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return <CommercialDashboard />;
+export default function HomePage() {
+  redirect("/dashboard");
 }

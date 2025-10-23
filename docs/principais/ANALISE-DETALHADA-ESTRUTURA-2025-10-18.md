@@ -43,7 +43,7 @@ src/app/
 │   │   └── [possivelmente outros]
 │   │
 │   ├── budgets/             # ✅ DIRETAMENTE em (authenticated)
-│   │   └── page.tsx         # NÃO está em /crm/budgets
+│   │   └── page.tsx         # NÃO está em //budgets
 │   │
 │   └── admin/
 │       └── users/
@@ -59,7 +59,7 @@ src/app/
 ### 📍 **Localização da Pasta Budgets**
 
 **Caminho:** `src/app/(authenticated)/budgets` ✅  
-**NÃO está em:** `/crm/budgets` ❌
+**NÃO está em:** `//budgets` ❌
 
 **Arquivo existente:**
 
@@ -75,7 +75,7 @@ src/app/
 
 **Não encontrados:**
 
-- `src/app/(authenticated)/crm/budgets/` ❌ (budgets está fora do CRM)
+- `src/app/(authenticated)//budgets/` ❌ (budgets está fora do CRM)
 
 ---
 
@@ -421,7 +421,7 @@ lib/firebase/budgets/approveBudget() → conversão completa ✅
 
 | Rota            | Status            | Observação                 |
 | --------------- | ----------------- | -------------------------- |
-| `/crm/budgets`  | ❌ NÃO EXISTE     | budgets está em `/budgets` |
+| `//budgets`     | ❌ NÃO EXISTE     | budgets está em `/budgets` |
 | `/crm/clients`  | ❌ NÃO EXISTE     | -                          |
 | `/crm/books`    | ❌ NÃO EXISTE     | -                          |
 | `/crm/orders`   | ❌ NÃO EXISTE     | -                          |
@@ -714,7 +714,7 @@ export async function approveBudget(
 ### ✅ **O QUE ESTÁ CORRETO**
 
 1. ✅ Usa route group `(authenticated)/`
-2. ✅ Budgets em `/budgets` (não `/crm/budgets`)
+2. ✅ Budgets em `/budgets` (não `//budgets`)
 3. ✅ Todos os hooks comerciais existem e funcionam
 4. ✅ Cloud Functions usam "budgets" (não "quotes")
 5. ✅ Frontend usa "approved" consistentemente

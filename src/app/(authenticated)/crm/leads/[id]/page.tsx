@@ -1,19 +1,19 @@
 // src/app/(authenticated)/crm/leads/[id]/page.tsx
-'use client';
+"use client";
 
-import { Timestamp } from 'firebase/firestore';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Timestamp } from "firebase/firestore";
+import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { ClientModal } from '@/components/comercial/modals/ClientModal';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { useFirestore } from '@/hooks/useFirestore';
-import { Client, ClientFormData } from '@/lib/types/clients';
-import { Lead } from '@/lib/types/leads';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { ClientModal } from "@/components/comercial/modals/ClientModal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useFirestore } from "@/hooks/useFirestore";
+import { Client, ClientFormData } from "@/lib/types/clients";
+import { Lead } from "@/lib/types/leads";
+import { formatDate, formatDateTime } from "@/lib/utils";
 
 export default function LeadDetailsPage() {
   const params = useParams();
@@ -24,12 +24,12 @@ export default function LeadDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [showClientModal, setShowClientModal] = useState(false);
 
-  const { getById } = useFirestore<Lead>('leads');
+  const { getById } = useFirestore<Lead>("leads");
 
   useEffect(() => {
     const fetchLead = async () => {
       if (!leadId) {
-        router.push('/crm/leads');
+        router.push("/crm/leads");
         return;
       }
 
@@ -39,10 +39,10 @@ export default function LeadDetailsPage() {
         if (leadData) {
           setLead(leadData);
         } else {
-          router.push('/crm/leads');
+          router.push("/crm/leads");
         }
       } catch {
-        router.push('/crm/leads');
+        router.push("/crm/leads");
       } finally {
         setLoading(false);
       }
@@ -57,13 +57,13 @@ export default function LeadDetailsPage() {
 
   const handleCreateClient = async (clientData: ClientFormData) => {
     try {
-      const client: Omit<Client, 'id'> = {
-        type: 'individual', // Adicionando o campo obrigatório
+      const client: Omit<Client, "id"> = {
+        type: "individual", // Adicionando o campo obrigatório
         name: lead?.name || clientData.name,
         email: lead?.email || clientData.email,
         phone: lead?.phone || clientData.phone,
-        document: clientData.document || 'A informar',
-        status: 'active',
+        document: clientData.document || "A informar",
+        status: "active",
         clientNumber: Number(Date.now()), // converter para number
         address: clientData.address,
         tags: lead?.tags,
@@ -71,11 +71,11 @@ export default function LeadDetailsPage() {
         updatedAt: Timestamp.now(),
       };
 
-      console.log('Criando cliente:', client);
+      console.log("Criando cliente:", client);
       // Implementar criação do cliente
       setShowClientModal(false);
     } catch (error) {
-      console.error('Erro ao criar cliente:', error);
+      console.error("Erro ao criar cliente:", error);
     }
   };
 
@@ -93,7 +93,7 @@ export default function LeadDetailsPage() {
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-800">Lead não encontrado</h2>
           <p className="mt-2 text-gray-600">O lead solicitado não existe ou foi removido.</p>
-          <Button onClick={() => router.push('/crm/leads')} className="mt-4">
+          <Button onClick={() => router.push("/crm/leads")} className="mt-4">
             Voltar aos Leads
           </Button>
         </div>
@@ -103,12 +103,12 @@ export default function LeadDetailsPage() {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      primeiro_contato: 'bg-blue-100 text-blue-800',
-      qualificado: 'bg-yellow-100 text-yellow-800',
-      proposta_enviada: 'bg-purple-100 text-purple-800',
-      negociacao: 'bg-orange-100 text-orange-800',
-      fechado_ganho: 'bg-emerald-100 text-emerald-800',
-      fechado_perdido: 'bg-red-100 text-red-800',
+      primeiro_contato: "bg-blue-100 text-blue-800",
+      qualificado: "bg-yellow-100 text-yellow-800",
+      proposta_enviada: "bg-purple-100 text-purple-800",
+      negociacao: "bg-orange-100 text-orange-800",
+      fechado_ganho: "bg-emerald-100 text-emerald-800",
+      fechado_perdido: "bg-red-100 text-red-800",
     };
     return colors[status as keyof typeof colors] || colors.primeiro_contato;
   };
@@ -118,7 +118,7 @@ export default function LeadDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="outline" size="sm" onClick={() => router.push('/crm/leads')}>
+          <Button variant="outline" size="sm" onClick={() => router.push("/crm/leads")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
@@ -203,7 +203,7 @@ export default function LeadDetailsPage() {
               <Button
                 className="w-full"
                 onClick={handleConvertToClient}
-                disabled={lead.status === 'fechado_ganho'}
+                disabled={lead.status === "fechado_ganho"}
               >
                 Converter em Cliente
               </Button>
@@ -271,11 +271,11 @@ export default function LeadDetailsPage() {
           client={
             {
               name: lead.name,
-              email: lead.email || '',
-              phone: lead.phone || '',
-              document: '', // Campo obrigatório vazio para preenchimento
-              type: 'individual', // Tipo obrigatório
-              status: 'active', // Status obrigatório
+              email: lead.email || "",
+              phone: lead.phone || "",
+              document: "", // Campo obrigatório vazio para preenchimento
+              type: "individual", // Tipo obrigatório
+              status: "active", // Status obrigatório
               tags: [],
               createdAt: Timestamp.now(),
               updatedAt: Timestamp.now(),

@@ -375,7 +375,7 @@ src/components/comercial/modals/BookModal.tsx  # ❌ "Bookt" com "t"
 
 ```
 // PLANO-MESTRE-INTEGRADO linha 87
-"- ✅ /crm/budgets/[id] - Detalhes do Budget"
+"- ✅ //budgets/[id] - Detalhes do Budget"
 ```
 
 **Código real:**
