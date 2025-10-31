@@ -55,7 +55,7 @@ export default function LeadDetailsPage() {
     setShowClientModal(true);
   };
 
-  const handleCreateClient = async (clientData: ClientFormData) => {
+  const handleCreateClient = async (clientData: ClientFormData): Promise<string | null> => {
     try {
       const client: Omit<Client, "id"> = {
         type: "individual", // Adicionando o campo obrigatório
@@ -74,8 +74,10 @@ export default function LeadDetailsPage() {
       console.log("Criando cliente:", client);
       // Implementar criação do cliente
       setShowClientModal(false);
+      return "client-id"; // Retornar o ID do cliente criado (ou null se falhar)
     } catch (error) {
       console.error("Erro ao criar cliente:", error);
+      return null;
     }
   };
 
@@ -263,19 +265,22 @@ export default function LeadDetailsPage() {
       </div>
 
       {/* Modal de Cliente */}
-      {showClientModal && (
+      {showClientModal && lead && (
         <ClientModal
           isOpen={showClientModal}
           onClose={() => setShowClientModal(false)}
           onSubmit={handleCreateClient}
           client={
             {
+              type: lead.company ? "company" : "individual",
               name: lead.name,
-              email: lead.email || "",
+              email: lead.email,
               phone: lead.phone || "",
+              company: lead.company || "",
               document: "", // Campo obrigatório vazio para preenchimento
-              type: "individual", // Tipo obrigatório
               status: "active", // Status obrigatório
+              notes: lead.notes || "",
+              source: lead.source || "",
               tags: [],
               createdAt: Timestamp.now(),
               updatedAt: Timestamp.now(),

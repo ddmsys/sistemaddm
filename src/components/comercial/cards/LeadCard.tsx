@@ -1,14 +1,14 @@
 // src/components/comercial/cards/LeadCard.tsx
-'use client';
+"use client";
 
-import { Building, Mail, MoreHorizontal, Phone } from 'lucide-react';
-import { useState } from 'react';
+import { Building, Mail, MoreHorizontal, Phone } from "lucide-react";
+import { useState } from "react";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Modal } from '@/components/ui/Modal';
-import { Lead, LeadSource, LeadStatus } from '@/lib/types/leads';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Modal } from "@/components/ui/Modal";
+import { Lead, LeadSource, LeadStatus } from "@/lib/types/leads";
 
 interface LeadCardProps {
   lead: Lead;
@@ -20,73 +20,73 @@ interface LeadCardProps {
 
 const statusConfig = {
   primeiro_contato: {
-    label: 'Primeiro Contato',
-    color: 'secondary',
-    class: 'bg-blue-50 text-blue-700 border-blue-200',
+    label: "Primeiro Contato",
+    color: "secondary",
+    class: "bg-blue-50 text-blue-700 border-blue-200",
   },
   qualificado: {
-    label: 'Qualificado',
-    color: 'success',
-    class: 'bg-green-50 text-green-700 border-green-200',
+    label: "Qualificado",
+    color: "success",
+    class: "bg-green-50 text-green-700 border-green-200",
   },
   proposta_enviada: {
-    label: 'Proposta Enviada',
-    color: 'warning',
-    class: 'bg-purple-50 text-purple-700 border-purple-200',
+    label: "Proposta Enviada",
+    color: "warning",
+    class: "bg-purple-50 text-purple-700 border-purple-200",
   },
   negociacao: {
-    label: 'Negociação',
-    color: 'warning',
-    class: 'bg-orange-50 text-orange-700 border-orange-200',
+    label: "Negociação",
+    color: "warning",
+    class: "bg-orange-50 text-orange-700 border-orange-200",
   },
   fechado_ganho: {
-    label: 'Fechado - Ganho',
-    color: 'success',
-    class: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    label: "Fechado - Ganho",
+    color: "success",
+    class: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
   fechado_perdido: {
-    label: 'Fechado - Perdido',
-    color: 'destructive',
-    class: 'bg-red-50 text-red-700 border-red-200',
+    label: "Fechado - Perdido",
+    color: "destructive",
+    class: "bg-red-50 text-red-700 border-red-200",
   },
 };
 
 const sourceConfig: Record<LeadSource, { label: string; icon: string }> = {
   website: {
-    label: 'Website',
-    icon: '🌐',
+    label: "Website",
+    icon: "🌐",
   },
   phone: {
-    label: 'Telefone',
-    icon: 'phone',
+    label: "Telefone",
+    icon: "phone",
   },
   socialmedia: {
-    label: 'SocialMedia',
-    icon: 'share-2',
+    label: "SocialMedia",
+    icon: "share-2",
   },
   referral: {
-    label: 'Indicação',
-    icon: 'users',
+    label: "Indicação",
+    icon: "users",
   },
   advertising: {
-    label: 'Publicidade',
-    icon: 'megaphone',
+    label: "Publicidade",
+    icon: "megaphone",
   },
   email: {
-    label: 'Email Marketing',
-    icon: 'mail',
+    label: "Email Marketing",
+    icon: "mail",
   },
   event: {
-    label: 'Eventos',
-    icon: 'calendar',
+    label: "Eventos",
+    icon: "calendar",
   },
   coldcall: {
-    label: 'Cold Call',
-    icon: 'phone',
+    label: "Cold Call",
+    icon: "phone",
   },
   other: {
-    label: 'Outros',
-    icon: 'more-horizontal',
+    label: "Outros",
+    icon: "more-horizontal",
   },
 };
 
@@ -98,11 +98,11 @@ export function LeadCard({ lead, onStatusChange, onEdit, onDelete, onConvert }: 
   const source = sourceConfig[lead.source];
 
   const getScoreColor = (score?: number) => {
-    if (!score) return 'text-gray-400';
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    if (score >= 40) return 'text-orange-600';
-    return 'text-red-600';
+    if (!score) return "text-gray-400";
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    if (score >= 40) return "text-orange-600";
+    return "text-red-600";
   };
 
   return (
@@ -174,7 +174,7 @@ export function LeadCard({ lead, onStatusChange, onEdit, onDelete, onConvert }: 
 
           <div className="flex space-x-2 pt-2">
             {/* CORRIGIDO: fechado_ganho */}
-            {lead.status !== 'fechado_ganho' && (
+            {lead.status !== "fechado_ganho" && (
               <Button
                 variant="outline"
                 size="sm"

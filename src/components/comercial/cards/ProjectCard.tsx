@@ -1,15 +1,15 @@
 // src/components/comercial/cards/ProjectCard.tsx
-'use client';
+"use client";
 
-import { AlertCircle, CheckCircle2, Clock, MoreHorizontal, Play, User, Users } from 'lucide-react';
-import { useState } from 'react';
+import { AlertCircle, CheckCircle2, Clock, MoreHorizontal, Play, User, Users } from "lucide-react";
+import { useState } from "react";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Modal } from '@/components/ui/Modal';
-import { Project, ProjectStatus } from '@/lib/types/projects'; // Corrigido import
-import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Modal } from "@/components/ui/Modal";
+import { Project, ProjectStatus } from "@/lib/types/projects"; // Corrigido import
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 
 interface ProjectCardProps {
   project: Project;
@@ -22,91 +22,91 @@ interface ProjectCardProps {
 // ================ CONFIGURAÇÕES ================
 const statusConfig = {
   open: {
-    label: 'Aberto',
-    color: 'secondary',
-    class: 'bg-gray-50 text-gray-700 border-gray-200',
+    label: "Aberto",
+    color: "secondary",
+    class: "bg-gray-50 text-gray-700 border-gray-200",
     icon: Clock,
   },
   design: {
-    label: 'Design',
-    color: 'info',
-    class: 'bg-blue-50 text-blue-700 border-blue-200',
+    label: "Design",
+    color: "info",
+    class: "bg-blue-50 text-blue-700 border-blue-200",
     icon: Play,
   },
   review: {
-    label: 'Revisão',
-    color: 'warning',
-    class: 'bg-purple-50 text-purple-700 border-purple-200',
+    label: "Revisão",
+    color: "warning",
+    class: "bg-purple-50 text-purple-700 border-purple-200",
     icon: AlertCircle,
   },
   production: {
-    label: 'Produção',
-    color: 'warning',
-    class: 'bg-amber-50 text-amber-700 border-amber-200',
+    label: "Produção",
+    color: "warning",
+    class: "bg-amber-50 text-amber-700 border-amber-200",
     icon: Play,
   },
   clientApproval: {
-    label: 'Aprovação Cliente',
-    color: 'warning',
-    class: 'bg-orange-50 text-orange-700 border-orange-200',
+    label: "Aprovação Cliente",
+    color: "warning",
+    class: "bg-orange-50 text-orange-700 border-orange-200",
     icon: User,
   },
   approved: {
-    label: 'Aprovado',
-    color: 'success',
-    class: 'bg-green-50 text-green-700 border-green-200',
+    label: "Aprovado",
+    color: "success",
+    class: "bg-green-50 text-green-700 border-green-200",
     icon: CheckCircle2,
   },
   printing: {
-    label: 'Impressão',
-    color: 'info',
-    class: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    label: "Impressão",
+    color: "info",
+    class: "bg-indigo-50 text-indigo-700 border-indigo-200",
     icon: Play,
   },
   delivering: {
-    label: 'Entregando',
-    color: 'info',
-    class: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+    label: "Entregando",
+    color: "info",
+    class: "bg-cyan-50 text-cyan-700 border-cyan-200",
     icon: Play,
   },
   shipped: {
-    label: 'Enviado',
-    color: 'info',
-    class: 'bg-teal-50 text-teal-700 border-teal-200',
+    label: "Enviado",
+    color: "info",
+    class: "bg-teal-50 text-teal-700 border-teal-200",
     icon: CheckCircle2,
   },
   done: {
-    label: 'Concluído',
-    color: 'success',
-    class: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    label: "Concluído",
+    color: "success",
+    class: "bg-emerald-50 text-emerald-700 border-emerald-200",
     icon: CheckCircle2,
   },
   cancelled: {
-    label: 'Cancelado',
-    color: 'destructive',
-    class: 'bg-red-50 text-red-700 border-red-200',
+    label: "Cancelado",
+    color: "destructive",
+    class: "bg-red-50 text-red-700 border-red-200",
     icon: AlertCircle,
   },
 };
 
 const typeConfig = {
-  L: { label: 'Livro', icon: '📖' },
-  E: { label: 'E-book', icon: '📱' },
-  K: { label: 'Kindle', icon: '📱' },
-  C: { label: 'CD', icon: '💿' },
-  D: { label: 'DVD', icon: '📀' },
-  G: { label: 'Material Gráfico', icon: '🎨' },
-  P: { label: 'Plataforma Digital', icon: '💻' },
-  S: { label: 'Single', icon: '🎵' },
-  X: { label: 'Livro Terceiros', icon: '📚' },
-  A: { label: 'Arte', icon: '🎭' },
+  L: { label: "Livro", icon: "📖" },
+  E: { label: "E-book", icon: "📱" },
+  K: { label: "Kindle", icon: "📱" },
+  C: { label: "CD", icon: "💿" },
+  D: { label: "DVD", icon: "📀" },
+  G: { label: "Material Gráfico", icon: "🎨" },
+  P: { label: "Plataforma Digital", icon: "💻" },
+  S: { label: "Single", icon: "🎵" },
+  X: { label: "Livro Terceiros", icon: "📚" },
+  A: { label: "Arte", icon: "🎭" },
 };
 
 const priorityConfig = {
-  low: { label: 'Baixa', color: 'text-green-600', bg: 'bg-green-100' },
-  medium: { label: 'Média', color: 'text-yellow-600', bg: 'bg-yellow-100' },
-  high: { label: 'Alta', color: 'text-orange-600', bg: 'bg-orange-100' },
-  urgent: { label: 'Urgente', color: 'text-red-600', bg: 'bg-red-100' },
+  low: { label: "Baixa", color: "text-green-600", bg: "bg-green-100" },
+  medium: { label: "Média", color: "text-yellow-600", bg: "bg-yellow-100" },
+  high: { label: "Alta", color: "text-orange-600", bg: "bg-orange-100" },
+  urgent: { label: "Urgente", color: "text-red-600", bg: "bg-red-100" },
 };
 
 export function ProjectCard({
@@ -128,7 +128,7 @@ export function ProjectCard({
   const isOverdue =
     project.dueDate &&
     (project.dueDate instanceof Date ? project.dueDate : project.dueDate.toDate()) < new Date() &&
-    project.status !== 'done';
+    project.status !== "done";
 
   const daysUntilDue = project.dueDate
     ? Math.ceil(
@@ -138,7 +138,7 @@ export function ProjectCard({
       )
     : null;
 
-  const completedTasks = project.tasks.filter((task) => task.status === 'done').length;
+  const completedTasks = project.tasks.filter((task) => task.status === "done").length;
   const totalTasks = project.tasks.length;
 
   const taskProgress =
@@ -152,7 +152,7 @@ export function ProjectCard({
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-lg font-semibold text-gray-900">{project.title}</h3>
             <p className="text-xs text-primary-500">
-              {project.catalogCode || 'Código em processamento...'}
+              {project.catalogCode || "Código em processamento..."}
             </p>
             <p className="mt-1 truncate text-sm text-gray-600">
               <User className="mr-1 inline h-4 w-4" />
@@ -196,14 +196,14 @@ export function ProjectCard({
             <div className="h-2 w-full rounded-full bg-gray-200">
               <div
                 className={cn(
-                  'h-2 rounded-full transition-all',
+                  "h-2 rounded-full transition-all",
                   taskProgress >= 100
-                    ? 'bg-emerald-500'
+                    ? "bg-emerald-500"
                     : taskProgress >= 75
-                      ? 'bg-blue-500'
+                      ? "bg-blue-500"
                       : taskProgress >= 50
-                        ? 'bg-amber-500'
-                        : 'bg-red-500',
+                        ? "bg-amber-500"
+                        : "bg-red-500",
                 )}
                 style={{ width: `${taskProgress}%` }}
               />
@@ -231,10 +231,10 @@ export function ProjectCard({
                 <span className="text-gray-600">Custo Real:</span>
                 <span
                   className={cn(
-                    'font-medium',
+                    "font-medium",
                     project.actualCost > (project.budget || 0)
-                      ? 'text-red-600'
-                      : 'text-emerald-600',
+                      ? "text-red-600"
+                      : "text-emerald-600",
                   )}
                 >
                   {formatCurrency(project.actualCost)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Plus, Trash2, Loader2, AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,8 @@ import type {
   BudgetFormData,
   BudgetItem,
   EditorialServiceItem,
-  PrintingItem,
   ExtraItem,
+  PrintingItem,
 } from "@/lib/types/budgets";
 import type { Client } from "@/lib/types/clients";
 import type { Lead } from "@/lib/types/leads";

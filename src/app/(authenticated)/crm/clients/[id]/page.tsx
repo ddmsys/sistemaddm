@@ -1,11 +1,11 @@
 // src/app/(authenticated)/crm/clients/[id]/page.tsx
-'use client';
+"use client";
 
-import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
-import { useClients } from '@/hooks/comercial/useClients';
-import { Client } from '@/lib/types/clients';
+import { useClients } from "@/hooks/comercial/useClients";
+import { Client } from "@/lib/types/clients";
 
 export default function ClientPage() {
   const router = useRouter();
@@ -20,22 +20,22 @@ export default function ClientPage() {
         setClient(foundClient);
       } else {
         setClient(null);
-        router.push('/crm/clients');
+        router.push("/crm/clients");
       }
     },
     [clients, router],
   );
 
   useEffect(() => {
-    if (!params || typeof params.id !== 'string') {
-      router.push('/crm/clients');
+    if (!params || typeof params.id !== "string") {
+      router.push("/crm/clients");
       return;
     }
 
     const id = params.id as string;
-    if (!id || typeof id !== 'string') {
+    if (!id || typeof id !== "string") {
       // Se id inválido, pode redirecionar ou mostrar erro simples
-      router.push('/crm/clients');
+      router.push("/crm/clients");
       return;
     }
     loadClient(id);

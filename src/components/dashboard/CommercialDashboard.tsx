@@ -529,9 +529,10 @@ export default function CommercialDashboard() {
         <LeadModal
           isOpen={showLeadModal}
           onClose={() => setShowLeadModal(false)}
-          onSubmit={async (data) => {
-            await createLead?.(data);
+          onSubmit={async (data): Promise<string | null> => {
+            const leadId = await createLead?.(data);
             setShowLeadModal(false);
+            return leadId || null;
           }}
         />
       )}
@@ -540,9 +541,10 @@ export default function CommercialDashboard() {
         <ClientModal
           isOpen={showClientModal}
           onClose={() => setShowClientModal(false)}
-          onSubmit={async (data) => {
-            await createClient?.(data);
+          onSubmit={async (data): Promise<string | null> => {
+            const clientId = await createClient?.(data);
             setShowClientModal(false);
+            return clientId || null;
           }}
         />
       )}

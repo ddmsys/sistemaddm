@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from "react";
 
 interface DonutData {
   stage: string;
@@ -92,13 +92,13 @@ export function DonutChart({
     const innerStart = polarToCartesian(centerX, centerY, innerRadius, endAngle);
     const innerEnd = polarToCartesian(centerX, centerY, innerRadius, startAngle);
 
-    const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
 
     return [
-      'M',
+      "M",
       start.x,
       start.y,
-      'A',
+      "A",
       outerRadius,
       outerRadius,
       0,
@@ -106,10 +106,10 @@ export function DonutChart({
       0,
       end.x,
       end.y,
-      'L',
+      "L",
       innerEnd.x,
       innerEnd.y,
-      'A',
+      "A",
       innerRadius,
       innerRadius,
       0,
@@ -117,8 +117,8 @@ export function DonutChart({
       1,
       innerStart.x,
       innerStart.y,
-      'z',
-    ].join(' ');
+      "z",
+    ].join(" ");
   };
 
   function polarToCartesian(
@@ -177,7 +177,7 @@ export function DonutChart({
                   fill={item.color}
                   className="cursor-pointer transition-all duration-300"
                   style={{
-                    filter: isHovered ? 'brightness(1.1) saturate(1.2)' : 'none',
+                    filter: isHovered ? "brightness(1.1) saturate(1.2)" : "none",
                   }}
                   onMouseEnter={() => setHoveredSegment(item.stage)}
                   onMouseLeave={() => setHoveredSegment(null)}
@@ -228,7 +228,7 @@ export function DonutChart({
       {/* ✅ LEGENDA HORIZONTAL EMBAIXO - MAIOR */}
       <div className="w-full px-4">
         <div className="flex flex-wrap justify-center gap-x-12 gap-y-4">
-          {' '}
+          {" "}
           {/* Era gap-x-8, agora gap-x-12 */}
           {processedData.map((item) => {
             const isHovered = hoveredSegment === item.stage;
@@ -238,7 +238,7 @@ export function DonutChart({
                 key={item.stage}
                 className={`flex cursor-pointer items-center gap-3 transition-all duration-200 ${
                   // Era gap-2, agora gap-3
-                  isHovered ? 'scale-110' : 'hover:scale-105' // Era scale-105, agora scale-110
+                  isHovered ? "scale-110" : "hover:scale-105" // Era scale-105, agora scale-110
                 }`}
                 onMouseEnter={() => setHoveredSegment(item.stage)}
                 onMouseLeave={() => setHoveredSegment(null)}
@@ -247,11 +247,11 @@ export function DonutChart({
                 <div
                   className={`h-4 w-4 rounded-full transition-all duration-200 ${
                     // Era w-3 h-3, agora w-4 h-4
-                    isHovered ? 'scale-125 shadow-lg' : ''
+                    isHovered ? "scale-125 shadow-lg" : ""
                   }`}
                   style={{
                     backgroundColor: item.color,
-                    boxShadow: isHovered ? `0 4px 12px ${item.color}40` : 'none',
+                    boxShadow: isHovered ? `0 4px 12px ${item.color}40` : "none",
                   }}
                 />
 
@@ -259,7 +259,7 @@ export function DonutChart({
                 <span
                   className={`text-base transition-colors duration-200 ${
                     // Era text-sm, agora text-base
-                    isHovered ? 'font-semibold text-slate-900' : 'text-slate-700' // Era font-medium, agora font-semibold
+                    isHovered ? "font-semibold text-slate-900" : "text-slate-700" // Era font-medium, agora font-semibold
                   }`}
                 >
                   {item.label}

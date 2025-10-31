@@ -42,25 +42,22 @@ export function useLeads() {
     error: null,
   });
 
-  // 🔥 ADICIONAR ESTE useEffect
   useEffect(() => {
     if (user) {
       fetchLeads();
     }
-  }, [user]); // Carrega quando o usuário estiver autenticado
+  }, [user]);
 
   // ================ FETCH LEADS ================
   const fetchLeads = useCallback(
     async (filters?: LeadFilters) => {
       if (!user) return;
       setLeads((prev) => ({ ...prev, loading: true, error: null }));
-
       try {
         let leadsQuery = query(collection(db, "leads"), orderBy("createdAt", "desc"));
 
-        // Aplicar filtros se fornecidos
         if (filters?.status && filters.status.length > 0) {
-          leadsQuery = query(leadsQuery, where("stage", "in", filters.status));
+          leadsQuery = query(leadsQuery, where("status", "in", filters.status));
         }
 
         if (filters?.source && filters.source.length > 0) {
@@ -77,7 +74,6 @@ export function useLeads() {
           ...doc.data(),
         })) as Lead[];
 
-        // Aplicar filtros de data e busca no frontend
         let filteredLeads = leadsData;
 
         if (filters?.dateRange?.start || filters?.dateRange?.end) {
@@ -86,7 +82,6 @@ export function useLeads() {
               lead.createdAt instanceof Date ? lead.createdAt : lead.createdAt.toDate();
             const start = filters.dateRange?.start ? new Date(filters.dateRange.start) : null;
             const end = filters.dateRange?.end ? new Date(filters.dateRange.end) : null;
-
             if (start && createdAt < start) return false;
             if (end && createdAt > end) return false;
             return true;
@@ -127,11 +122,9 @@ export function useLeads() {
     try {
       const docRef = doc(db, "leads", id);
       const docSnap = await getDoc(docRef);
-
       if (docSnap.exists()) {
         return { id: docSnap.id, ...docSnap.data() } as Lead;
       }
-
       return null;
     } catch (error) {
       console.error("Erro ao buscar lead:", error);
@@ -155,7 +148,7 @@ export function useLeads() {
           phone: data.phone,
           company: data.company,
           source: data.source,
-          status: "primeiro_contato", // Adicionando status obrigatório
+          status: "primeiro_contato",
           value: data.value || 0,
           probability: data.probability || 0,
           ownerId: user.uid,
@@ -181,29 +174,32 @@ export function useLeads() {
     [user, fetchLeads],
   );
 
-  // ================ UPDATE LEAD ================
+  // 🔥 CORREÇÃO: UPDATE LEAD aceita qualquer campo de Lead
   const updateLead = useCallback(
-    async (id: string, data: Partial<LeadFormData>): Promise<boolean> => {
+    async (id: string, data: Partial<Lead>): Promise<boolean> => {
       if (!user) {
         toast.error("Usuário não autenticado");
         return false;
       }
 
       try {
+        console.log("🔄 Atualizando lead:", id, data);
+
         const docRef = doc(db, "leads", id);
-        const updateData: Partial<Lead> = {
+        const updateData: any = {
           ...data,
           updatedAt: Timestamp.now(),
           lastActivityAt: Timestamp.now(),
         };
 
         await updateDoc(docRef, updateData);
+        console.log("✅ Lead atualizado");
         toast.success("Lead atualizado com sucesso!");
         await fetchLeads();
         return true;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao atualizar lead:", error);
+        console.error("❌ Erro ao atualizar lead:", error);
         toast.error(`Erro ao atualizar lead: ${errorMessage}`);
         return false;
       }
@@ -222,18 +218,17 @@ export function useLeads() {
       try {
         const docRef = doc(db, "leads", id);
         await updateDoc(docRef, {
-          stage,
+          status: stage,
           updatedAt: Timestamp.now(),
           lastActivityAt: Timestamp.now(),
         });
-
-        toast.success("Stage do lead atualizado!");
+        toast.success("Status do lead atualizado!");
         await fetchLeads();
         return true;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        console.error("Erro ao atualizar stage:", error);
-        toast.error("Erro ao atualizar stage do lead");
+        console.error("Erro ao atualizar status:", error);
+        toast.error("Erro ao atualizar status do lead");
         return false;
       }
     },
@@ -273,8 +268,6 @@ export function useLeads() {
         label: `${lead.name}${lead.email ? ` (${lead.email})` : ""}`,
       }));
   }, [leads.data]);
-
-  // AQUI, SEM NENHUM OUTRO BLOCO DEPOIS
 
   return {
     leads: leads.data ?? [],

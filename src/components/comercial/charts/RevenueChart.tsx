@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Area,
@@ -11,10 +11,10 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
+} from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/utils";
 
 interface RevenueData {
   period: string;
@@ -26,13 +26,13 @@ interface RevenueData {
 interface RevenueChartProps {
   data: RevenueData[];
   title?: string;
-  type?: 'line' | 'area';
+  type?: "line" | "area";
 }
 
 export function RevenueChart({
   data = [],
-  title = 'Receita vs Despesas',
-  type = 'area',
+  title = "Receita vs Despesas",
+  type = "area",
 }: RevenueChartProps) {
   const CustomTooltip = ({
     active,
@@ -58,7 +58,7 @@ export function RevenueChart({
     return null;
   };
 
-  const Chart = type === 'area' ? AreaChart : LineChart;
+  const Chart = type === "area" ? AreaChart : LineChart;
 
   return (
     <Card>
@@ -75,7 +75,7 @@ export function RevenueChart({
               <Tooltip content={<CustomTooltip />} />
               <Legend />
 
-              {type === 'area' ? (
+              {type === "area" ? (
                 <>
                   <Area
                     type="monotone"

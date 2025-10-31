@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { Building, Edit, Mail, MapPin, MoreHorizontal, Phone, Trash2, User } from 'lucide-react';
-import { useState } from 'react';
+import { Building, Edit, Mail, MapPin, MoreHorizontal, Phone, Trash2, User } from "lucide-react";
+import { useState } from "react";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Client, ClientStatus } from '@/lib/types/clients';
-import { formatDate } from '@/lib/utils';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Client, ClientStatus } from "@/lib/types/clients";
+import { formatDate } from "@/lib/utils";
 
 interface ClientCardProps {
   client: Client;
@@ -21,37 +21,37 @@ interface ClientCardProps {
 const getStatusConfig = (status: ClientStatus) => {
   const configs = {
     active: {
-      label: 'Ativo',
-      color: 'bg-green-100 text-green-800 border-green-200',
-      dot: 'bg-green-400',
+      label: "Ativo",
+      color: "bg-green-100 text-green-800 border-green-200",
+      dot: "bg-green-400",
     },
     inactive: {
-      label: 'Inativo',
-      color: 'bg-gray-100 text-gray-800 border-gray-200',
-      dot: 'bg-gray-400',
+      label: "Inativo",
+      color: "bg-gray-100 text-gray-800 border-gray-200",
+      dot: "bg-gray-400",
     },
     blocked: {
-      label: 'Bloqueado',
-      color: 'bg-red-100 text-red-800 border-red-200',
-      dot: 'bg-red-400',
+      label: "Bloqueado",
+      color: "bg-red-100 text-red-800 border-red-200",
+      dot: "bg-red-400",
     },
   };
   return configs[status] || configs.active;
 };
 
-const getTypeConfig = (type: 'individual' | 'company') => {
+const getTypeConfig = (type: "individual" | "company") => {
   const configs = {
     individual: {
-      label: 'Pessoa Física',
+      label: "Pessoa Física",
       icon: User,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
+      color: "text-green-600",
+      bgColor: "bg-green-100",
     },
     company: {
-      label: 'Pessoa Jurídica',
+      label: "Pessoa Jurídica",
       icon: Building,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
     },
   };
   return configs[type];
@@ -71,7 +71,7 @@ export function ClientCard({ client, onEdit, onDelete, onView, onClick }: Client
     }
 
     const target = e.target as HTMLElement;
-    if (!target.closest('[data-menu]')) {
+    if (!target.closest("[data-menu]")) {
       onClick?.(client);
     }
   };
@@ -79,7 +79,7 @@ export function ClientCard({ client, onEdit, onDelete, onView, onClick }: Client
   return (
     <Card
       className={`group relative transition-all duration-200 hover:shadow-md ${
-        onClick ? 'cursor-pointer' : ''
+        onClick ? "cursor-pointer" : ""
       }`}
       onClick={handleCardClick}
     >
@@ -184,7 +184,7 @@ export function ClientCard({ client, onEdit, onDelete, onView, onClick }: Client
               <div className="flex h-4 w-4 items-center justify-center">
                 <div className="h-2 w-2 rounded-full bg-gray-400" />
               </div>
-              <span className="text-gray-600">{client.type === 'company' ? 'CNPJ:' : 'CPF:'}</span>
+              <span className="text-gray-600">{client.type === "company" ? "CNPJ:" : "CPF:"}</span>
               <span className="font-mono text-gray-900">{client.document}</span>
             </div>
           )}

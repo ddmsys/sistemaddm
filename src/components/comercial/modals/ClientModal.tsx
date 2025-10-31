@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useFirestore } from "@/hooks/useFirestore";
 import { Client, ClientFormData } from "@/lib/types/clients";
@@ -68,6 +68,52 @@ export function ClientModal({ isOpen, onClose, onSubmit, client }: ClientModalPr
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loadingCEP, setLoadingCEP] = useState(false);
   const [tagInput, setTagInput] = useState("");
+
+  useEffect(() => {
+    if (client) {
+      // ✅ Detectar o tipo do cliente salvo
+      const detectedType = client.type === "company" ? "juridica" : "fisica";
+      setClientType(detectedType);
+
+      // ✅ Carregar todos os dados
+      setFormData({
+        type: client.type || "individual",
+        name: client.name || "",
+        email: client.email || "",
+        phone: client.phone || "",
+        document: client.document || "",
+        rg: client.rg || "",
+        birthDate: client.birthDate || "",
+        referralSource: client.referralSource || "",
+        status: client.status || "active",
+        company: client.company || "",
+        companyName: client.companyName || "",
+        stateRegistration: client.stateRegistration || "",
+        contactPerson: client.contactPerson || "",
+        businessType: client.businessType || "",
+        source: client.source || "",
+        notes: client.notes || "",
+        tags: client.tags || [],
+        socialMedia: client.socialMedia || {
+          facebook: "",
+          instagram: "",
+          linkedin: "",
+          twitter: "",
+          website: "",
+        },
+        address: {
+          street: client.address?.street || "",
+          number: client.address?.number || "",
+          complement: client.address?.complement || "",
+          neighborhood: client.address?.neighborhood || "",
+          city: client.address?.city || "",
+          state: client.address?.state || "",
+          zipCode: client.address?.zipCode || "",
+          country: client.address?.country || "Brasil",
+        },
+      });
+    }
+  }, [client]);
 
   if (!isOpen) return null;
 

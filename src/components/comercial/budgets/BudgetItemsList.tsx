@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Edit2, FileText, Gift, Package, Trash2 } from 'lucide-react';
+import { Edit2, FileText, Gift, Package, Trash2 } from "lucide-react";
 
-import { BudgetItem, EditorialServiceType, ExtraType } from '@/lib/types/budgets';
+import { BudgetItem, EditorialServiceType, ExtraType } from "@/lib/types/budgets";
 
 interface BudgetItemsListProps {
   items: BudgetItem[];
@@ -29,11 +29,11 @@ export function BudgetItemsList({
 
   const getItemIcon = (type: string) => {
     switch (type) {
-      case 'editorial_service':
+      case "editorial_service":
         return <FileText className="h-5 w-5 text-blue-600" />;
-      case 'printing':
+      case "printing":
         return <Package className="h-5 w-5 text-green-600" />;
-      case 'extra':
+      case "extra":
         return <Gift className="h-5 w-5 text-purple-600" />;
       default:
         return <FileText className="h-5 w-5 text-gray-600" />;
@@ -42,26 +42,26 @@ export function BudgetItemsList({
 
   const getItemTypeName = (type: string) => {
     switch (type) {
-      case 'editorial_service':
-        return 'Serviço Editorial';
-      case 'printing':
-        return 'Impressão';
-      case 'extra':
-        return 'Extra';
+      case "editorial_service":
+        return "Serviço Editorial";
+      case "printing":
+        return "Impressão";
+      case "extra":
+        return "Extra";
       default:
         return type;
     }
   };
 
   const getServiceName = (item: BudgetItem) => {
-    if (item.type === 'editorial_service') {
+    if (item.type === "editorial_service") {
       return item.service === EditorialServiceType.CUSTOM
-        ? item.customService || 'Serviço Personalizado'
+        ? item.customService || "Serviço Personalizado"
         : item.service;
     }
-    if (item.type === 'extra') {
+    if (item.type === "extra") {
       return item.extraType === ExtraType.CUSTOM
-        ? item.customExtra || 'Extra Personalizado'
+        ? item.customExtra || "Extra Personalizado"
         : item.extraType;
     }
     return item.description;

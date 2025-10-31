@@ -1,269 +1,368 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { useFirestore } from "@/hooks/useFirestore";
-import { Lead, LeadFormData, LeadSource, LeadStatus } from "@/lib/types/leads";
-import { isValidEmail, maskPhone } from "@/lib/utils";
+import { Lead, LeadFormData } from "@/lib/types/leads";
+import { maskPhone } from "@/lib/utils";
 
 interface LeadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: LeadFormData) => Promise<void>;
+  onSubmit: (data: LeadFormData) => Promise<string | null>;
   lead?: Lead | null;
 }
 
-// Opções de origem do lead
-const sourceOptions = [
-  { value: "website", label: "Site" },
-  { value: "email", label: "Email" },
-  { value: "phone", label: "Telefone" },
-  { value: "referral", label: "Indicação" },
-  { value: "socialmedia", label: "Redes Sociais" },
-  { value: "coldcall", label: "Cold Call" },
-  { value: "event", label: "Evento" },
-  { value: "advertising", label: "Publicidade" },
-  { value: "other", label: "Outro" },
-];
-
 export function LeadModal({ isOpen, onClose, onSubmit, lead }: LeadModalProps) {
-  const { checkDuplicate } = useFirestore<Lead>("leads");
-  const [formData, setFormData] = useState<LeadFormData>({
-    name: lead?.name || "",
-    email: lead?.email || "",
-    phone: lead?.phone || "",
-    company: lead?.company || "",
-    source: (lead?.source as LeadSource) || "website",
-    interestArea: lead?.interestArea || "",
-    notes: lead?.notes || "",
-    status: (lead?.status as LeadStatus) || "primeiro_contato", // ajuste para status correto!
-    value: lead?.value,
-    probability: lead?.probability,
-    tags: lead?.tags || [],
+  const [activeTab, setActiveTab] = useState<"basic" | "details">("basic");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    source: "website" as LeadFormData["source"],
+    referredBy: "",
+    status: "primeiro_contato" as LeadFormData["status"],
+    value: 0,
+    probability: 0,
+    notes: "",
+    tags: [] as string[],
   });
 
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [tagInput, setTagInput] = useState("");
 
-  if (!isOpen) return null;
-
-  const validateForm = async (): Promise<Record<string, string>> => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Nome é obrigatório";
-    }
-    if (!formData.email?.trim()) {
-      newErrors.email = "Email é obrigatório";
-    } else if (!isValidEmail(formData.email)) {
-      newErrors.email = "Email inválido";
+  // Carregar dados do lead ao editar
+  useEffect(() => {
+    if (lead) {
+      setFormData({
+        name: lead.name || "",
+        email: lead.email || "",
+        phone: lead.phone || "",
+        company: lead.company || "",
+        source: lead.source || "website",
+        referredBy: lead.referredBy || "",
+        status: lead.status || "primeiro_contato",
+        value: lead.value || 0,
+        probability: lead.probability || 0,
+        notes: lead.notes || "",
+        tags: lead.tags || [],
+      });
     } else {
-      const isDuplicate = await checkDuplicate("email", formData.email, lead?.id);
-      if (isDuplicate) {
-        newErrors.email = "Este email já está cadastrado";
-      }
-    }
-    if (formData.phone) {
-      const cleaned = formData.phone.replace(/\D/g, "");
-      if (cleaned.length < 10 || cleaned.length > 11) {
-        newErrors.phone = "Telefone inválido";
-      }
-    }
-    return newErrors;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const validationErrors = await validateForm();
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
-      await onSubmit(formData);
-      onClose();
-
-      // Reset form
+      // Resetar ao criar novo
       setFormData({
         name: "",
         email: "",
         phone: "",
         company: "",
         source: "website",
-        interestArea: "",
-        notes: "",
+        referredBy: "",
         status: "primeiro_contato",
-        value: undefined,
-        probability: undefined,
+        value: 0,
+        probability: 0,
+        notes: "",
         tags: [],
       });
-      setErrors({});
-    } catch (error) {
-      console.error("Erro ao salvar lead:", error);
-      setErrors({ general: "Erro ao salvar lead. Tente novamente." });
-    } finally {
-      setLoading(false);
+    }
+  }, [lead, isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validação básica
+    if (!formData.name.trim()) {
+      alert("Nome é obrigatório!");
+      return;
+    }
+
+    const result = await onSubmit(formData);
+    if (result) {
+      onClose();
     }
   };
 
-  const handleClose = () => {
-    setErrors({});
-    onClose();
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = maskPhone(e.target.value);
+    setFormData((prev) => ({ ...prev, phone: value }));
+  };
+
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: parseFloat(value) || 0 }));
+  };
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !formData.tags?.includes(tagInput.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...(prev.tags || []), tagInput.trim()],
+      }));
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tag: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags?.filter((t) => t !== tag) || [],
+    }));
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b p-6">
-          <h2 className="text-xl font-semibold text-primary-900">
-            {lead ? "Editar Lead" : "Novo Lead"}
-          </h2>
-          <button onClick={handleClose} className="p-1 text-primary-400 hover:text-primary-600">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-8 shadow-xl">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">{lead ? "Editar Lead" : "Novo Lead"}</h2>
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="max-h-[calc(90vh-140px)] overflow-y-auto p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {errors.general && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                {errors.general}
-              </div>
-            )}
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">
-                  Nome completo *
-                </label>
-                <input
-                  type="text"
-                  className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData({ ...formData, name: e.target.value });
-                    if (errors.name) setErrors({ ...errors, name: "" });
-                  }}
-                  placeholder="Digite o nome"
-                />
-                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">Email *</label>
-                <input
-                  type="email"
-                  className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.email}
-                  onChange={(e) => {
-                    setFormData({ ...formData, email: e.target.value });
-                    if (errors.email) setErrors({ ...errors, email: "" });
-                  }}
-                  placeholder="email@exemplo.com"
-                />
-                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">Telefone</label>
-                <input
-                  type="text"
-                  className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.phone}
-                  onChange={(e) => {
-                    const masked = maskPhone(e.target.value);
-                    setFormData({ ...formData, phone: masked });
-                    if (errors.phone) setErrors({ ...errors, phone: "" });
-                  }}
-                  placeholder="(11) 99999-9999"
-                  maxLength={15}
-                />
-                {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">Empresa</label>
-                <input
-                  type="text"
-                  className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  placeholder="Nome da empresa"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">
-                  Fonte do lead
-                </label>
-                <select
-                  className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.source}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      source: e.target.value as LeadSource,
-                    })
-                  }
-                >
-                  {sourceOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-primary-700">
-                  Área de interesse
-                </label>
-                <input
-                  type="text"
-                  className="h-12 w-full rounded-md border border-primary-200 px-3 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  value={formData.interestArea}
-                  onChange={(e) => setFormData({ ...formData, interestArea: e.target.value })}
-                  placeholder="Ex: Livros, E-books, CDs, DVDs..."
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-primary-700">Observações</label>
-              <textarea
-                rows={4}
-                className="w-full rounded-md border border-primary-200 px-3 py-2 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Observações sobre o lead..."
-              />
-            </div>
-          </form>
-        </div>
-
-        <div className="flex items-center justify-end gap-3 border-t bg-primary-50 px-6 py-4">
+        {/* Tabs */}
+        <div className="mb-6 flex gap-4 border-b">
           <button
             type="button"
-            onClick={handleClose}
-            className="rounded-md border border-primary-300 px-4 py-2 text-primary-700 transition-colors hover:bg-primary-100"
-            disabled={loading}
+            onClick={() => setActiveTab("basic")}
+            className={`pb-3 text-sm font-medium transition-colors ${
+              activeTab === "basic"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
           >
-            Cancelar
+            Dados Básicos
           </button>
           <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex items-center gap-2 rounded-md bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            type="button"
+            onClick={() => setActiveTab("details")}
+            className={`pb-3 text-sm font-medium transition-colors ${
+              activeTab === "details"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
           >
-            {loading && (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-            )}
-            {lead ? "Salvar Alterações" : "Criar Lead"}
+            Detalhes
           </button>
         </div>
+
+        <form onSubmit={handleSubmit}>
+          {/* ABA: Dados Básicos */}
+          {activeTab === "basic" && (
+            <div className="space-y-4">
+              {/* Nome */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Nome <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Telefone */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Telefone</label>
+                <input
+                  type="text"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handlePhoneChange}
+                  placeholder="(00) 00000-0000"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Empresa */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Empresa</label>
+                <input
+                  type="text"
+                  name="company"
+                  value={formData.company}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/*Indicação */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Indicação</label>
+                <input
+                  type="text"
+                  name="referredBy"
+                  value={formData.referredBy}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Origem */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Origem <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="source"
+                  value={formData.source}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="website">Website</option>
+                  <option value="social_media">Redes Sociais</option>
+                  <option value="referral">Indicação</option>
+                  <option value="advertising">Publicidade</option>
+                  <option value="email">Email Marketing</option>
+                  <option value="event">Eventos</option>
+                  <option value="cold_call">Cold Call</option>
+                  <option value="phone">Telefone</option>
+                  <option value="other">Outros</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* ABA: Detalhes */}
+          {activeTab === "details" && (
+            <div className="space-y-4">
+              {/* Valor Estimado */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Valor Estimado (R$)
+                </label>
+                <input
+                  type="number"
+                  name="value"
+                  value={formData.value}
+                  onChange={handleNumberChange}
+                  min="0"
+                  step="0.01"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Probabilidade */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Probabilidade (%)
+                </label>
+                <input
+                  type="number"
+                  name="probability"
+                  value={formData.probability}
+                  onChange={handleNumberChange}
+                  min="0"
+                  max="100"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Observações */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Observações</label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  rows={4}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Tags */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Tags</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    placeholder="Digite e pressione Enter"
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                  >
+                    Adicionar
+                  </button>
+                </div>
+
+                {formData.tags && formData.tags.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {formData.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          className="hover:text-blue-900"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              {lead ? "Salvar" : "Criar Lead"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

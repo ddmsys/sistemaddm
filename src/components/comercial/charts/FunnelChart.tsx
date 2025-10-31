@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 import {
   Bar,
   BarChart,
@@ -10,11 +10,11 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
+} from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LeadStatus } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LeadStatus } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 
 interface FunnelData {
   status: string;
@@ -34,22 +34,22 @@ interface FunnelChartProps {
 }
 
 const stageConfig = {
-  new: { label: 'Novos Leads', color: '#3b82f6' },
-  primeiro_contato: { label: 'Primeiro Contato', color: '#8b5cf6' },
-  qualificado: { label: 'Qualificado', color: '#f59e0b' },
-  proposta_enviada: { label: 'Proposta Enviada', color: '#06b6d4' },
-  negociacao: { label: 'Negociação', color: '#f97316' },
-  fechado_ganho: { label: 'Fechado - Ganhou', color: '#10b981' },
-  fechado_perdido: { label: 'Fechado - Perdido', color: '#ef4444' },
+  new: { label: "Novos Leads", color: "#3b82f6" },
+  primeiro_contato: { label: "Primeiro Contato", color: "#8b5cf6" },
+  qualificado: { label: "Qualificado", color: "#f59e0b" },
+  proposta_enviada: { label: "Proposta Enviada", color: "#06b6d4" },
+  negociacao: { label: "Negociação", color: "#f97316" },
+  fechado_ganho: { label: "Fechado - Ganhou", color: "#10b981" },
+  fechado_perdido: { label: "Fechado - Perdido", color: "#ef4444" },
 };
 
 export function FunnelChart({
   data,
-  title = 'Funil de Vendas',
+  title = "Funil de Vendas",
   showValues = true,
 }: FunnelChartProps) {
   const chartData = useMemo(() => {
-    const totalLeads = data.find((item) => item.status === 'primeiro_contato')?.count || 0;
+    const totalLeads = data.find((item) => item.status === "primeiro_contato")?.count || 0;
 
     return Object.entries(stageConfig)
       .map(([status, config]) => {
@@ -133,7 +133,7 @@ export function FunnelChart({
           </div>
           <div className="rounded-lg bg-emerald-50 p-3 text-center">
             <div className="text-2xl font-bold text-emerald-700">
-              {chartData.find((d) => d.stage.includes('Fechados'))?.conversion.toFixed(1) || 0}%
+              {chartData.find((d) => d.stage.includes("Fechados"))?.conversion.toFixed(1) || 0}%
             </div>
             <div className="text-sm text-emerald-600">Taxa de Conversão</div>
           </div>
